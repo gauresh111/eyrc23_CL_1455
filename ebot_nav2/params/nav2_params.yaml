@@ -56,7 +56,6 @@ amcl_rclcpp_node:
   ros__parameters:
     use_sim_time: True
 
-
 bt_navigator:
   ros__parameters:
     use_sim_time: True
@@ -116,7 +115,7 @@ controller_server:
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
-    failure_tolerance: 0.9
+    failure_tolerance: 0.3
     odom_topic : "/odometry/filtered"
     progress_checker_plugin: "progress_checker"
     goal_checker_plugins: ["general_goal_checker"] # "precise_goal_checker"
@@ -131,19 +130,19 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.03
-      yaw_goal_tolerance: 0.99
+      xy_goal_tolerance: 0.15
+      yaw_goal_tolerance: 0.25
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.30
+      max_vel_x: 0.26
       max_vel_y: 0.0
-      max_vel_theta: 0.2
+      max_vel_theta: 1.0
       min_speed_xy: 0.0
-      max_speed_xy: 0.30
+      max_speed_xy: 0.26
       min_speed_theta: 0.0
 
       acc_lim_x: 2.5
@@ -153,16 +152,16 @@ controller_server:
       decel_lim_y: 0.0
       decel_lim_theta: -3.2
 
-      vx_samples: 20
-      vy_samples: 5
-      vtheta_samples: 20
+      vx_samples: 80
+      vy_samples: 10
+      vtheta_samples: 40
 
       sim_time: 1.7
       linear_granularity: 0.05
-      angular_granularity: 0.025
-      transform_tolerance: 0.99
-      xy_goal_tolerance: 0.03
-      trans_stopped_velocity: 0.25
+      angular_granularity: 1.0
+      transform_tolerance: 0.2
+      xy_goal_tolerance: 0.08
+      trans_stopped_velocity: 0.3
       short_circuit_trajectory_evaluation: True
       stateful: True
 
@@ -171,15 +170,15 @@ controller_server:
       BaseObstacle.scale: 0.02
 
       PathAlign.scale: 32.0
-      PathAlign.forward_point_distance: 0.1
+      PathAlign.forward_point_distance: 0.5
 
-      GoalAlign.scale: 24.0
-      GoalAlign.forward_point_distance: 0.1
+      GoalAlign.scale: 200.0
+      GoalAlign.forward_point_distance: 0.5
 
-      PathDist.scale: 32.0
-      GoalDist.scale: 24.0
+      PathDist.scale: 5.0
+      GoalDist.scale: 6.0
 
-      RotateToGoal.scale: 32.0
+      RotateToGoal.scale: 100.0
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
       
@@ -296,10 +295,9 @@ planner_server:
     planner_plugins: ["GridBased"]
     GridBased:
       plugin: "nav2_navfn_planner/NavfnPlanner"
-      tolerance: 0.1
+      tolerance: 0.5
       use_astar: false
       allow_unknown: true
-      use_final_approach_orientation: false
 
 planner_server_rclcpp_node:
   ros__parameters:
@@ -345,8 +343,8 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [1.6, 0.0, 2.0]
-    min_velocity: [-1.6, 0.0, -2.0]
+    max_velocity: [1.6, 0.0, 5.0]
+    min_velocity: [-1.6, 0.0, -5.0]
     max_accel: [1.5, 0.0, 6.2]
     max_decel: [-1.5, 0.0, -6.2]
     odom_topic: "/odometry/filtered"
