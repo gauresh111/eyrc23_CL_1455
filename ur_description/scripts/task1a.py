@@ -327,7 +327,7 @@ def main():
 
     rclpy.shutdown()                                                # shutdown process
 
-
+    print("Node destroyed")                                         # log information
 if __name__ == '__main__':
     '''
     Description:    If the python interpreter is running that module (the source file) as the main program, 
