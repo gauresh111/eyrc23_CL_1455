@@ -172,7 +172,7 @@ controller_server:
       PathAlign.scale: 90.0
       PathAlign.forward_point_distance: 0.1
 
-      GoalAlign.scale: 200.0
+      GoalAlign.scale: 100.0
       GoalAlign.forward_point_distance: 0.1
 
       PathDist.scale: 90.0
