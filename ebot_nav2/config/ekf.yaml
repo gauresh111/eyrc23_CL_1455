@@ -70,30 +70,23 @@ ekf_filter_node:
 #     3a. Set your "world_frame" to your map_frame value
 #     3b. MAKE SURE something else is generating the odom->base_link transform. Note that this can even be another state
 #         estimation node from robot_localization! However, that instance should *not* fuse the global data.
-        map_frame: map_frame                   # Defaults to "map" if unspecified
-        odom_frame: odom_frmae                 # Defaults to "odom" if unspecified
-        base_link_frame: base_link  # Defaults to "base_link" if unspecified
-        world_frame: odom_frame                # Defaults to the value of odom_frame if unspecified
-
+        map_frame: map                   # map frame define
+    	odom_frame: odom                 # odom frame define
+    	base_link_frame: ebot_base_link  # our ebot_base_link is the base frame
+   	world_frame: odom                # Defaults to the value of odom_frame if unspecified
+          # Defaults to the value of odom_frame if unspecified
+	
 # The filter accepts an arbitrary number of inputs from each input message type (nav_msgs/Odometry,
 # geometry_msgs/PoseWithCovarianceStamped, geometry_msgs/TwistWithCovarianceStamped,
 # sensor_msgs/Imu). To add an input, simply append the next number in the sequence to its "base" name, e.g., odom0,
 # odom1, twist0, twist1, imu0, imu1, imu2, etc. The value should be the topic name. These parameters obviously have no
 # default values, and must be specified.
-        odom0: /odom_topic
-
-# Each sensor reading updates some or all of the filter's state. These options give you greater control over which
-# values from each measurement are fed to the filter. For example, if you have an odometry message as input, but only
-# want to use its Z position value, then set the entire vector to false, except for the third entry. The order of the
-# values is x, y, z, roll, pitch, yaw, vx, vy, vz, vroll, vpitch, vyaw, ax, ay, az. Note that not some message types
-# do not provide some of the state variables estimated by the filter. For example, a TwistWithCovarianceStamped message
-# has no pose information, so the first six values would be meaningless in that case. Each vector defaults to all false
-# if unspecified, effectively making this parameter required for each sensor.
-        odom0_config: [true, true, true,
-                       false, false, false,
-                       true,  true,  true,
-                       false, false, true,
-                       false, false, false]
+        odom0: /odom_topic                     # odom topic here
+    	odom0_config: [true, true, true,      # To know more about it read ekf.yaml 
+                    false, false, false,
+                    true,  true,  true,
+                    false, false, true,
+                    false, false, false]
 
         #        [x_pos   , y_pos    , z_pos,
         #         roll    , pitch    , yaw,
@@ -137,8 +130,8 @@ ekf_filter_node:
 
         
 
-        imu0: /imu_topic
-        imu0_config: [false, false, false,
+        imu0: /imu_topic                       # imu topic here
+        imu0_config: [false, false, false,   # To know more about it read ekf.yaml 
                       true,  true,  true,
                       false, false, false,
                       false,  false,  false,

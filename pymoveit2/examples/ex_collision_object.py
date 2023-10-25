@@ -20,7 +20,15 @@ from pymoveit2.robots import ur5
 DEFAULT_EXAMPLE_MESH = path.join(
     path.dirname(path.realpath(__file__)), "assets", "suzanne.stl"
 )
-
+box = path.join(
+    path.dirname(path.realpath(__file__)), "assets", "box.stl"
+)
+rack = path.join(
+    path.dirname(path.realpath(__file__)), "assets", "rack.stl"
+)
+floor = path.join(
+    path.dirname(path.realpath(__file__)), "assets", "floor.stl"
+)
 
 def main():
     rclpy.init()
@@ -30,15 +38,9 @@ def main():
 
     # Declare parameter for joint positions
     node.declare_parameter(
-        "filepath",
-        "",
-    )
-    node.declare_parameter(
         "action",
         "add",
     )
-    node.declare_parameter("position", [0.5, 0.0, 0.5])
-    node.declare_parameter("quat_xyzw", [0.0, 0.0, -0.707, 0.707])
 
     # Create callback group that allows execution of callbacks in parallel without restrictions
     callback_group = ReentrantCallbackGroup()
@@ -60,38 +62,47 @@ def main():
     executor_thread.start()
 
     # Get parameters
-    filepath = node.get_parameter("filepath").get_parameter_value().string_value
-    action = node.get_parameter("action").get_parameter_value().string_value
-    position = node.get_parameter("position").get_parameter_value().double_array_value
-    quat_xyzw = node.get_parameter("quat_xyzw").get_parameter_value().double_array_value
-
-    # Use the default example mesh if invalid
-    if not filepath:
-        node.get_logger().info(f"Using the default example mesh file")
-        filepath = DEFAULT_EXAMPLE_MESH
-
-    # Make sure the mesh file exists
-    if not path.exists(filepath):
-        node.get_logger().error(f"File '{filepath}' does not exist")
-        rclpy.shutdown()
-        exit(1)
-
-    # Determine ID of the collision mesh
-    mesh_id = path.basename(filepath).split(".")[0]
+    action_parameter = node.get_parameter("action").get_parameter_value().string_value
+    action = action_parameter
+    # action="add"
 
     if "add" == action:
-        # Add collision mesh
-        node.get_logger().info(
-            f"Adding collision mesh '{filepath}' {{position: {list(position)}, quat_xyzw: {list(quat_xyzw)}}}"
-        )
-        # print(ur5.base_link_name())
-        moveit2.add_collision_mesh(
-            filepath=filepath, id=mesh_id, position=position, quat_xyzw=quat_xyzw, frame_id=ur5.base_link_name()
-        )
+        for i in range(3):
+            moveit2.add_collision_mesh(
+                filepath=rack, id="Right rack", position=[0.25, -0.65, -0.57], quat_xyzw=[0, 0, 0.717356,0.696707], frame_id=ur5.base_link_name()
+            )
+        
+            # #left_side#
+            moveit2.add_collision_mesh(
+                filepath=rack, id="Left_rack", position=[0.25, 0.71, -0.57], quat_xyzw=[0, 0, 0.717356,0.696707],
+                frame_id=ur5.base_link_name()
+            )
+            # center_side
+            moveit2.add_collision_mesh(
+                filepath=rack, id="Center_rack", position=[0.54, 0.07, -0.57], quat_xyzw=[0, 0, 0, 1],
+                frame_id=ur5.base_link_name()
+            )
+            moveit2.add_collision_mesh(
+                filepath=box, id="Box_1", position=[0.48, 0.10, 0.55], quat_xyzw=[0, 0, 0, 1],
+                frame_id=ur5.base_link_name()
+            )
+            moveit2.add_collision_mesh(
+                filepath=box, id="Box_2", position=[0.30, -0.56, 0.54], quat_xyzw=[0 ,0 ,0.706825 ,0.707388],
+                frame_id=ur5.base_link_name()
+            )
+            moveit2.add_collision_mesh(
+                filepath=floor, id="Floor", position=[-0.04, 0.03, 0.00], quat_xyzw=[0.0, 0.0, 0.0, 1.0],
+                frame_id=ur5.base_link_name()
+            )
+        
     else:
-        # Remove collision mesh
-        node.get_logger().info(f"Removing collision mesh with ID '{mesh_id}'")
-        moveit2.remove_collision_mesh(id=mesh_id)
+        print("remove")
+        moveit2.remove_collision_mesh(id="Right_rack")
+        moveit2.remove_collision_mesh(id="Left_rack")
+        moveit2.remove_collision_mesh(id="Center_rack")
+        moveit2.remove_collision_mesh(id="Box_1")
+        moveit2.remove_collision_mesh(id="Box_2")
+        moveit2.remove_collision_mesh(id="Floor")
 
     rclpy.shutdown()
     exit(0)

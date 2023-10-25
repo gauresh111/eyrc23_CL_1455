@@ -1,12 +1,12 @@
 amcl:
   ros__parameters:
     use_sim_time: True
-    alpha1: 0.2
-    alpha2: 0.2
-    alpha3: 0.2
-    alpha4: 0.2
-    alpha5: 0.2
-    base_frame_id: "base_link"
+    alpha1: 0.00005   ## alpha's are related to odom model tuning, refer Nav2 Docs
+    alpha2: 0.00005
+    alpha3: 0.00005
+    alpha4: 0.00005
+    alpha5: 0.00005
+    base_frame_id: "base_footprint" #
     beam_skip_distance: 0.5
     beam_skip_error_threshold: 0.9
     beam_skip_threshold: 0.3
@@ -130,7 +130,7 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.25
+      xy_goal_tolerance: 0.15
       yaw_goal_tolerance: 0.25
     # DWB parameters
     FollowPath:
@@ -158,10 +158,10 @@ controller_server:
 
       sim_time: 1.7
       linear_granularity: 0.05
-      angular_granularity: 0.025
+      angular_granularity: 1.0
       transform_tolerance: 0.2
-      xy_goal_tolerance: 0.25
-      trans_stopped_velocity: 0.25
+      xy_goal_tolerance: 0.08
+      trans_stopped_velocity: 0.3
       short_circuit_trajectory_evaluation: True
       stateful: True
 
@@ -169,16 +169,16 @@ controller_server:
       
       BaseObstacle.scale: 0.02
 
-      PathAlign.scale: 32.0
+      PathAlign.scale: 90.0
       PathAlign.forward_point_distance: 0.1
 
-      GoalAlign.scale: 24.0
+      GoalAlign.scale: 200.0
       GoalAlign.forward_point_distance: 0.1
 
-      PathDist.scale: 32.0
-      GoalDist.scale: 24.0
+      PathDist.scale: 90.0
+      GoalDist.scale: 150.0
 
-      RotateToGoal.scale: 32.0
+      RotateToGoal.scale: 100.0
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
       
@@ -278,7 +278,7 @@ global_costmap:
 map_server:
   ros__parameters:
     use_sim_time: True
-    yaml_filename: "map_name.yaml"
+    yaml_filename: "map.yaml"
 
 map_saver:
   ros__parameters:
