@@ -111,11 +111,11 @@ bt_navigator_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: True
-    controller_frequency: 20.0
+    controller_frequency: 360.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
-    failure_tolerance: 0.3
+    failure_tolerance: 0.9
     odom_topic : "/odometry/filtered"
     progress_checker_plugin: "progress_checker"
     goal_checker_plugins: ["general_goal_checker"] # "precise_goal_checker"
@@ -124,7 +124,7 @@ controller_server:
     # Progress checker parameters
     progress_checker:
       plugin: "nav2_controller::SimpleProgressChecker"
-      required_movement_radius: 0.5
+      required_movement_radius: 1.0
       movement_time_allowance: 10.0
 
     general_goal_checker:
@@ -138,26 +138,26 @@ controller_server:
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.26
+      max_vel_x: 0.3
       max_vel_y: 0.0
       max_vel_theta: 1.0
       min_speed_xy: 0.0
-      max_speed_xy: 0.26
+      max_speed_xy: 0.3
       min_speed_theta: 0.0
 
-      acc_lim_x: 2.5
+      acc_lim_x: 2.0
       acc_lim_y: 0.0
-      acc_lim_theta: 3.2
-      decel_lim_x: -2.5
+      acc_lim_theta: 6.2
+      decel_lim_x: -2.0
       decel_lim_y: 0.0
-      decel_lim_theta: -3.2
+      decel_lim_theta: -6.2
 
       vx_samples: 80
       vy_samples: 10
       vtheta_samples: 40
 
       sim_time: 1.7
-      linear_granularity: 0.05
+      linear_granularity: 0.5
       angular_granularity: 1.0
       transform_tolerance: 0.2
       xy_goal_tolerance: 0.08
@@ -169,16 +169,16 @@ controller_server:
       
       BaseObstacle.scale: 0.02
 
-      PathAlign.scale: 32.0
-      PathAlign.forward_point_distance: 0.5
+      PathAlign.scale: 70.0
+      PathAlign.forward_point_distance: 0.1
 
-      GoalAlign.scale: 200.0
-      GoalAlign.forward_point_distance: 0.5
+      GoalAlign.scale: 40.0
+      GoalAlign.forward_point_distance: 0.1
 
-      PathDist.scale: 5.0
-      GoalDist.scale: 6.0
+      PathDist.scale: 32.0
+      GoalDist.scale: 10.0
 
-      RotateToGoal.scale: 100.0
+      RotateToGoal.scale: 32.0
       RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
       
@@ -195,8 +195,8 @@ local_costmap:
       robot_base_frame: "base_footprint"
       use_sim_time: True
       rolling_window: true
-      width: 5
-      height: 5
+      width: 20
+      height: 20
       resolution: 0.05
       footprint: "[ [0.21, 0.195], [0.21, -0.195], [-0.21, -0.195], [-0.21, 0.195] ]"
       plugins: ["voxel_layer", "inflation_layer"]
