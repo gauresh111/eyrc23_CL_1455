@@ -84,7 +84,7 @@ def generate_launch_description():
 
     declare_map_yaml_cmd = DeclareLaunchArgument(
         'map',
-        default_value=os.path.join(ebot_nav2_dir, 'maps', 'map_name.yaml'),
+        default_value=os.path.join(ebot_nav2_dir, 'maps', 'map.yaml'),
         description='Full path to map yaml file to load')
 
     declare_use_sim_time_cmd = DeclareLaunchArgument(
@@ -113,11 +113,13 @@ def generate_launch_description():
         'log_level', default_value='info',
         description='log level')
 
+    # Loading the params
     declare_mapper_online_async_param_cmd = DeclareLaunchArgument(
         'async_param',
         default_value=os.path.join(ebot_nav2_dir, 'config', 'mapper_params_online_async.yaml'),
         description='Set mappers online async param file')
 
+     # Adding slam-toolbox, with online_async_launch.py
     mapper_online_async_param_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(get_package_share_directory('slam_toolbox'), 'launch', 'online_async_launch.py'),
@@ -209,5 +211,11 @@ def generate_launch_description():
     ld.add_action(declare_log_level_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
     ld.add_action(start_rviz_cmd)
+    # ld.add_action(declare_mapper_online_async_param_cmd)
+    # ld.add_action(mapper_online_async_param_launch)
+    ld.add_action(robot_localization_node)
+    ld.add_action(bringup_cmd_group)
+
+
 
     return ld

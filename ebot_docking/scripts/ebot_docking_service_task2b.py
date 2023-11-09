@@ -291,11 +291,10 @@ class MyRobotDockingController(Node):
                 for i in range(5):
                     
                     self.moveBot(0.0,0.0)
-                # if self.isAttach:
-                #     self.attachRack(self.rackName)
-                # else :
-                #     self.detachRack(self.rackName)
-                
+                if self.isAttach:
+                    self.attachRack(self.rackName)
+                else :
+                    self.detachRack(self.rackName)
             for i in range(5):
                 self.moveBot(0.0,0.0)
             self.is_docking = False

@@ -93,7 +93,7 @@ def main():
     Drop_Joints_List = [Drop_Joints_Left, Drop_Joints_Right, Drop_Joints_Back]
 
     box_file_path = path.join(
-        path.dirname(path.realpath(__file__)), "assets", "box.stl"
+        path.dirname(path.realpath(__file__)),"..", "assets", "box.stl"
     )
 
     tolerance = 0.02

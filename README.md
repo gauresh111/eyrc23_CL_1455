@@ -68,10 +68,13 @@ To launch task 2A, use this commands in seperate terminals-
     ros2 launch ur_description ur5_gazebo_launch.py
     ```
     ```sh
-    ros2 launch ur5_moveit spawn_ur5_launch_moveit.py
+    ros2 launch ur5_moveit spawn_ur5_launch_moveit.launch.py
     ```
     ```sh
     ros2 run mani_stack task1ab-perception.py
+    ```
+    ```sh
+    ros2 run pymoveit2 ex_collision_object.py
     ```
     ```sh
     ros2 run mani_stack task1ab-manipulation.py
@@ -82,9 +85,6 @@ To launch task 2A, use this commands in seperate terminals-
     ros2 run mani_stack task1ab-manipulation-servo.py
     ```
     ```sh
-    ros2 run pymoveit2 ex_collision_object.py
-    ```
-    ```sh
     ros2 service call /servo_node/start_servo std_srvs/srv/Trigger {}
     ```
 
@@ -92,16 +92,16 @@ To launch task 2A, use this commands in seperate terminals-
 To launch task 2B, use this commands in seperate terminals-
 
     ```sh
-    ros2 ros2 launch ebot_description ebot_gazebo_launch.py
+    ros2 launch ebot_description ebot_gazebo_launch.py
     ```
     ```sh
     ros2 launch ebot_nav2 ebot_bringup_launch.py
     ```
     ```sh
-    ros2 run ebot_docking task2b.py
+    ros2 run ebot_nav2 ebot_nav2_cmd_task2b.py
     ```
     ```sh
-    ros2 run ebot_docking ebot_docking_boilerplate.py
+    ros2 run ebot_docking ebot_docking_service_task2b.py
     ```
 
 
