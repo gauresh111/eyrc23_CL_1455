@@ -25,6 +25,7 @@ import time
 from threading import Thread
 import numpy as np
 from linkattacher_msgs.srv import AttachLink , DetachLink
+from sensor_msgs.msg import Imu
 rclpy.init()
 
 global robot_pose
@@ -235,13 +236,14 @@ class MyRobotDockingController(Node):
             global robot_pose
             robot_pose[0] = msg.pose.pose.position.x
             robot_pose[1] = msg.pose.pose.position.y
-            quaternion_array = msg.pose.pose.orientation
+            robot_pose[3] = msg.pose.pose.position.z
+        def imu_callback(msg):
+            global robot_pose
+            quaternion_array = msg.orientation
             orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
             _, _, yaw = euler_from_quaternion(orientation_list)
             yaw = math.degrees(yaw)
             robot_pose[2] = yaw
-            robot_pose[3] = msg.pose.pose.position.z
-
         if self.is_docking:
             # ...
             # Implement control logic here for linear and angular motion
@@ -252,12 +254,15 @@ class MyRobotDockingController(Node):
             global robot_pose
             dockingNode = Node("GlobalNodeDocking")
             callback_group = ReentrantCallbackGroup()
-            executor = MultiThreadedExecutor(2)
+            executor = MultiThreadedExecutor(3)
             executor.add_node(dockingNode)
             executor_thread = Thread(target=executor.spin, daemon=True, args=())
             executor_thread.start()
             dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
             dockingNode.odom_sub
+            dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10)
+            dockingNode.imu_sub
+            
             time.sleep(0.5)
             if self.targetX != self.targetY:
                 yaw = False
