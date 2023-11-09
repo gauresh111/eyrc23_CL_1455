@@ -68,6 +68,26 @@ def main():
     executor_thread.start()
     tf_buffer = tf2_ros.buffer.Buffer()
     tf_listener = tf2_ros.TransformListener(tf_buffer, node)
+    time.sleep(1)
+    transform = []
+
+    while (len(transform) == 0):
+        try:
+            transform = tf_buffer.lookup_transform(
+                "base_link", "tool0", rclpy.time.Time()
+            )
+            transform = [
+                transform.transform.translation.x,
+                transform.transform.translation.y,
+                transform.transform.translation.z
+            ]
+        except Exception as e:
+
+            print(e)
+            pass
+        time.sleep(0.2)
+    print(transform)
+
     def moveToPose(position, quaternions, position_name):
         counter = 0
         position = [round(position[0], 2), round(position[1], 2), round(position[2], 2)]
@@ -76,7 +96,7 @@ def main():
         while x == False and y == False and z == False:
             counter += 1
             print("Moving to ", position_name, "    [Attempt: ", counter,"]")
-            moveit2.move_to_pose(position=position, quat_xyzw=quaternions, cartesian=True)
+            moveit2.move_to_pose(position=position, quat_xyzw=quaternions, cartesian=False)
             moveit2.wait_until_executed()
             try:
                 transform = tf_buffer.lookup_transform("base_link", "tool0", rclpy.time.Time())
@@ -95,7 +115,7 @@ def main():
                 # ]
             except Exception as e:
                 print(e)
-            time.sleep(0.02)
+            time.sleep(0.05)
             x = True if(currentPose[0] - position[0]) == 0.00 else False
             y = True if(currentPose[1] - position[1]) == 0.00 else False
             z = True if(currentPose[2] - position[2]) == 0.00 else False 
@@ -130,6 +150,7 @@ def main():
     # print("Reached Initial")
     
     print("Done")
+    rclpy.spin(node)
     rclpy.shutdown()
     exit(0)
 

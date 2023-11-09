@@ -35,6 +35,7 @@ def aruco_name_list_updater(msg):
 
 def main():
     rclpy.init()
+    print("Starting Task 1AB Manipulation")
 
     Initial_Pose = ArucoBoxPose()
     Initial_Pose.position = [0.18, 0.10, 0.46]
@@ -84,25 +85,29 @@ def main():
 
     arucoData = []
     while len(arucoData) <2:
-        try:
-            if(tf_buffer.can_transform("base_link", aruco_name_list[0], rclpy.time.Time())
-            ):  
-                arucoData = []
-                
-                for i in range(len(aruco_name_list)):
-                    arucoData.append(ArucoNameCoordinate())
-                    arucoData[i].name = aruco_name_list[i]
-                    arucoData[i].position = [tf_buffer.lookup_transform("base_link", aruco_name_list[i], rclpy.time.Time()).transform.translation.x,
-                                            tf_buffer.lookup_transform("base_link", aruco_name_list[i], rclpy.time.Time()).transform.translation.y,
-                                            tf_buffer.lookup_transform("base_link", aruco_name_list[i], rclpy.time.Time()).transform.translation.z
+        flag = True
+        for aruco in aruco_name_list:
+            tempFlag = False
+            if(tf_buffer.can_transform("base_link", aruco, rclpy.time.Time())):
+                tempFlag = True
+            flag = tempFlag and flag
+
+        if(flag == True):  
+            arucoData = []
+            
+            for i in range(len(aruco_name_list)):
+                arucoData.append(ArucoNameCoordinate())
+                arucoData[i].name = aruco_name_list[i]
+                transform = tf_buffer.lookup_transform("base_link", aruco_name_list[i], rclpy.time.Time()).transform
+                arucoData[i].position = [transform.translation.x,
+                                        transform.translation.y,
+                                        transform.translation.z
+                                        ]
+                arucoData[i].quaternions = [transform.rotation.x,
+                                            transform.rotation.y,
+                                            transform.rotation.z,
+                                            transform.rotation.w
                                             ]
-                    arucoData[i].quaternions = [tf_buffer.lookup_transform("base_link", aruco_name_list[i], rclpy.time.Time()).transform.rotation.x,
-                                                tf_buffer.lookup_transform("base_link", aruco_name_list[i], rclpy.time.Time()).transform.rotation.y,
-                                                tf_buffer.lookup_transform("base_link", aruco_name_list[i], rclpy.time.Time()).transform.rotation.z,
-                                                tf_buffer.lookup_transform("base_link", aruco_name_list[i], rclpy.time.Time()).transform.rotation.w
-                                                ]
-        except Exception as e:
-            print(e)
 
     # transform = []
 
@@ -128,6 +133,7 @@ def main():
     #         pass
     #     time.sleep(0.2)
     # print(transform)
+
     def moveToPose(position, quaternions, position_name):
         counter = 0
         position = [round(position[0], 2), round(position[1], 2), round(position[2], 2)]
