@@ -157,7 +157,7 @@ class MyRobotDockingController(Node):
     def getRemaningDistance(self, current_x, current_y, goal_x, goal_y):
         distance = ((current_x - goal_x)**2 + (current_y - goal_y)**2)**0.5
         return distance
-    
+    wad
     # Utility function to normalize angles within the range of -π to π (OPTIONAL)
     def normalize_angle(self,angle):
         """Normalizes an angle to the range [-π, π].
