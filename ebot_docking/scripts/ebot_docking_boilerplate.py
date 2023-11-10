@@ -162,7 +162,7 @@ class MyRobotDockingController(Node):
     # Utility function to normalize angles within the range of -π to π (OPTIONAL)
     def normalize_angle(self,angle):
         """Normalizes an angle to the range [-π, π].
- 
+    
         Args:
             angle: A float representing the angle in radians.
 
