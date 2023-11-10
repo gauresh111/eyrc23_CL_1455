@@ -159,11 +159,15 @@ class MyRobotDockingController(Node):
         return distance
 <<<<<<< HEAD:ebot_docking/scripts/ebot_docking_service_task2b.py
 <<<<<<< HEAD:ebot_docking/scripts/ebot_docking_service_task2b.py
+<<<<<<< HEAD:ebot_docking/scripts/ebot_docking_service_task2b.py
 =======
     wad
 >>>>>>> d4dcd4e (gauresh):ebot_docking/scripts/ebot_docking_boilerplate.py
 =======
 >>>>>>> d0b532c (w):ebot_docking/scripts/ebot_docking_boilerplate.py
+=======
+    
+>>>>>>> f9d363c (yaw done):ebot_docking/scripts/ebot_docking_boilerplate.py
     # Utility function to normalize angles within the range of -π to π (OPTIONAL)
     def normalize_angle(self,angle):
         """Normalizes an angle to the range [-π, π].
