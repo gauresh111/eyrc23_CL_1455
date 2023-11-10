@@ -167,7 +167,10 @@ class MyRobotDockingController(Node):
         Returns:
             A float representing the normalized angle in radians.
         """
-        
+        global robot_pose
+        if self.targetYaw == 0.0:
+            return angle
+
         if angle<0:
             angle = angle + 360
         return angle
@@ -258,6 +261,7 @@ class MyRobotDockingController(Node):
             dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
             dockingNode.odom_sub
             time.sleep(0.5)
+<<<<<<< HEAD:ebot_docking/scripts/ebot_docking_service_task2b.py
             if self.targetX != self.targetY:
                 yaw = False
                 while (yaw == False):
@@ -294,8 +298,43 @@ class MyRobotDockingController(Node):
                     self.attachRack(self.rackName)
                 else :
                     self.detachRack(self.rackName)
+=======
+        
+            yaw = False
+            while (yaw == False):
+                angle=botPid.computeAngle(int(self.normalize_angle(self.targetYaw)),int(self.normalize_angle(robot_pose[2])),robot_pose[0],robot_pose[1])
+                self.moveBot(0.0,angle)
+                # yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
+                time.sleep(0.01)
+>>>>>>> 407fdf3 (yaw done):ebot_docking/scripts/ebot_docking_boilerplate.py
             for i in range(5):
+                
                 self.moveBot(0.0,0.0)
+            #orientation done
+            
+            
+            reached = False
+            
+            while (reached == False):
+                # linearSpeed = botPid.computeLinear(round(robot_pose[1],2),round(self.targetY,2))
+                reached = self.is_bot_at_goal_position(round(robot_pose[0],2),round(robot_pose[1],2),round(self.targetX,2),round(self.targetY,2))
+                X,Yaw = self.tracjetory(self.targetX,self.targetY,robot_pose[0],robot_pose[1],math.radians(robot_pose[2]),math.radians(self.targetYaw))
+                print(X,Yaw)
+                # self.moveBot(X,Yaw)
+            yaw = False
+            while (yaw == False):
+                angle=botPid.computeAngle(int(self.normalize_angle(self.targetYaw)),int(self.normalize_angle(robot_pose[2])),robot_pose[0],robot_pose[1])
+                self.moveBot(0.0,angle)
+                yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
+                
+                time.sleep(0.01)
+            for i in range(5):
+                
+                self.moveBot(0.0,0.0)
+            # if self.isAttach:
+            #     self.attachRack(self.rackName)
+            # else :
+            #     self.detachRack(self.rackName)
             self.is_docking = False
             self.dock_aligned=True
             

@@ -50,6 +50,34 @@ def main():
     botOrientation =[] 
     global XrackOFfset, YrackOffset
     XrackOFfset, YrackOffset = [0.0,1.08,0.0,0.0,0.3,0.0,0.0,0.0],[0.0,0.0,1.08,-0.81,0.0,0.0,0.0,0.0]
+<<<<<<< HEAD:ebot_nav2/scripts/ebot_nav2_cmd_task2b.py
+=======
+    global positionToGO
+    positionToGO ={
+               "initalPose":[[0.0,0.0,0.0],[0.0,0.0,0.0,1.0]], 
+               "rack1": [[0.0,4.35,1.0],[0.0,0.0,1.0,0.0]],
+               "rack2": [[2.03,2.06,2.0],[0.0,0.0,-0.7068252,0.7073883]],
+               "rack3": [[2.03,-7.09,3.0],[0.0,0.0,0.7068252,0.7073883]],
+               "ap1": [[0.0,-2.45,4.0],[0.0,0.0,0.0,1.0]],
+               "ap2": [[0.0,4.35,1.0],[0.0,0.0,1.0,0.0]],
+               "ap3": [[0.0,4.35,1.0],[0.0,0.0,1.0,0.0]]
+               }
+    def getGoalPoseStamped(goal):
+        global positionToGO
+        Goal = positionToGO[goal]
+        goalPose = PoseStamped()
+        goalPose.header.frame_id = 'map'
+        goalPose.header.stamp = navigator.get_clock().now().to_msg()
+        goalPose.pose.position.x = Goal[0][0]
+        goalPose.pose.position.y = Goal[0][1]
+        goalPose.pose.position.z = Goal[0][2]
+        goalPose.pose.orientation.x = Goal[1][0]
+        goalPose.pose.orientation.y = Goal[1][1]
+        goalPose.pose.orientation.z = Goal[1][2]
+        goalPose.pose.orientation.w = Goal[1][3]
+        print(goalPose)
+        return goalPose  
+>>>>>>> 407fdf3 (yaw done):ebot_docking/scripts/task2b.py
     global isDock
     isDock = False
     def poseUpdate(data):
@@ -163,6 +191,9 @@ def main():
     
     def moveToGoal(goalPose,rack_no,israck):
         global botPosition, botOrientation
+        Xoff = XrackOFfset[int(goalPose.pose.position.z)]
+        Yoff = YrackOffset[int(goalPose.pose.position.z)]
+        goalPose.pose.position.z=0.0
         navigator.goToPose(goalPose)
 
         i = 0
@@ -182,8 +213,8 @@ def main():
         orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
         _, _, yaw = euler_from_quaternion(orientation_list)
         yaw = math.degrees(yaw)
-        goalPose.pose.position.x += XrackOFfset[int(goalPose.pose.position.z)]
-        goalPose.pose.position.y += YrackOffset[int(goalPose.pose.position.z)]
+        goalPose.pose.position.x += Xoff
+        goalPose.pose.position.y += Yoff
         node.dockingRequest.linear_dock = True
         node.dockingRequest.orientation_dock = True
         node.dockingRequest.goal_x = goalPose.pose.position.x
@@ -196,6 +227,7 @@ def main():
         while isDock!=True:
             print("waiting")
                     # node.publisher.publish(goalPose)
+<<<<<<< HEAD:ebot_nav2/scripts/ebot_nav2_cmd_task2b.py
     moveToGoal(rack1,"rack1",True)
     moveToGoal(ap1,"rack1",False)
     moveToGoal(initalPose,"initalPose",False)
@@ -204,6 +236,14 @@ def main():
     # moveToGoal(rack3,"rack3",True)
     # while True:
     #     print(isDock,type(isDock),"callback")
+=======
+    # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
+    moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
+    moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
+    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
+    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
+    # moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
+>>>>>>> 407fdf3 (yaw done):ebot_docking/scripts/task2b.py
     
     # Shut down the ROS 2 Navigation Stack
     navigator.lifecycleShutdown()
