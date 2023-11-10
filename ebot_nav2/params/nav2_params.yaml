@@ -140,11 +140,11 @@ controller_server:
       min_vel_y: 0.0
       max_vel_x: 0.26
       max_vel_y: 0.0
-      max_vel_theta: 1.0
+      max_vel_theta: 2.0
       min_speed_xy: 0.0
       max_speed_xy: 0.26
       min_speed_theta: 0.0
-    
+
       acc_lim_x: 2.5
       acc_lim_y: 0.0
       acc_lim_theta: 3.2
@@ -157,9 +157,9 @@ controller_server:
       vtheta_samples: 20
 
       sim_time: 1.7
-      linear_granularity: 0.05
+      linear_granularity: 0.01
       angular_granularity: 0.025
-      transform_tolerance: 0.5
+      transform_tolerance: 0.6
       xy_goal_tolerance: 0.08
       trans_stopped_velocity: 0.25
       short_circuit_trajectory_evaluation: True
@@ -343,10 +343,10 @@ velocity_smoother:
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [1.6, 0.0, 2.0]
-    min_velocity: [-1.6, 0.0, -2.0]
-    max_accel: [1.5, 0.0, 6.2]
-    max_decel: [-1.5, 0.0, -6.2]
+    max_velocity: [1.6, 0.0, 3.0]
+    min_velocity: [-1.6, 0.0, -3.0]
+    max_accel: [1.5, 0.0, 3.2]
+    max_decel: [-1.5, 0.0, -3.2]
     odom_topic: "/odometry/filtered"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
