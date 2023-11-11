@@ -216,6 +216,7 @@ def generate_launch_description():
     ld.add_action(declare_rviz_config_file_cmd)
     ld.add_action(start_rviz_cmd)
 <<<<<<< HEAD
+<<<<<<< HEAD
     # ld.add_action(declare_mapper_online_async_param_cmd)
     # ld.add_action(mapper_online_async_param_launch)
     ld.add_action(robot_localization_node)
@@ -228,5 +229,11 @@ def generate_launch_description():
 >>>>>>> b8fede3 (new_map)
 
 
+=======
+    ld.add_action(robot_localization_node)
+    ld.add_action(bringup_cmd_group)
+    # ld.add_action(declare_mapper_online_async_param_cmd)
+    # ld.add_action(mapper_online_async_param_launch)
+>>>>>>> 950989d (New_MAP)
 
     return ld
