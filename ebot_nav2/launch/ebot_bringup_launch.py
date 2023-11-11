@@ -38,25 +38,27 @@ def generate_launch_description():
     bringup_dir = get_package_share_directory('nav2_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
     ebot_nav2_dir = get_package_share_directory('ebot_nav2')
-
+    costmap_filters_demo_dir = get_package_share_directory('ebot_nav2')
+    # Create our own temporary YAML files that include substitutions
+    lifecycle_nodes = ['filter_mask_server', 'costmap_filter_info_server']
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
     slam = LaunchConfiguration('slam')
     map_yaml_file = LaunchConfiguration('map')
     use_sim_time = LaunchConfiguration('use_sim_time')
-    params_file = LaunchConfiguration('params_file')
     autostart = LaunchConfiguration('autostart')
     use_composition = LaunchConfiguration('use_composition')
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
     rviz_config_file = LaunchConfiguration('rviz_config')
-
+    params_file = LaunchConfiguration('params_file')
+    mask_yaml_file = LaunchConfiguration('mask_yaml_file')
     remappings = [('/tf', 'tf'),
                   ('/tf_static', 'tf_static')]
 
     param_substitutions = {
         'use_sim_time': use_sim_time,
-        'yaml_filename': map_yaml_file}
+        'yaml_filename': mask_yaml_file}
 
     configured_params = RewrittenYaml(
         source_file=params_file,
@@ -96,7 +98,10 @@ def generate_launch_description():
         'params_file',
         default_value=os.path.join(ebot_nav2_dir, 'params', 'nav2_params.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes')
-
+    declare_mask_yaml_file_cmd = DeclareLaunchArgument(
+        'mask_yaml_file',
+        default_value=os.path.join(ebot_nav2_dir, 'maps', 'mapkeepout.yaml'),
+        description='Full path to map yaml file to load')
     declare_autostart_cmd = DeclareLaunchArgument(
         'autostart', default_value='true',
         description='Automatically startup the nav2 stack')
@@ -125,12 +130,14 @@ def generate_launch_description():
         ),
         launch_arguments=[('slam_params_file', LaunchConfiguration('async_param'))],
     )
-
+   
     declare_rviz_config_file_cmd = DeclareLaunchArgument(
         'rviz_config',
         default_value=os.path.join(ebot_nav2_dir, 'rviz', 'nav2_default_view.rviz'),
         description='Full path to the RVIZ config file to use')
 
+     # Make re-written yaml
+    
 
     # Launch rviz
     start_rviz_cmd = Node(
@@ -139,7 +146,34 @@ def generate_launch_description():
         name='rviz2',
         arguments=['-d', rviz_config_file],
         output='screen')
-    
+    start_lifecycle_manager_cmd = Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager_costmap_filters',
+            namespace=namespace,
+            output='screen',
+            emulate_tty=True,  # https://github.com/ros2/launch/issues/188
+            parameters=[{'use_sim_time': use_sim_time},
+                        {'autostart': autostart},
+                        {'node_names': lifecycle_nodes}])
+
+    start_map_server_cmd = Node(
+            package='nav2_map_server',
+            executable='map_server',
+            name='filter_mask_server',
+            namespace=namespace,
+            output='screen',
+            emulate_tty=True,  # https://github.com/ros2/launch/issues/188
+            parameters=[configured_params])
+
+    start_costmap_filter_info_server_cmd = Node(
+            package='nav2_map_server',
+            executable='costmap_filter_info_server',
+            name='costmap_filter_info_server',
+            namespace=namespace,
+            output='screen',
+            emulate_tty=True,  # https://github.com/ros2/launch/issues/188
+            parameters=[configured_params])
     robot_localization_node = Node(
        package='robot_localization',
        executable='ekf_node',
@@ -204,6 +238,8 @@ def generate_launch_description():
     ld.add_action(declare_map_yaml_cmd)
     ld.add_action(declare_use_sim_time_cmd)
     ld.add_action(declare_params_file_cmd)
+    ld.add_action(declare_mask_yaml_file_cmd)
+    
     ld.add_action(declare_autostart_cmd)
     ld.add_action(declare_use_composition_cmd)
     ld.add_action(declare_use_respawn_cmd)
@@ -212,7 +248,9 @@ def generate_launch_description():
     ld.add_action(start_rviz_cmd)
     ld.add_action(robot_localization_node)
     ld.add_action(bringup_cmd_group)
+    ld.add_action(start_lifecycle_manager_cmd)
+    ld.add_action(start_map_server_cmd)
+    ld.add_action(start_costmap_filter_info_server_cmd)
     # ld.add_action(declare_mapper_online_async_param_cmd)
     # ld.add_action(mapper_online_async_param_launch)
-
     return ld
