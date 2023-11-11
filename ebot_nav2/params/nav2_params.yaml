@@ -256,6 +256,7 @@ global_costmap:
           max_obstacle_height: 2.0
           clearing: True
           marking: True
+          
           data_type: "LaserScan"
           raytrace_max_range: 3.0
           raytrace_min_range: 0.0
