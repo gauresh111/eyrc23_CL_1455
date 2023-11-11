@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: ur_description
+    relative_path: urdf/ur5_arm.urdf.xacro
+  srdf:
+    relative_path: config/ur5.srdf
+  package_settings:
+    author_name: Joel
+    author_email: joeldevasia1962002@student.sfit.ac.in
+    generated_timestamp: 1695810165
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
