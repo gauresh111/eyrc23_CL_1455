@@ -48,6 +48,8 @@ def main():
                "ap2": [[0.0,4.35,1.0],[0.0,0.0,1.0,0.0]],
                "ap3": [[0.0,4.35,1.0],[0.0,0.0,1.0,0.0]]
                }
+    withRackFootprint = [ [0.31, 0.23],[0.31, -0.23],[-0.31, -0.23],[-0.31, 0.23] ]
+    withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
     def getGoalPoseStamped(goal):
         global positionToGO
         Goal = positionToGO[goal]
@@ -69,14 +71,16 @@ def main():
         # Initialize ROS node
         nodeFootprint = rclpy.create_node('change_footprint_node')
         # Create a service client to set parameters
-        nodeFootprint.footprintPub=nodeFootprint.create_publisher(Polygon, '/local_costmap/footprint', 10)
+        nodeFootprint.localFootPrintPub=nodeFootprint.create_publisher(Polygon, '/local_costmap/footprint', 10)
+        nodeFootprint.globalFootPrintPub=nodeFootprint.create_publisher(Polygon, '/global_costmap/footprint', 10)
         p = Polygon()
-        p.points = [Point32(x=1.0, y=1.0),
-                            Point32(x=-1.0, y=1.0),
-                            Point32(x=-1.0, y=-1.0),
-                            Point32(x=1.0, y=-1.0)]
-        for i in range (5):
-            nodeFootprint.footprintPub.publish(p)
+        p.points = [Point32(x=new_footprint[0][0], y=new_footprint[0][1]),
+                            Point32(x=new_footprint[1][0], y=new_footprint[1][1]),
+                            Point32(x=new_footprint[2][0], y=new_footprint[2][1]),
+                            Point32(x=new_footprint[3][0], y=new_footprint[3][1])]
+        for i in range (15):
+            nodeFootprint.localFootPrintPub.publish(p)
+            nodeFootprint.globalFootPrintPub.publish(p)
             print("publishing")
         nodeFootprint.destroy_node()
     def poseUpdate(data):
@@ -124,6 +128,10 @@ def main():
         Xoff = XrackOFfset[int(goalPose.pose.position.z)]
         Yoff = YrackOffset[int(goalPose.pose.position.z)]
         goalPose.pose.position.z=0.0
+        if not israck:
+            change_footprint(withRackFootprint)
+        else:
+            change_footprint(withoutRackFootprint)
         navigator.goToPose(goalPose)
 
         i = 0
@@ -152,10 +160,10 @@ def main():
             print("waiting")
                     # node.publisher.publish(goalPose)
     moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
-    # new_footprint = [ [0.1, 0.08], [0.1, -0.08], [-0.1, -0.08], [-0.1, 0.08]]
-    # change_footprint(new_footprint)
+    
+    
     # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
-    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
+    moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
     # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     # moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
