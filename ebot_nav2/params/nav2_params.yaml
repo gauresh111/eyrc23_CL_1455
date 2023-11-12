@@ -195,8 +195,8 @@ local_costmap:
       robot_base_frame: "base_footprint"
       use_sim_time: True
       rolling_window: true
-      width: 5
-      height: 5
+      width: 7
+      height: 7
       resolution: 0.05
       footprint: "[ [0.21, 0.195], [0.21, -0.195], [-0.21, -0.195], [-0.21, 0.195] ]"
       plugins: ["voxel_layer", "inflation_layer","keepout_filter"]
@@ -246,7 +246,8 @@ global_costmap:
       global_frame: map
       robot_base_frame: "base_footprint"
       use_sim_time: True
-      robot_radius: 0.3
+      footprint: "[ [0.21, 0.195],      [0.21, -0.195],     [-0.21, -0.195],   [-0.21, 0.195] ]"
+                    #front Whelle left  front Whelle right  back Whelle right   back Whelle left
       resolution: 0.05
       track_unknown_space: true
       plugins: ["static_layer", "obstacle_layer", "inflation_layer","keepout_filter"]

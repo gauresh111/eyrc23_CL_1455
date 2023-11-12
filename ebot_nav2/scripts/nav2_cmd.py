@@ -4,7 +4,6 @@ from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 import rclpy
 from rclpy.duration import Duration
-import transforms3d as tf3d
 
 
 def main():
@@ -44,11 +43,7 @@ def main():
     goal_pose_1.header.stamp = navigator.get_clock().now().to_msg()
     goal_pose_1.pose.position.x = 1.8
     goal_pose_1.pose.position.y = 1.5
-    quats_xyzw = tf3d.euler.euler2quat(0, 0, 1.57)
-    goal_pose_1.pose.orientation.x = quats_xyzw[3]
-    goal_pose_1.pose.orientation.y = quats_xyzw[0]
-    goal_pose_1.pose.orientation.z = quats_xyzw[1]
-    goal_pose_1.pose.orientation.w = quats_xyzw[2]
+
 
     goal_pose_2 = PoseStamped()
     goal_pose_2.header.frame_id = 'map'
