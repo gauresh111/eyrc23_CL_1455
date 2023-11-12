@@ -146,14 +146,14 @@ def main():
         node.dockingRequest.orientation = yaw
         node.dockingRequest.rack_no = rack_no
         node.dockingRequest.rack_attach=israck
-        # future = node.dockingClient.call_async(node.dockingRequest)
-        # time.sleep(0.5)
-        # while isDock!=True:
-        #     print("waiting")
-        #             # node.publisher.publish(goalPose)
-    # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
-    new_footprint = [ [0.1, 0.08], [0.1, -0.08], [-0.1, -0.08], [-0.1, 0.08]]
-    change_footprint(new_footprint)
+        future = node.dockingClient.call_async(node.dockingRequest)
+        time.sleep(0.5)
+        while isDock!=True:
+            print("waiting")
+                    # node.publisher.publish(goalPose)
+    moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
+    # new_footprint = [ [0.1, 0.08], [0.1, -0.08], [-0.1, -0.08], [-0.1, 0.08]]
+    # change_footprint(new_footprint)
     # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
     # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)

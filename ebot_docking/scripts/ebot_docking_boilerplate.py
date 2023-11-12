@@ -28,13 +28,15 @@ from linkattacher_msgs.srv import AttachLink , DetachLink
 from sensor_msgs.msg import Imu
 rclpy.init()
 global robot_pose
+global ultrasonic_value
+ultrasonic_value = [0.0, 0.0]
 robot_pose = [0.0, 0.0, 0.0,0.0]
 
 
 class pid():
     def __init__(self):
         self.angleKp = 0.012
-        self.linearKp = 0.012
+        self.linearKp = 0.5
         self.error = 0
         self.lastError = 0
     def computeAngle(self ,setPoint, Input,X,Y):
@@ -43,29 +45,22 @@ class pid():
         
         if(output > 0.6):
             output = 0.6
-        if(output < 0.1 and output > 0.0):
+        elif(output < 0.05 and output > 0.0):
             output = 0.1
-        if(output < -0.6):
+        elif(output < -0.6):
             output = -0.6
-        if(output > -0.1 and output < 0.0):
+        elif(output > -0.05 and output < 0.0):
             output = -0.1          
         print("Input",Input,"setPoint",setPoint,"error",error,"output",output)
         return output*-1.0
     def computeLinear(self,InputY,setPointY):
         error = InputY - setPointY                                         
-        output = self.linearKp * error
-        if(output > 0.5):
-            output = 0.5
-        if(output < 0.2 and output > 0.0):
-            output = 0.2
-        if(output < -0.5):
-            output = -0.5
-        if(output > -0.2 and output < 0.0):
-            output = -0.2  
-        if(error==0.0):
-            output = 0.0
-        print("Input",InputY,"setPoint",setPointY,"error",error,"output",output)  
-        return output    
+        output = self.linearKp * error  
+        if output < 0.05:
+            output = 0.05
+        print("InputY",InputY,"setPointY",setPointY,"error",error,"output",output)
+        
+        return output*-1.0    
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
     #     output = self.kp * error + self.kd * (error - self.lastError) + self.ki * (self.ki + error)
@@ -227,6 +222,15 @@ class MyRobotDockingController(Node):
         y_diff = abs(bot_y - goal_y)
         print("x_diff",x_diff,"y_diff",y_diff)
         return x_diff <= tolerance and y_diff <= tolerance
+    def linearDocking(self,leftUltraSonic,rightUltraSonic):
+        avgUltraSonic = (leftUltraSonic+rightUltraSonic)/2
+        reached = False
+        if avgUltraSonic <0.1:
+            reached = True
+        linearPid = pid()
+        return linearPid.computeLinear(avgUltraSonic,0.1),reached
+        
+
     def controller_loop(self):
 
         # The controller loop manages the robot's linear and angular motion 
@@ -246,6 +250,15 @@ class MyRobotDockingController(Node):
             _, _, yaw = euler_from_quaternion(orientation_list)
             yaw = math.degrees(yaw)
             robot_pose[2] = yaw
+            # print("robot_pose",robot_pose)
+        def ultrasonic_rl_callback(msg):
+            global ultrasonic_value
+            ultrasonic_value[0] = round(msg.range,2)
+
+        def ultrasonic_rr_callback(msg):
+            global ultrasonic_value
+            ultrasonic_value[1] = round(msg.range,2)
+            print("ultrasonic_value",ultrasonic_value)
         if self.is_docking:
             # ...
             # Implement control logic here for linear and angular motion
@@ -254,6 +267,7 @@ class MyRobotDockingController(Node):
             botPid = pid()
             yaw = False
             global robot_pose
+            global ultrasonic_value
             dockingNode = Node("GlobalNodeDocking")
             callback_group = ReentrantCallbackGroup()
             executor = MultiThreadedExecutor(3)
@@ -264,14 +278,17 @@ class MyRobotDockingController(Node):
             dockingNode.odom_sub
             dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10)
             dockingNode.imu_sub
-            
+            dockingNode.ultrasonic_rl_sub = dockingNode.create_subscription(Range, '/ultrasonic_rl/scan', ultrasonic_rl_callback, 10)
+            dockingNode.ultrasonic_rl_sub
+            dockingNode.ultrasonic_rr_sub = dockingNode.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10)
+            dockingNode.ultrasonic_rr_sub
             time.sleep(0.5)
         
             yaw = False
             while (yaw == False):
                 angle=botPid.computeAngle(int(self.normalize_angle(self.targetYaw)),int(self.normalize_angle(robot_pose[2])),robot_pose[0],robot_pose[1])
                 self.moveBot(0.0,angle)
-                # yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
+                yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
                 time.sleep(0.01)
             for i in range(5):
                 
@@ -283,10 +300,11 @@ class MyRobotDockingController(Node):
             
             while (reached == False):
                 # linearSpeed = botPid.computeLinear(round(robot_pose[1],2),round(self.targetY,2))
-                reached = self.is_bot_at_goal_position(round(robot_pose[0],2),round(robot_pose[1],2),round(self.targetX,2),round(self.targetY,2))
-                X,Yaw = self.tracjetory(self.targetX,self.targetY,robot_pose[0],robot_pose[1],math.radians(robot_pose[2]),math.radians(self.targetYaw))
-                print(X,Yaw)
-                # self.moveBot(X,Yaw)
+                # reached = self.is_bot_at_goal_position(round(robot_pose[0],2),round(robot_pose[1],2),round(self.targetX,2),round(self.targetY,2))
+                # X,Yaw = self.tracjeto(ry(self.targetX,self.targetY,robot_pose[0],robot_pose[1],math.radians(robot_pose[2]),math.radians(self.targetYaw))
+                X,reached=self.linearDocking(ultrasonic_value[0],ultrasonic_value[1]) 
+                print("usrleft_value:",round(ultrasonic_value[0],2)," usrright_value:",round(ultrasonic_value[1],2)," Reached:",reached)
+                self.moveBot(X,0.0)
             yaw = False
             while (yaw == False):
                 angle=botPid.computeAngle(int(self.normalize_angle(self.targetYaw)),int(self.normalize_angle(robot_pose[2])),robot_pose[0],robot_pose[1])
