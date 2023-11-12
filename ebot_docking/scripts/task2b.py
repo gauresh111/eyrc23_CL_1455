@@ -16,7 +16,8 @@ from std_msgs.msg import Bool
 from ebot_docking.srv import DockSw  # Import custom service message
 from tf_transformations import euler_from_quaternion
 import math
-
+from rcl_interfaces.srv import SetParameters
+from geometry_msgs.msg import Polygon,Point32
 
 def main():
     rclpy.init()
@@ -64,6 +65,20 @@ def main():
         return goalPose  
     global isDock
     isDock = False
+    def change_footprint(new_footprint):
+        # Initialize ROS node
+        nodeFootprint = rclpy.create_node('change_footprint_node')
+        # Create a service client to set parameters
+        nodeFootprint.footprintPub=nodeFootprint.create_publisher(Polygon, '/local_costmap/footprint', 10)
+        p = Polygon()
+        p.points = [Point32(x=1.0, y=1.0),
+                            Point32(x=-1.0, y=1.0),
+                            Point32(x=-1.0, y=-1.0),
+                            Point32(x=1.0, y=-1.0)]
+        for i in range (5):
+            nodeFootprint.footprintPub.publish(p)
+            print("publishing")
+        nodeFootprint.destroy_node()
     def poseUpdate(data):
         # print("current pose:", data.pose.pose.position.x)
         global botPosition, botOrientation
@@ -131,22 +146,24 @@ def main():
         node.dockingRequest.orientation = yaw
         node.dockingRequest.rack_no = rack_no
         node.dockingRequest.rack_attach=israck
-        future = node.dockingClient.call_async(node.dockingRequest)
-        time.sleep(0.5)
-        while isDock!=True:
-            print("waiting")
-                    # node.publisher.publish(goalPose)
+        # future = node.dockingClient.call_async(node.dockingRequest)
+        # time.sleep(0.5)
+        # while isDock!=True:
+        #     print("waiting")
+        #             # node.publisher.publish(goalPose)
     # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
-    
+    new_footprint = [ [0.1, 0.08], [0.1, -0.08], [-0.1, -0.08], [-0.1, 0.08]]
+    change_footprint(new_footprint)
     # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
     # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
     # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     # moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
     
-    navigator.lifecycleShutdown()
+    
     rclpy.spin(node)
     rclpy.shutdown()
+    navigator.lifecycleShutdown()
     exit(0)
 
 

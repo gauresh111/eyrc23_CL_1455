@@ -27,7 +27,6 @@ import numpy as np
 from linkattacher_msgs.srv import AttachLink , DetachLink
 from sensor_msgs.msg import Imu
 rclpy.init()
-
 global robot_pose
 robot_pose = [0.0, 0.0, 0.0,0.0]
 
@@ -155,6 +154,7 @@ class MyRobotDockingController(Node):
         
         distance = ((current_x - goal_x)**2 + (current_y - goal_y)**2)**0.5
         return distance <= tolerance
+
     def getRemaningDistance(self, current_x, current_y, goal_x, goal_y):
         distance = ((current_x - goal_x)**2 + (current_y - goal_y)**2)**0.5
         return distance
