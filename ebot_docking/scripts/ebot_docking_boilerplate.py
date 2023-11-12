@@ -171,38 +171,6 @@ class MyRobotDockingController(Node):
             angle = angle + 360
         return angle
     
-    def tracjetory(self,goal_x,goal_y,odom_x,odom_y,odom_yaw,goal_yaw):
-        dx = goal_x - odom_x
-        dy = goal_y - odom_y
-        dist = math.sqrt(dx * dx + dy * dy)
-
-        dx_odom = math.cos(odom_yaw) * dx + math.sin(odom_yaw) * dy
-        dy_odom = -math.sin(odom_yaw) * dx + math.cos(odom_yaw) * dy
-
-        vel_x = 0.12 * dx_odom
-        if(vel_x > 0.35):
-            vel_x = 0.35
-        if(vel_x > 0.0  and vel_x < 0.26):
-            vel_x = 0.26
-        if(vel_x < 0.0  and vel_x > -0.26):
-            vel_x = -0.26
-        if(vel_x < -0.35):
-            vel_x = -0.35         
-        
-
-        dyaw = math.atan2(dy_odom, dx_odom)
-
-        if (dist < 0.1 ): 
-            
-            dyaw = goal_yaw - odom_yaw
-            if (dyaw > 3.14):
-                dyaw -= 2 * 3.14
-            elif (dyaw < -3.14):
-                dyaw += 2 * 3.14
-            
-
-        vel_yaw = 0.07 * dyaw
-        return vel_x,vel_yaw*-1
     # Main control loop for managing docking behavior
     def is_bot_at_goal_position(self,bot_x, bot_y, goal_x, goal_y, tolerance=0.08):
         """Checks if the bot is at the goal position.
@@ -229,8 +197,22 @@ class MyRobotDockingController(Node):
             reached = True
         linearPid = pid()
         return linearPid.computeLinear(avgUltraSonic,0.1),reached
-        
+    
+    def AngularDocking(self):   
+        yaw = False
+        botPid = pid()
+        while (yaw == False):
+            angle=botPid.computeAngle(int(self.normalize_angle(self.targetYaw)),int(self.normalize_angle(robot_pose[2])),robot_pose[0],robot_pose[1])
+            self.moveBot(0.0,angle)
+            yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
+            time.sleep(0.01)
 
+    def LinearDocking(self):
+        reached = False    
+        while (reached == False):
+            X,reached=self.linearDocking(ultrasonic_value[0],ultrasonic_value[1]) 
+            print("usrleft_value:",round(ultrasonic_value[0],2)," usrright_value:",round(ultrasonic_value[1],2)," Reached:",reached)
+            self.moveBot(X,0.0)
     def controller_loop(self):
 
         # The controller loop manages the robot's linear and angular motion 
@@ -264,12 +246,10 @@ class MyRobotDockingController(Node):
             # Implement control logic here for linear and angular motion
             # For example P-controller is enough, what is P-controller go check it out !
             # ...
-            botPid = pid()
-            yaw = False
             global robot_pose
             global ultrasonic_value
             dockingNode = Node("GlobalNodeDocking")
-            callback_group = ReentrantCallbackGroup()
+            
             executor = MultiThreadedExecutor(3)
             executor.add_node(dockingNode)
             executor_thread = Thread(target=executor.spin, daemon=True, args=())
@@ -283,42 +263,25 @@ class MyRobotDockingController(Node):
             dockingNode.ultrasonic_rr_sub = dockingNode.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10)
             dockingNode.ultrasonic_rr_sub
             time.sleep(0.5)
-        
-            yaw = False
-            while (yaw == False):
-                angle=botPid.computeAngle(int(self.normalize_angle(self.targetYaw)),int(self.normalize_angle(robot_pose[2])),robot_pose[0],robot_pose[1])
-                self.moveBot(0.0,angle)
-                yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
-                time.sleep(0.01)
+
+            self.AngularDocking()
             for i in range(5):
-                
+            
+                self.moveBot(0.0,0.0)     
+            #orientation done
+            self.LinearDocking()
+            for i in range(5):
+            
+                self.moveBot(0.0,0.0)     
+            #linear done
+            self.AngularDocking()
+            for i in range(5):
                 self.moveBot(0.0,0.0)
             #orientation done
-            
-            
-            reached = False
-            
-            while (reached == False):
-                # linearSpeed = botPid.computeLinear(round(robot_pose[1],2),round(self.targetY,2))
-                # reached = self.is_bot_at_goal_position(round(robot_pose[0],2),round(robot_pose[1],2),round(self.targetX,2),round(self.targetY,2))
-                # X,Yaw = self.tracjeto(ry(self.targetX,self.targetY,robot_pose[0],robot_pose[1],math.radians(robot_pose[2]),math.radians(self.targetYaw))
-                X,reached=self.linearDocking(ultrasonic_value[0],ultrasonic_value[1]) 
-                print("usrleft_value:",round(ultrasonic_value[0],2)," usrright_value:",round(ultrasonic_value[1],2)," Reached:",reached)
-                self.moveBot(X,0.0)
-            yaw = False
-            while (yaw == False):
-                angle=botPid.computeAngle(int(self.normalize_angle(self.targetYaw)),int(self.normalize_angle(robot_pose[2])),robot_pose[0],robot_pose[1])
-                self.moveBot(0.0,angle)
-                yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
-                
-                time.sleep(0.01)
-            for i in range(5):
-                
-                self.moveBot(0.0,0.0)
-            # if self.isAttach:
-            #     self.attachRack(self.rackName)
-            # else :
-            #     self.detachRack(self.rackName)
+            if self.isAttach:
+                self.attachRack(self.rackName)
+            else :
+                self.detachRack(self.rackName)
             self.is_docking = False
             self.dock_aligned=True
             
@@ -369,7 +332,7 @@ class MyRobotDockingController(Node):
             msg.data = True
             self.isDocked.publish(msg)
         
-        response.message = "Docking control initiated"
+        response.message = "Docking control completed "
         return response
 
 # Main function to initialize the ROS2 node and spin the executor
