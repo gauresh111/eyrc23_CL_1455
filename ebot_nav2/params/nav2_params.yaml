@@ -111,7 +111,7 @@ bt_navigator_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: True
-    controller_frequency: 20.0
+    controller_frequency: 40.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
@@ -130,8 +130,8 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.08
-      yaw_goal_tolerance: 0.5
+      xy_goal_tolerance: 0.1
+      yaw_goal_tolerance: 1.57
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
@@ -140,26 +140,26 @@ controller_server:
       min_vel_y: 0.0
       max_vel_x: 0.26
       max_vel_y: 0.0
-      max_vel_theta: 2.0
+      max_vel_theta: 1.5
       min_speed_xy: 0.0
       max_speed_xy: 0.26
       min_speed_theta: 0.0
 
-      acc_lim_x: 2.5
+      acc_lim_x: 0.5
       acc_lim_y: 0.0
-      acc_lim_theta: 3.2
-      decel_lim_x: -2.5
+      acc_lim_theta: 0.8
+      decel_lim_x: -0.5
       decel_lim_y: 0.0
-      decel_lim_theta: -3.2
+      decel_lim_theta: -0.8
 
-      vx_samples: 20
-      vy_samples: 5
-      vtheta_samples: 20
+      vx_samples: 40
+      vy_samples: 10
+      vtheta_samples: 40
 
       sim_time: 1.7
       linear_granularity: 0.01
-      angular_granularity: 0.025
-      transform_tolerance: 0.6
+      angular_granularity: 0.05
+      transform_tolerance: 0.1
       xy_goal_tolerance: 0.08
       trans_stopped_velocity: 0.25
       short_circuit_trajectory_evaluation: True
@@ -172,7 +172,7 @@ controller_server:
       PathAlign.scale: 32.0
       PathAlign.forward_point_distance: 0.1
 
-      GoalAlign.scale: 24.0
+      GoalAlign.scale: 32.0
       GoalAlign.forward_point_distance: 0.1
 
       PathDist.scale: 32.0
@@ -195,8 +195,8 @@ local_costmap:
       robot_base_frame: "base_footprint"
       use_sim_time: True
       rolling_window: true
-      width: 7
-      height: 7
+      width: 5
+      height: 5
       resolution: 0.05
       footprint: "[ [0.21, 0.195], [0.21, -0.195], [-0.21, -0.195], [-0.21, 0.195] ]"
       plugins: ["voxel_layer", "inflation_layer","keepout_filter"]
@@ -317,21 +317,19 @@ recoveries_server:
     costmap_topic: local_costmap/costmap_raw
     footprint_topic: local_costmap/published_footprint
     cycle_frequency: 10.0
-    recovery_plugins: ["spin", "backup", "wait"]
-    spin:
-      plugin: "nav2_recoveries/Spin"
+    behavior_plugins: ["backup",  "wait", ]
     backup:
-      plugin: "nav2_recoveries/BackUp"
+      plugin: "nav2_behaviors/BackUp"
     wait:
-      plugin: "nav2_recoveries/Wait"
+      plugin: "nav2_behaviors/Wait"
     global_frame: odom
     robot_base_frame: "base_footprint"
     transform_timeout: 0.1
     use_sim_time: true
     simulate_ahead_time: 2.0
-    max_rotational_vel: 1.0
-    min_rotational_vel: 0.4
-    rotational_acc_lim: 3.2
+    max_rotational_vel: 0.5
+    min_rotational_vel: 0.0
+    rotational_acc_lim: 1.0
 
 robot_state_publisher:
   ros__parameters:
@@ -349,13 +347,13 @@ waypoint_follower:
 
 velocity_smoother:
   ros__parameters:
-    smoothing_frequency: 20.0
+    smoothing_frequency: 40.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [1.6, 0.0, 3.0]
-    min_velocity: [-1.6, 0.0, -3.0]
-    max_accel: [1.5, 0.0, 3.2]
-    max_decel: [-1.5, 0.0, -3.2]
+    max_velocity: [2.6, 0.0, 1.5]
+    min_velocity: [-2.6, 0.0, -1.5]
+    max_accel: [1.0, 0.0, 1.0]
+    max_decel: [-1.0, 0.0, -1.0]
     odom_topic: "/odometry/filtered"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
