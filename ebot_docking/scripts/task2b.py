@@ -78,12 +78,12 @@ def main():
                             Point32(x=new_footprint[1][0], y=new_footprint[1][1]),
                             Point32(x=new_footprint[2][0], y=new_footprint[2][1]),
                             Point32(x=new_footprint[3][0], y=new_footprint[3][1])]
-        for i in range (15):
-            
+        for i in range (3):
             nodeFootprint.globalFootPrintPub.publish(p)
-            print("publishing:" ,msg)
-        for i in range (15):
             nodeFootprint.localFootPrintPub.publish(p)
+            time.sleep(0.1)
+            print("publishing:" ,msg)
+            
         nodeFootprint.destroy_node()
     def poseUpdate(data):
         # print("current pose:", data.pose.pose.position.x)
