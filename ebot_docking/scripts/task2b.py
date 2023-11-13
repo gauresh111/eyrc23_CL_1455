@@ -44,7 +44,7 @@ def main():
                "rack1": [[0.0,4.35,1.0],[0.0,0.0,1.0,0.0]],
                "rack2": [[2.03,2.06,2.0],[0.0,0.0,-0.7068252,0.7073883]],
                "rack3": [[2.03,-7.09,3.0],[0.0,0.0,0.7068252,0.7073883]],
-               "ap1": [[0.0,-2.45,4.0],[0.0,0.0,0.0,1.0]],
+               "ap1": [[0.0,-2.45,4.0],[0.0,0.0,1.0,0.0]],
                "ap2": [[0.0,4.35,1.0],[0.0,0.0,1.0,0.0]],
                "ap3": [[0.0,4.35,1.0],[0.0,0.0,1.0,0.0]]
                }
@@ -67,7 +67,7 @@ def main():
         return goalPose  
     global isDock
     isDock = False
-    def change_footprint(new_footprint):
+    def change_footprint(new_footprint,msg):
         # Initialize ROS node
         nodeFootprint = rclpy.create_node('change_footprint_node')
         # Create a service client to set parameters
@@ -79,9 +79,11 @@ def main():
                             Point32(x=new_footprint[2][0], y=new_footprint[2][1]),
                             Point32(x=new_footprint[3][0], y=new_footprint[3][1])]
         for i in range (15):
-            nodeFootprint.localFootPrintPub.publish(p)
+            
             nodeFootprint.globalFootPrintPub.publish(p)
-            print("publishing")
+            print("publishing:" ,msg)
+        for i in range (15):
+            nodeFootprint.localFootPrintPub.publish(p)
         nodeFootprint.destroy_node()
     def poseUpdate(data):
         # print("current pose:", data.pose.pose.position.x)
@@ -129,9 +131,12 @@ def main():
         Yoff = YrackOffset[int(goalPose.pose.position.z)]
         goalPose.pose.position.z=0.0
         if not israck:
-            change_footprint(withRackFootprint)
+            if rack_no=="initalPose":
+                change_footprint(withoutRackFootprint,"withoutRackFootprint")
+            else:
+                change_footprint(withRackFootprint,"withRackFootprint")
         else:
-            change_footprint(withoutRackFootprint)
+            change_footprint(withoutRackFootprint,"withoutRackFootprint")
         navigator.goToPose(goalPose)
 
         i = 0
@@ -160,14 +165,12 @@ def main():
             print("waiting")
                     # node.publisher.publish(goalPose)
     moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
-    
-    
-    # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
+    moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
     moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
-    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    # moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
-    
+    moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
+    moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
+    moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
+    moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     
     rclpy.spin(node)
     rclpy.shutdown()

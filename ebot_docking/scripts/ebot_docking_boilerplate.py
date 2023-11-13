@@ -45,19 +45,19 @@ class pid():
         
         if(output > 0.6):
             output = 0.6
-        elif(output < 0.05 and output > 0.0):
+        elif(output < 0.1 and output > 0.0):
             output = 0.1
         elif(output < -0.6):
             output = -0.6
-        elif(output > -0.05 and output < 0.0):
+        elif(output > -0.1 and output < 0.0):
             output = -0.1          
         print("Input",Input,"setPoint",setPoint,"error",error,"output",output)
         return output*-1.0
     def computeLinear(self,InputY,setPointY):
         error = InputY - setPointY                                         
         output = self.linearKp * error  
-        if output < 0.05:
-            output = 0.05
+        if output < 0.1:
+            output = 0.1
         print("InputY",InputY,"setPointY",setPointY,"error",error,"output",output)
         
         return output*-1.0    
@@ -172,7 +172,7 @@ class MyRobotDockingController(Node):
         return angle
     
     # Main control loop for managing docking behavior
-    def is_bot_at_goal_position(self,bot_x, bot_y, goal_x, goal_y, tolerance=0.08):
+    def is_bot_at_goal_position(self,bot_x, bot_y, goal_x, goal_y, tolerance=3.0):
         """Checks if the bot is at the goal position.
 
         Args:
@@ -190,6 +190,35 @@ class MyRobotDockingController(Node):
         y_diff = abs(bot_y - goal_y)
         print("x_diff",x_diff,"y_diff",y_diff)
         return x_diff <= tolerance and y_diff <= tolerance
+    def is_robot_within_tolerance(self,current_x, current_y, current_orientation, goal_x, goal_y, goal_orientation,
+                                x_tolerance=3.0, y_tolerance=3.0, orientation_tolerance=10):
+        """
+        Check if the robot is within tolerance for X axis, Y axis, and Orientation.
+
+        Parameters:
+        - current_x: Current X axis position of the robot.
+        - current_y: Current Y axis position of the robot.
+        - current_orientation: Current orientation of the robot.
+        - goal_x: Goal X axis position for the robot.
+        - goal_y: Goal Y axis position for the robot.
+        - goal_orientation: Goal orientation for the robot.
+        - x_tolerance: Tolerance for the X axis (default is 3.0).
+        - y_tolerance: Tolerance for the Y axis (default is 3.0).
+        - orientation_tolerance: Tolerance for the orientation (default is 10).
+
+        Returns:
+        - True if the robot is within tolerance, False otherwise.
+        """
+        x_difference = abs(goal_x)- abs(current_x)
+        y_difference = abs(goal_y) -abs(current_y)
+        orientation_difference = abs(goal_orientation) - abs(current_orientation)
+        print("x_difference",x_difference,"y_difference",y_difference,"orientation_difference",orientation_difference)
+        x_within_tolerance = x_difference <= x_tolerance
+        y_within_tolerance = y_difference <= y_tolerance
+        orientation_within_tolerance = orientation_difference <= orientation_tolerance
+
+        return x_within_tolerance and y_within_tolerance and orientation_within_tolerance
+
     def linearDocking(self,leftUltraSonic,rightUltraSonic):
         avgUltraSonic = (leftUltraSonic+rightUltraSonic)/2
         reached = False
@@ -269,22 +298,23 @@ class MyRobotDockingController(Node):
             
                 self.moveBot(0.0,0.0)     
             #orientation done
-            self.LinearDocking()
-            for i in range(5):
-            
-                self.moveBot(0.0,0.0)     
+            if self.isAttach:
+                self.LinearDocking()
+                for i in range(5):
+                
+                    self.moveBot(0.0,0.0)     
             #linear done
             self.AngularDocking()
             for i in range(5):
                 self.moveBot(0.0,0.0)
             #orientation done
-            if self.isAttach:
-                self.attachRack(self.rackName)
-            else :
-                self.detachRack(self.rackName)
+            # if self.isAttach:
+            #     self.attachRack(self.rackName)
+            # else :
+            #     self.detachRack(self.rackName)
             self.is_docking = False
             self.dock_aligned=True
-            
+            print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
             ## docking and orientation done
             dockingNode.destroy_node()
             
@@ -318,7 +348,6 @@ class MyRobotDockingController(Node):
 
         # Create a rate object to control the loop frequency
         rate = self.create_rate(2, self.get_clock())
-        print(request)
         # Wait until the robot is aligned for docking
         while not self.dock_aligned:
             # self.get_logger().info("Waiting for alignment...")
