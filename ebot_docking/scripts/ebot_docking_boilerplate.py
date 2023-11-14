@@ -39,18 +39,19 @@ class pid():
         self.linearKp = 0.5
         self.error = 0
         self.lastError = 0
+        self.odomLinear = 0.5
     def computeAngle(self ,setPoint, Input,X,Y):
         error = Input - setPoint                                         
         output = self.angleKp * error
         
         if(output > 0.6):
             output = 0.6
-        elif(output < 0.1 and output > 0.0):
-            output = 0.1
+        elif(output < 0.2 and output > 0.0):
+            output = 0.2
         elif(output < -0.6):
             output = -0.6
-        elif(output > -0.1 and output < 0.0):
-            output = -0.1          
+        elif(output > -0.2 and output < 0.0):
+            output = -0.2         
         print("Input",Input,"setPoint",setPoint,"error",error,"output",output)
         return output*-1.0
     def computeLinear(self,InputY,setPointY):
@@ -58,9 +59,15 @@ class pid():
         output = self.linearKp * error  
         if output < 0.1:
             output = 0.1
-        print("InputY",InputY,"setPointY",setPointY,"error",error,"output",output)
+        # print("InputY",InputY,"setPointY",setPointY,"error",error,"output",output)
         
         return output*-1.0    
+    def odomComputeLinear(self,Input,Setpoint):
+        error = Input - Setpoint                                         
+        output = self.odomLinear * error  
+        if output < 0.1:
+            output = 0.1
+        return output*-1.0
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
     #     output = self.kp * error + self.kd * (error - self.lastError) + self.ki * (self.ki + error)
@@ -191,7 +198,7 @@ class MyRobotDockingController(Node):
         print("x_diff",x_diff,"y_diff",y_diff)
         return x_diff <= tolerance and y_diff <= tolerance
     def is_robot_within_tolerance(self,current_x, current_y, current_orientation, goal_x, goal_y, goal_orientation,
-                                x_tolerance=3.0, y_tolerance=3.0, orientation_tolerance=10):
+                                x_tolerance=0.3, y_tolerance=0.3, orientation_tolerance=10):
         """
         Check if the robot is within tolerance for X axis, Y axis, and Orientation.
 
@@ -209,8 +216,8 @@ class MyRobotDockingController(Node):
         Returns:
         - True if the robot is within tolerance, False otherwise.
         """
-        x_difference = abs(goal_x)- abs(current_x)
-        y_difference = abs(goal_y) -abs(current_y)
+        x_difference = abs(goal_x)-abs(current_x)
+        y_difference = abs(goal_y)-abs(current_y)
         orientation_difference = abs(goal_orientation) - abs(current_orientation)
         print("x_difference",x_difference,"y_difference",y_difference,"orientation_difference",orientation_difference)
         x_within_tolerance = x_difference <= x_tolerance
@@ -219,14 +226,32 @@ class MyRobotDockingController(Node):
 
         return x_within_tolerance and y_within_tolerance and orientation_within_tolerance
 
-    def linearDocking(self,leftUltraSonic,rightUltraSonic):
+    def UltralinearDockingprocess(self,leftUltraSonic,rightUltraSonic):
         avgUltraSonic = (leftUltraSonic+rightUltraSonic)/2
         reached = False
         if avgUltraSonic <0.1:
             reached = True
         linearPid = pid()
         return linearPid.computeLinear(avgUltraSonic,0.1),reached
-    
+    def UltraLinearDocking(self):
+        reached = False    
+        while (reached == False):
+            X,reached=self.UltralinearDockingprocess(ultrasonic_value[0],ultrasonic_value[1]) 
+            print("usrleft_value:",round(ultrasonic_value[0],2)," usrright_value:",round(ultrasonic_value[1],2)," Reached:",reached)
+            self.moveBot(X,0.0)
+    def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
+        odomlinearPid = pid()
+        reached =False
+        if InputDistance < 0.1:
+            reached = True
+        return odomlinearPid.odomComputeLinear(InputDistance,Setpoint),reached
+    def odomLinearDocking(self):
+        global robot_pose
+        reached = False    
+        while (reached == False):
+            X,reached=self.odomLinearDockingprocess(self.getRemaningDistance(robot_pose[0],robot_pose[1],self.targetX,self.targetY)) 
+            print("reaming Distance",self.getRemaningDistance(robot_pose[0],robot_pose[1],self.targetX,self.targetY)," Reached:",reached)
+            self.moveBot(X,0.0)
     def AngularDocking(self):   
         yaw = False
         botPid = pid()
@@ -236,12 +261,7 @@ class MyRobotDockingController(Node):
             yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
             time.sleep(0.01)
 
-    def LinearDocking(self):
-        reached = False    
-        while (reached == False):
-            X,reached=self.linearDocking(ultrasonic_value[0],ultrasonic_value[1]) 
-            print("usrleft_value:",round(ultrasonic_value[0],2)," usrright_value:",round(ultrasonic_value[1],2)," Reached:",reached)
-            self.moveBot(X,0.0)
+    
     def controller_loop(self):
 
         # The controller loop manages the robot's linear and angular motion 
@@ -295,14 +315,17 @@ class MyRobotDockingController(Node):
 
             self.AngularDocking()
             for i in range(5):
-            
                 self.moveBot(0.0,0.0)     
             #orientation done
-            if self.isAttach:
-                self.LinearDocking()
-                for i in range(5):
-                
-                    self.moveBot(0.0,0.0)     
+            if not self.rackName=="initalPose":
+                if self.isAttach:
+                    self.UltraLinearDocking()
+                    for i in range(5):
+                        self.moveBot(0.0,0.0)
+                else:
+                    self.odomLinearDocking()
+                    for i in range(5):
+                        self.moveBot(0.0,0.0)     
             #linear done
             self.AngularDocking()
             for i in range(5):
