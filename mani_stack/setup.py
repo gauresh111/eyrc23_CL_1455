@@ -23,6 +23,7 @@ setup(
         # Include all launch files.
         (os.path.join('lib', package_name, 'launch'), glob(os.path.join('launch', '*.launch.py'))),
         (os.path.join('lib', package_name, 'scripts'), glob(os.path.join('scripts', '*.py'))),
+        (os.path.join('lib', package_name, 'assets'), glob(os.path.join('assets', '*.stl'))),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
