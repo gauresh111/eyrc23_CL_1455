@@ -93,7 +93,7 @@ def main():
     Drop_Joints_List = [Drop_Joints_Left, Drop_Joints_Right, Drop_Joints_Back]
 
     box_file_path = path.join(
-        path.dirname(path.realpath(__file__)), "assets", "box.stl"
+        path.dirname(path.realpath(__file__)),"..", "assets", "box.stl"
     )
 
     tolerance = 0.02
@@ -404,12 +404,15 @@ def main():
                 if servo_status > 0:
                     print("Exited next While Loop due to Servo Error", servo_status)
                     break
+            if servo_status > 0:
+                    print("Exited next While Loop due to Servo Error", servo_status)
+                    break
             print("Tolerance Achieved: Came out")
             time.sleep(0.1)
 
-            for i in range(20):
-                moveit2.add_collision_mesh( filepath=box_file_path, id="currentBox", position=[0.0, -0.12, 0.09], quat_xyzw=[ -0.5, 0.5, 0.5, 0.5  ], frame_id='tool0',
-                )
+            # for i in range(20):
+            #     moveit2.add_collision_mesh( filepath=box_file_path, id="currentBox", position=[0.0, -0.12, 0.09], quat_xyzw=[ -0.5, 0.5, 0.5, 0.5  ], frame_id='tool0',
+            #     )
 
             # Move to Pre Drop Pose
             print("Moving to ", "Pre Drop Pose")
