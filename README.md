@@ -68,7 +68,7 @@ To launch task 2A, use this commands in seperate terminals-
     ros2 launch ur_description ur5_gazebo_launch.py
     ```
     ```sh
-    ros2 launch ur5_moveit spawn_ur5_launch_moveit.py
+    ros2 launch ur5_moveit spawn_ur5_launch_moveit.launch.py
     ```
     ```sh
     ros2 run mani_stack task1ab-perception.py
