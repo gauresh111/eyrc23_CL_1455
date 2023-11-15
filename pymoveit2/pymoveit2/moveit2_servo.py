@@ -79,8 +79,8 @@ class MoveIt2Servo:
         self.__twist_msg.twist.angular.z = angular_speed
 
         # Enable servo immediately, if desired
-        # if enable_at_init:
-        #     self.enable()
+        if enable_at_init:
+            self.enable()
 
     def __del__(self):
         """
