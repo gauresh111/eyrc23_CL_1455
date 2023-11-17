@@ -65,8 +65,8 @@ class pid():
     def odomComputeLinear(self,Input,Setpoint):
         error = Input - Setpoint                                         
         output = self.odomLinear * error  
-        if output < 0.1:
-            output = 0.1
+        if output < 0.2:
+            output = 0.05
         return output*-1.0
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
@@ -197,6 +197,8 @@ class MyRobotDockingController(Node):
         y_diff = abs(bot_y - goal_y)
         print("x_diff",x_diff,"y_diff",y_diff)
         return x_diff <= tolerance and y_diff <= tolerance
+    def calculate_distance(self,x1, y1, x2, y2):
+        return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)   
     def is_robot_within_tolerance(self,current_x, current_y, current_orientation, goal_x, goal_y, goal_orientation,
                                 x_tolerance=0.3, y_tolerance=0.3, orientation_tolerance=10):
         """
@@ -281,23 +283,20 @@ class MyRobotDockingController(Node):
     def odomLinearDocking(self):
         global robot_pose
         reached = False    
+        X1 =self.getWhichIsGreater(round(robot_pose[0],2),round(robot_pose[1],2))
         while (reached == False):
-            X =self.getWhichIsGreater(round(robot_pose[0],2),round(robot_pose[1],2))
             # self.MaxDist([[robot_pose[0],robot_pose[1]],[self.targetX,self.targetY]],2)
-            if X == 0:
-                while abs(robot_pose[0])-abs(self.targetX)<0.1:
-                    # print(abs(robot_pose[0])-abs(self.targetX))
-                    # X,reached=self.odomLinearDockingprocess(abs(robot_pose[0])-abs(self.targetX))
-                    self.moveBot(-0.2,0.0)
-            elif X == 1:
-                while abs(robot_pose[1])-abs(self.targetY)<0.1:
-                    # print(abs(robot_pose[1])-abs(self.targetY))
-                    self.moveBot(-0.2,0.0)
-            # X,reached=self.odomLinearDockingprocess(X)
-            print("X",X," Reached:",reached)
-            reached = True 
-            # print("reaming Distance",self.getRemaningDistance(robot_pose[0],robot_pose[1],self.targetX,self.targetY)," Reached:",reached)
-            # self.moveBot(X,0.0)
+            if X1 == 0:
+                reachedExtra = True if(round(robot_pose[0],2) == round(self.targetX,2)) else False
+                print("target",self.targetX,"current",robot_pose[0])
+            elif X1 == 1:
+                reachedExtra = True if(round(robot_pose[1],2) == round(self.targetY,2)) else False
+                print("target",self.targetY,"current",robot_pose[1])
+            distance=self.calculate_distance(robot_pose[0],robot_pose[1],self.targetX,self.targetY)
+            speed,reached=self.odomLinearDockingprocess(distance)
+            reached = True if(reached == True or reachedExtra == True) else False
+            self.moveBot(speed,0.0)
+            # print("X",distance," Reached:",reached)
     def AngularDocking(self):   
         yaw = False
         botPid = pid()
@@ -371,16 +370,21 @@ class MyRobotDockingController(Node):
                 else:
                     self.odomLinearDocking()
                     for i in range(5):
-                        self.moveBot(0.0,0.0)     
-            #linear done
-            self.AngularDocking()
-            for i in range(5):
-                self.moveBot(0.0,0.0)
-            #orientation done
-            if self.isAttach:
-                self.attachRack(self.rackName)
-            else :
-                self.detachRack(self.rackName)
+                        self.moveBot(0.0,0.0)
+                #linear done
+                self.AngularDocking()
+                for i in range(5):
+                    self.moveBot(0.0,0.0)
+                #orientation done
+                if self.isAttach:
+                    self.attachRack(self.rackName)
+                else :
+                    self.detachRack(self.rackName)
+                    for i in range(5):
+                            self.moveBot(1.0,0.0)
+                    time.sleep(0.5)
+                    for i in range(5):
+                        self.moveBot(0.0,0.0)
             self.is_docking = False
             self.dock_aligned=True
             print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
