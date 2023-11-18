@@ -66,7 +66,7 @@ class pid():
         error = Input - Setpoint                                         
         output = self.odomLinear * error  
         if output < 0.2:
-            output = 0.05
+            output = 0.2
         return output*-1.0
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
@@ -380,9 +380,10 @@ class MyRobotDockingController(Node):
                     self.attachRack(self.rackName)
                 else :
                     self.detachRack(self.rackName)
+                    time.sleep(0.1)
                     for i in range(5):
                             self.moveBot(1.0,0.0)
-                    time.sleep(0.5)
+                    time.sleep(0.6)
                     for i in range(5):
                         self.moveBot(0.0,0.0)
             self.is_docking = False
