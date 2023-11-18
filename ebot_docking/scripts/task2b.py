@@ -37,18 +37,18 @@ def main():
     botPosition = []
     botOrientation =[] 
     global XrackOFfset, YrackOffset
-    XrackOFfset, YrackOffset = [0.0,1.08,0.0,0.0,0.3,0.0,0.0,0.0],[0.0,0.0,1.08,-0.81,0.0,0.7,-0.3,0.0]
+    XrackOFfset, YrackOffset = [0.0,1.08,0.0,0.0,0.3,0.0,0.0,0.0],[0.0,0.0,1.08,-0.81,0.0,0.8,-0.3,0.0]
     global positionToGO
     positionToGO ={
                "initalPose":[[0.0,0.0,0.0],[0.0,0.0,0.0,1.0]], 
-               "rack1": [[0.0,4.35,1.0],[0.0,0.0,1.0,0.0]],
+               "rack1": [[0.0,4.40,1.0],[0.0,0.0,1.0,0.0]],
                "rack2": [[2.03,2.06,2.0],[0.0,0.0,-0.7068252,0.7073883]],
-               "rack3": [[2.03,-7.09,3.0],[0.0,0.0,0.7068252,0.7073883]],
+               "rack3": [[2.13,-7.09,3.0],[0.0,0.0,0.7068252,0.7073883]],
                "ap1": [[0.0,-2.45,4.0],[0.0,0.0,1.0,0.0]],
-               "ap2": [[1.35,-5.6,5.0],[0.0,0.0,-0.7068252,0.7073883]],
-               "ap3": [[1.35,-1.04,6.0],[0.0,0.0,0.7068252,0.7073883]]
+               "ap2": [[1.40,-4.15,5.0],[0.0,0.0,-0.7068252,0.7073883]],
+               "ap3": [[1.40,-1.04,6.0],[0.0,0.0,0.7068252,0.7073883]]
                }
-    withRackFootprint = [ [0.31, 0.23],[0.31, -0.23],[-0.31, -0.23],[-0.31, 0.23] ]
+    withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
     def getGoalPoseStamped(goal):
         global positionToGO
@@ -167,12 +167,12 @@ def main():
     moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
     moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
     moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
-    # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False)
-    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    # moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
-    # moveToGoal(getGoalPoseStamped("ap3"),"rack3",False)
-    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
+    moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
+    moveToGoal(getGoalPoseStamped("ap2"),"rack2",False)
+    moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
+    moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
+    moveToGoal(getGoalPoseStamped("ap3"),"rack3",False)
+    moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     
     rclpy.spin(node)
     rclpy.shutdown()
