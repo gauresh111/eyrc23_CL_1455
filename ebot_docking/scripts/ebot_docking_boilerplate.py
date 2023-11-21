@@ -367,10 +367,12 @@ class MyRobotDockingController(Node):
                     self.UltraLinearDocking()
                     for i in range(5):
                         self.moveBot(0.0,0.0)
+                    time.sleep(0.5)
                 else:
                     self.odomLinearDocking()
                     for i in range(5):
                         self.moveBot(0.0,0.0)
+                    time.sleep(0.5)
                 #linear done
                 self.AngularDocking()
                 for i in range(5):
@@ -380,7 +382,7 @@ class MyRobotDockingController(Node):
                     self.attachRack(self.rackName)
                 else :
                     self.detachRack(self.rackName)
-                    time.sleep(0.1)
+                    time.sleep(0.5)
                     for i in range(5):
                             self.moveBot(1.0,0.0)
                     time.sleep(0.6)
