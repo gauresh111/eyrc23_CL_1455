@@ -37,7 +37,7 @@ def main():
     botPosition = []
     botOrientation =[] 
     global XrackOFfset, YrackOffset
-    XrackOFfset, YrackOffset = [0.0,1.08,0.0,0.0,0.3,0.0,0.0,0.0],[0.0,0.0,1.08,-0.81,0.0,0.8,-0.3,0.0]
+    XrackOFfset, YrackOffset = [0.0,1.0,0.0,0.0,0.3,0.0,0.0,0.0],[0.0,0.0,1.08,-0.81,0.0,0.8,-0.3,0.0]
     global positionToGO
     positionToGO ={
                "initalPose":[[0.0,0.0,0.0],[0.0,0.0,0.0,1.0]], 
