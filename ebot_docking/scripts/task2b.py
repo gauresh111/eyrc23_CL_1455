@@ -37,7 +37,7 @@ def main():
     botPosition = []
     botOrientation =[] 
     global XrackOFfset, YrackOffset
-    XrackOFfset, YrackOffset = [0.0,1.08,0.0,0.0,0.3,0.0,0.0,0.0],[0.0,0.0,1.08,-0.81,0.0,0.8,-0.3,0.0]
+    XrackOFfset, YrackOffset = [0.0,1.08,0.0,0.0,0.8,0.0,0.0,0.0],[0.0,0.0,1.08,-0.81,0.0,0.8,-0.3,0.0]
     global positionToGO
     positionToGO ={
                "initalPose":[[0.0,0.0,0.0],[0.0,0.0,0.0,1.0]], 
@@ -167,8 +167,8 @@ def main():
     moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
     moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
     # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
-    moveToGoal(getGoalPoseStamped("ap2"),"rack2",False)
+    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
+    # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False)
     # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
     moveToGoal(getGoalPoseStamped("ap3"),"rack3",False)
