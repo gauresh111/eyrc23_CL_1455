@@ -404,15 +404,17 @@ def main():
                 if servo_status > 0:
                     print("Exited next While Loop due to Servo Error", servo_status)
                     break
-            if servo_status > 0:
-                    print("Exited next While Loop due to Servo Error", servo_status)
-                    break
+            # if servo_status > 0:
+            #         print("Exited next While Loop due to Servo Error", servo_status)
+            #         continue
             print("Tolerance Achieved: Came out")
             time.sleep(0.1)
 
-            # for i in range(20):
-            #     moveit2.add_collision_mesh( filepath=box_file_path, id="currentBox", position=[0.0, -0.12, 0.09], quat_xyzw=[ -0.5, 0.5, 0.5, 0.5  ], frame_id='tool0',
-            #     )
+            for i in range(5):
+                moveit2.add_collision_mesh( filepath=box_file_path, id="currentBox", position=[0.0, -0.12, 0.09], quat_xyzw=[ -0.5, 0.5, 0.5, 0.5  ], frame_id='tool0',
+                )
+                time.sleep(0.5)
+            
 
             # Move to Pre Drop Pose
             print("Moving to ", "Pre Drop Pose")
@@ -427,8 +429,10 @@ def main():
             print("Reached Drop")
 
             controlGripper("OFF", box_name)
+
             for i in range(5):
                 moveit2.remove_collision_mesh(id="currentBox")
+                time.sleep(0.5)
             time.sleep(1)
 
             servoNode.destroy_node()
