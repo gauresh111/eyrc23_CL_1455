@@ -164,7 +164,7 @@ def main():
             print("waiting")
                     # node.publisher.publish(goalPose)
     moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
-    # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
+    moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
     # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
     # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False)
