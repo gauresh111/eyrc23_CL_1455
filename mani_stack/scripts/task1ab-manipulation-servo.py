@@ -145,7 +145,7 @@ def main():
     time.sleep(5)
 
     arucoData = []
-    while len(arucoData) < 2:
+    while len(arucoData) < 1:
         flag = True
         for aruco in aruco_name_list:
             tempFlag = False
