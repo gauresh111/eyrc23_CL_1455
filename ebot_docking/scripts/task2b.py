@@ -36,18 +36,16 @@ def main():
     global botPosition, botOrientation
     botPosition = []
     botOrientation =[] 
-    global XrackOFfset, YrackOffset
-    XrackOFfset, YrackOffset = [0.0,1.0,0.0,0.0,0.3,0.0,0.0,0.0],[0.0,0.0,1.08,-0.81,0.0,0.8,-0.3,0.0]
     global positionToGO
-    positionToGO ={
-               "initalPose":[[0.0,0.0,0.0],[0.0,0.0,0.0,1.0]], 
-               "rack1": [[0.0,4.40,1.0],[0.0,0.0,1.0,0.0]],
-               "rack2": [[2.03,2.06,2.0],[0.0,0.0,-0.7068252,0.7073883]],
-               "rack3": [[2.13,-7.09,3.0],[0.0,0.0,0.7068252,0.7073883]],
-               "ap1": [[0.0,-2.45,4.0],[0.0,0.0,1.0,0.0]],
-               "ap2": [[1.37,-4.15,5.0],[0.0,0.0,-0.7068252,0.7073883]],
-               "ap3": [[1.37,-1.04,6.0],[0.0,0.0,0.7068252,0.7073883]]
-               }
+    positionToGO = {
+        'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},
+        'rack1':{'xyz': [0.0, 4.4, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [1.0, 0.0]}, 
+        'rack2':{'xyz': [2.03, 2.06, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 1.08]},
+        'rack3':{'xyz': [2.13, -7.09, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.81]}, 
+        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.8, 0.0]}, 
+        'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8]}, 
+        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.3]}
+            }
     withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
     def getGoalPoseStamped(goal):
@@ -56,13 +54,13 @@ def main():
         goalPose = PoseStamped()
         goalPose.header.frame_id = 'map'
         goalPose.header.stamp = navigator.get_clock().now().to_msg()
-        goalPose.pose.position.x = Goal[0][0]
-        goalPose.pose.position.y = Goal[0][1]
-        goalPose.pose.position.z = Goal[0][2]
-        goalPose.pose.orientation.x = Goal[1][0]
-        goalPose.pose.orientation.y = Goal[1][1]
-        goalPose.pose.orientation.z = Goal[1][2]
-        goalPose.pose.orientation.w = Goal[1][3]
+        goalPose.pose.position.x = Goal['xyz'][0]
+        goalPose.pose.position.y = Goal['xyz'][1]
+        goalPose.pose.position.z = Goal['xyz'][2]
+        goalPose.pose.orientation.x = Goal['quaternions'][0]
+        goalPose.pose.orientation.y = Goal['quaternions'][1]
+        goalPose.pose.orientation.z = Goal['quaternions'][2]
+        goalPose.pose.orientation.w = Goal['quaternions'][3]
         print(goalPose)
         return goalPose  
     global isDock
@@ -127,9 +125,10 @@ def main():
     
     def moveToGoal(goalPose,rack_no,israck):
         global botPosition, botOrientation
-        Xoff = XrackOFfset[int(goalPose.pose.position.z)]
-        Yoff = YrackOffset[int(goalPose.pose.position.z)]
-        goalPose.pose.position.z=0.0
+        global positionToGO
+        
+        
+        # goalPose.pose.position.z=0.0
         if not israck:
             if rack_no=="initalPose":
                 change_footprint(withoutRackFootprint,"withoutRackFootprint")
@@ -150,12 +149,12 @@ def main():
         orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
         _, _, yaw = euler_from_quaternion(orientation_list)
         yaw = math.degrees(yaw)
-        goalPose.pose.position.x += Xoff
-        goalPose.pose.position.y += Yoff
+        Xoff = positionToGO[rack_no]['XYoffsets'][0]
+        Yoff = positionToGO[rack_no]['XYoffsets'][1]
         node.dockingRequest.linear_dock = True
         node.dockingRequest.orientation_dock = True
-        node.dockingRequest.goal_x = goalPose.pose.position.x
-        node.dockingRequest.goal_y = goalPose.pose.position.y
+        node.dockingRequest.goal_x = goalPose.pose.position.x+Xoff
+        node.dockingRequest.goal_y = goalPose.pose.position.y+Yoff
         node.dockingRequest.orientation = yaw
         node.dockingRequest.rack_no = rack_no
         node.dockingRequest.rack_attach=israck
@@ -165,14 +164,14 @@ def main():
             print("waiting")
                     # node.publisher.publish(goalPose)
     moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
-    moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
+    # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
+    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
+    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
+    # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False)
+    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
+    # moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
+    # moveToGoal(getGoalPoseStamped("ap3"),"rack3",False)
     # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
-    moveToGoal(getGoalPoseStamped("ap2"),"rack2",False)
-    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
-    moveToGoal(getGoalPoseStamped("ap3"),"rack3",False)
-    moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     
     rclpy.spin(node)
     rclpy.shutdown()
