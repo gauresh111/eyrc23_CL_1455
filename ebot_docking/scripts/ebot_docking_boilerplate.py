@@ -227,30 +227,10 @@ class MyRobotDockingController(Node):
         orientation_within_tolerance = orientation_difference <= orientation_tolerance
 
         return x_within_tolerance and y_within_tolerance and orientation_within_tolerance
-    def MaxDist(self,A, N):
- 
-        # Variables to track running extrema
-        minsum = maxsum = A[0][0] + A[0][1]
-        mindiff = maxdiff = A[0][0] - A[0][1]
     
-        for i in range(1,N):
-            sum = A[i][0] + A[i][1]
-            diff = A[i][0] - A[i][1]
-            if (sum < minsum):
-                minsum = sum
-            elif (sum > maxsum):
-                maxsum = sum
-            if (diff < mindiff):
-                mindiff = diff
-            elif (diff > maxdiff):
-                maxdiff = diff
-    
-        maximum = max(maxsum - minsum, maxdiff - mindiff)
-    
-        print(maximum)
     def getWhichIsGreater(self,currentX,currentY):
-        goalX = round(self.targetX,2)
-        goalY = round(self.targetY,2)
+        goalX = self.targetX
+        goalY = self.targetY
         AbsdifferenceX = abs(abs(currentX) - abs(goalX))
         AbsdifferenceY = abs(abs(currentY) - abs(goalY))
         # print("AbsdifferenceX",AbsdifferenceX,"AbsdifferenceY",AbsdifferenceY)
@@ -260,6 +240,8 @@ class MyRobotDockingController(Node):
         else:
             # print("Y is greater")
             return 1
+    def distanceSingle(self,x1, x2):
+        return math.sqrt((x1 - x2) ** 2)*1.0
     def UltralinearDockingprocess(self,leftUltraSonic,rightUltraSonic):
         avgUltraSonic = (leftUltraSonic+rightUltraSonic)/2
         reached = False
@@ -271,30 +253,32 @@ class MyRobotDockingController(Node):
         reached = False    
         while (reached == False):
             X,reached=self.UltralinearDockingprocess(ultrasonic_value[0],ultrasonic_value[1]) 
-            print("usrleft_value:",round(ultrasonic_value[0],2)," usrright_value:",round(ultrasonic_value[1],2)," Reached:",reached)
+            print("usrleft_value:",ultrasonic_value[0]," usrright_value:",ultrasonic_value[1]," Reached:",reached)
             self.moveBot(X,0.0)
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
         reached =False
         if InputDistance <0.1:
             reached = True
-            return 0.0,reached
-        return odomlinearPid.odomComputeLinear(InputDistance,Setpoint),reached
+            return 0.0
+        return odomlinearPid.odomComputeLinear(InputDistance,Setpoint)
     def odomLinearDocking(self):
         global robot_pose
-        reached = False    
-        X1 =self.getWhichIsGreater(round(robot_pose[0],2),round(robot_pose[1],2))
-        while (reached == False):
-            # self.MaxDist([[robot_pose[0],robot_pose[1]],[self.targetX,self.targetY]],2)
+        reachedExtra = False    
+        X1 =self.getWhichIsGreater(robot_pose[0],robot_pose[1])
+        while (reachedExtra == False):
             if X1 == 0:
-                reachedExtra = True if(round(robot_pose[0],2) == round(self.targetX,2)) else False
-                print("target",self.targetX,"current",robot_pose[0])
+                distance=self.distanceSingle(self.targetX,robot_pose[0])
+                if distance < 0.15:
+                    reachedExtra = True
+                print("X: target",self.targetX,"current",robot_pose[0],"distance",distance)
             elif X1 == 1:
-                reachedExtra = True if(round(robot_pose[1],2) == round(self.targetY,2)) else False
-                print("target",self.targetY,"current",robot_pose[1])
-            distance=self.calculate_distance(robot_pose[0],robot_pose[1],self.targetX,self.targetY)
-            speed,reached=self.odomLinearDockingprocess(distance)
-            reached = True if(reached == True or reachedExtra == True) else False
+                distance=self.distanceSingle(self.targetY,robot_pose[1])
+                if distance < 0.15:
+                    reachedExtra = True
+                print("Y: target",self.targetY,"current",robot_pose[1],"distance",distance)
+            # distance=self.calculate_distance(robot_pose[0],robot_pose[1],self.targetX,self.targetY)
+            speed=self.odomLinearDockingprocess(distance)
             self.moveBot(speed,0.0)
             # print("X",distance," Reached:",reached)
     def AngularDocking(self):   
@@ -316,9 +300,9 @@ class MyRobotDockingController(Node):
         def odometry_callback(msg):
         # Extract and update robot pose information from odometry message
             global robot_pose
-            robot_pose[0] = msg.pose.pose.position.x
-            robot_pose[1] = msg.pose.pose.position.y
-            robot_pose[3] = msg.pose.pose.position.z
+            robot_pose[0] = round(msg.pose.pose.position.x,2)
+            robot_pose[1] = round(msg.pose.pose.position.y,2)
+            robot_pose[3] = round(msg.pose.pose.position.z,2)
         def imu_callback(msg):
             global robot_pose
             quaternion_array = msg.orientation
@@ -378,6 +362,7 @@ class MyRobotDockingController(Node):
                 for i in range(5):
                     self.moveBot(0.0,0.0)
                 #orientation done
+                print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
                 if self.isAttach:
                     self.attachRack(self.rackName)
                 else :
@@ -390,7 +375,6 @@ class MyRobotDockingController(Node):
                         self.moveBot(0.0,0.0)
             self.is_docking = False
             self.dock_aligned=True
-            print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
             ## docking and orientation done
             dockingNode.destroy_node()
             
@@ -438,6 +422,7 @@ class MyRobotDockingController(Node):
             self.isDocked.publish(msg)
         
         response.message = "Docking control completed "
+        print(request)
         return response
 
 # Main function to initialize the ROS2 node and spin the executor
