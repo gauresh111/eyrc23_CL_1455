@@ -44,7 +44,7 @@ def main():
         'rack3':{'xyz': [2.13, -7.09, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -1.0]}, 
         'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]}, 
         'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8]}, 
-        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.65]}
+        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72]}
             }
     withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
@@ -164,12 +164,12 @@ def main():
         while isDock!=True:
             print("waiting")
                     # node.publisher.publish(goalPose)
-    moveToGoal(getGoalPoseStamped("rack1"),"rack1",True,"rack1")
-    moveToGoal(getGoalPoseStamped("ap1"),"rack1",False,"ap1")
-    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
-    moveToGoal(getGoalPoseStamped("rack2"),"rack2",True,"rack2")
-    moveToGoal(getGoalPoseStamped("ap2"),"rack2",False,"ap2")
-    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
+    # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True,"rack1")
+    # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False,"ap1")
+    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
+    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True,"rack2")
+    # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False,"ap2")
+    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
     moveToGoal(getGoalPoseStamped("rack3"),"rack3",True,"rack3")
     moveToGoal(getGoalPoseStamped("ap3"),"rack3",False,"ap3")
     moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
