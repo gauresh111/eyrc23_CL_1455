@@ -144,8 +144,11 @@ def main():
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
     time.sleep(5)
 
+    while not node.create_client(AttachLink, "/GripperMagnetON").wait_for_service(timeout_sec=1.0):
+        node.get_logger().info("EEF service not available, waiting again...")
+
     arucoData = []
-    while len(arucoData) < 1:
+    while len(arucoData) < len(aruco_name_list):
         flag = True
         for aruco in aruco_name_list:
             tempFlag = False
@@ -228,6 +231,7 @@ def main():
         req.model2_name = "ur5"
         req.link2_name = "wrist_3_link"
         print(gripper_control.call_async(req))
+        time.sleep(1)
 
         print("Gripper Status: ", status, "has been requested")
 
@@ -434,6 +438,12 @@ def main():
                 moveit2.remove_collision_mesh(id="currentBox")
                 time.sleep(0.5)
             time.sleep(1)
+
+            # Move to Pre Drop Pose
+            print("Moving to ", "Pre Drop Pose")
+            moveit2.move_to_configuration(Pre_Drop_Joints.joint_states)
+            moveit2.wait_until_executed()
+            print("Reached Pre-Drop")
 
             servoNode.destroy_node()
             jointStatesNode.destroy_node()
