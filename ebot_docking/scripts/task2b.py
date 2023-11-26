@@ -163,14 +163,14 @@ def main():
         while isDock!=True:
             print("waiting")
                     # node.publisher.publish(goalPose)
-    moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
-    moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
+    # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
+    # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
     # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
     # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False)
     # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    # moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
-    # moveToGoal(getGoalPoseStamped("ap3"),"rack3",False)
+    moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
+    moveToGoal(getGoalPoseStamped("ap3"),"rack3",False)
     # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
     
     rclpy.spin(node)
