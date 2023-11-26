@@ -39,10 +39,10 @@ def main():
     global positionToGO
     positionToGO = {
         'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},
-        'rack1':{'xyz': [0.0, 4.4, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [1.0, 0.0]}, 
-        'rack2':{'xyz': [2.03, 2.06, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 1.08]},
-        'rack3':{'xyz': [2.13, -7.09, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.81]}, 
-        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.8, 0.0]}, 
+        'rack1':{'xyz': [0.0, 4.4, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [1.26, 0.0]}, 
+        'rack2':{'xyz': [2.03, 2.06, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 1.24]},
+        'rack3':{'xyz': [2.13, -7.09, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -1.0]}, 
+        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]}, 
         'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8]}, 
         'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72]}
             }
@@ -123,7 +123,7 @@ def main():
     navigator.waitUntilNav2Active()
     # Go to the goal pose
     
-    def moveToGoal(goalPose,rack_no,israck):
+    def moveToGoal(goalPose,rack_no,israck,positionName):
         global botPosition, botOrientation
         global positionToGO
         
@@ -149,30 +149,32 @@ def main():
         orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
         _, _, yaw = euler_from_quaternion(orientation_list)
         yaw = math.degrees(yaw)
-        Xoff = positionToGO[rack_no]['XYoffsets'][0]
-        Yoff = positionToGO[rack_no]['XYoffsets'][1]
+        Xoff = positionToGO[positionName]['XYoffsets'][0]
+        Yoff = positionToGO[positionName]['XYoffsets'][1]
         node.dockingRequest.linear_dock = True
         node.dockingRequest.orientation_dock = True
-        node.dockingRequest.goal_x = goalPose.pose.position.x+Xoff
-        node.dockingRequest.goal_y = goalPose.pose.position.y+Yoff
-        node.dockingRequest.orientation = yaw
+        node.dockingRequest.goal_x = round(goalPose.pose.position.x+Xoff,2)
+        node.dockingRequest.goal_y = round(goalPose.pose.position.y+Yoff,2)
+        node.dockingRequest.orientation = round(yaw,2)
         node.dockingRequest.rack_no = rack_no
         node.dockingRequest.rack_attach=israck
         future = node.dockingClient.call_async(node.dockingRequest)
+        print(node.dockingRequest)
         time.sleep(0.5)
         while isDock!=True:
             print("waiting")
                     # node.publisher.publish(goalPose)
-    moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
-    moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
-    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
-    # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False)
-    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
-    moveToGoal(getGoalPoseStamped("ap3"),"rack3",False)
-    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    
+
+    # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True,"rack1")
+    # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False,"ap1")
+    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
+    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True,"rack2")
+    # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False,"ap2")
+    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
+    moveToGoal(getGoalPoseStamped("rack3"),"rack3",True,"rack3")
+    moveToGoal(getGoalPoseStamped("ap3"),"rack3",False,"ap3")
+    moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
+
     rclpy.spin(node)
     rclpy.shutdown()
     navigator.lifecycleShutdown()
