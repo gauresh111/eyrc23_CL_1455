@@ -164,6 +164,7 @@ def main():
         while isDock!=True:
             print("waiting")
                     # node.publisher.publish(goalPose)
+
     # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True,"rack1")
     # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False,"ap1")
     # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
@@ -173,7 +174,7 @@ def main():
     moveToGoal(getGoalPoseStamped("rack3"),"rack3",True,"rack3")
     moveToGoal(getGoalPoseStamped("ap3"),"rack3",False,"ap3")
     moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
-    
+
     rclpy.spin(node)
     rclpy.shutdown()
     navigator.lifecycleShutdown()
