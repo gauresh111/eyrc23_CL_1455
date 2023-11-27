@@ -57,12 +57,10 @@ def generate_launch_description():
     start_perception = Node(
     package='mani_stack',
     executable='task1ab-perception.py',
- 
     )
     start_docking = Node(
-       package='ebot_docking',
+    package='ebot_docking',
     executable='ebot_docking_boilerplate.py',
-
     )
     start_navigation = Node(
     package='ebot_docking',

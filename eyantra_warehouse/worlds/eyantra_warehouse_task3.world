@@ -159,7 +159,7 @@
 	</include>
 
    <include>
-      <uri>model://boxes/box_3</uri>
+      <uri>model://boxes/box_1</uri>
       <name>box3</name>
       <pose>2.03 -8.17 1.35 0 -0 -1.57</pose>
 	</include>
@@ -228,24 +228,6 @@
 
   <plugin name="gazebo_link_attacher" filename="libgazebo_link_attacher.so"/>
   <plugin name="gazebo_link_ur5_attacher" filename="libgazebo_link_ur5_attacher.so"/>
-
-  <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
-      <ros>
-        <namespace>/_makeit</namespace>
-      </ros>
-
-      <update_rate>1.0</update_rate>
-  </plugin>
-
-  <plugin name="gazebo_link_ur5_attacher" filename="libgazebo_link_ur5_attacher.so"/>
-
-  <plugin name="gazebo_ros_state" filename="libgazebo_ros_state.so">
-      <ros>
-        <namespace>/_makeit</namespace>
-      </ros>
-
-      <update_rate>1.0</update_rate>
-  </plugin>
 
   </world>
 </sdf>
