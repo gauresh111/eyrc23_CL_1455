@@ -516,8 +516,11 @@ class aruco_tf(Node):
         aruco_string.data =  tempStr.join(aruco_name_list)
         print("Aruco_List:", aruco_string)
         self.aruco_name_publisher.publish(aruco_string)
-        # cv2.imshow("aruco_image", arucoImageWindow)
-        # cv2.waitKey(1)
+        try:
+            cv2.imshow("aruco_image", arucoImageWindow)
+            cv2.waitKey(1)
+        except:
+            pass
 
         #   ->  NOTE:   The Z axis of TF should be pointing inside the box (Purpose of this will be known in task 1B)
         #               Also, auto eval script will be judging angular difference aswell. So, make sure that Z axis is inside the box (Refer sample images on Portal - MD book)
