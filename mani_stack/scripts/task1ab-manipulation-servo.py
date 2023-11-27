@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from concurrent.futures import wait
 from os import path
 from threading import Thread
 import time
@@ -144,8 +145,11 @@ def main():
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
     time.sleep(5)
 
+    while not node.create_client(AttachLink, "/GripperMagnetON").wait_for_service(timeout_sec=1.0):
+        node.get_logger().info("EEF service not available, waiting again...")
+
     arucoData = []
-    while len(arucoData) < 1:
+    while len(arucoData) < len(aruco_name_list):
         flag = True
         for aruco in aruco_name_list:
             tempFlag = False
@@ -173,7 +177,7 @@ def main():
                     transform.rotation.z,
                     transform.rotation.w,
                 ]
-
+    print("Ready Set Go!!!")
     def moveWithServo(linear_speed, angular_speed):
         twist_msg = TwistStamped()
         twist_msg.header.frame_id = ur5.base_link_name()
@@ -227,9 +231,15 @@ def main():
         req.link1_name = "link"
         req.model2_name = "ur5"
         req.link2_name = "wrist_3_link"
-        print(gripper_control.call_async(req))
-
-        print("Gripper Status: ", status, "has been requested")
+        future = gripper_control.call_async(req)
+        print("Gripper Status: ", status, "requested")
+        time.sleep(1)
+        while not future.done():
+            print("Waiting for Gripper Status to be updated")
+            time.sleep(1)
+        
+        print("## Gripper Status: ", status, "has been accomplished")
+        time.sleep(1)
 
     def checkSphericalTolerance(currentPose, targetPose, tolerance):
         currentTolerance = math.sqrt(
@@ -296,7 +306,7 @@ def main():
                 round(quaternions[2], 4),
                 round(quaternions[3], 4),
             ]
-            box_name = "box" + str(int(re.search(r"\d+", position_name).group()))
+            box_name = "box" + position_name.split("_")[-1]
             # quaternions = P2.quaternions
 
             x, y, z = False, False, False
@@ -434,6 +444,12 @@ def main():
                 moveit2.remove_collision_mesh(id="currentBox")
                 time.sleep(0.5)
             time.sleep(1)
+
+            # Move to Pre Drop Pose
+            print("Moving to ", "Pre Drop Pose")
+            moveit2.move_to_configuration(Pre_Drop_Joints.joint_states)
+            moveit2.wait_until_executed()
+            print("Reached Pre-Drop")
 
             servoNode.destroy_node()
             jointStatesNode.destroy_node()

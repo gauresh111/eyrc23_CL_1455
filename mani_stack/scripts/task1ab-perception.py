@@ -509,7 +509,7 @@ class aruco_tf(Node):
                 transformStamped = TransformStamped()
                 transformStamped.header.stamp = self.get_clock().now().to_msg()
                 transformStamped.header.frame_id = "base_link"
-                transformStamped.child_frame_id = "1455_obj_" + str(id)
+                transformStamped.child_frame_id = "1455_base_" + str(id)
                 transformStamped.transform.translation.x = (
                     tranform.transform.translation.x
                 )
@@ -524,7 +524,7 @@ class aruco_tf(Node):
                 transformStamped.transform.rotation.z = tranform.transform.rotation.z
                 transformStamped.transform.rotation.w = tranform.transform.rotation.w
                 self.br.sendTransform(transformStamped)
-                aruco_name_list.append("obj_" + str(id))
+                aruco_name_list.append("1455_base_" + str(id))
             except:
                 pass
 
@@ -537,8 +537,11 @@ class aruco_tf(Node):
         aruco_string.data =  tempStr.join(aruco_name_list)
         print("Aruco_List:", aruco_string.data)
         self.aruco_name_publisher.publish(aruco_string)
-        cv2.imshow("aruco_image", arucoImageWindow)
-        cv2.waitKey(1)
+        try:
+            cv2.imshow("aruco_image", arucoImageWindow)
+            cv2.waitKey(1)
+        except:
+            pass
 
         #   ->  NOTE:   The Z axis of TF should be pointing inside the box (Purpose of this will be known in task 1B)
         #               Also, auto eval script will be judging angular difference aswell. So, make sure that Z axis is inside the box (Refer sample images on Portal - MD book)
