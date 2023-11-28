@@ -16,6 +16,8 @@ from linkattacher_msgs.srv import AttachLink, DetachLink
 import re
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Int8
+import transforms3d as tf3d
+import numpy as np
 
 
 aruco_name_list = []
@@ -29,6 +31,7 @@ class ArucoNameCoordinate:
         self.name = None
         self.position = None
         self.quaternions = None
+        self.eulerAngles = None
 
 
 class ArucoBoxPose:
@@ -94,6 +97,12 @@ def main():
 
     box_file_path = path.join(
         path.dirname(path.realpath(__file__)),"..", "assets", "box.stl"
+    )
+    # floor_file_path = path.join(
+    #     path.dirname(path.realpath(__file__)),"..", "assets", "floor.stl"
+    # )
+    floor_file_path = path.join(
+        path.dirname(path.realpath(__file__)),"..", "assets", "simpleRack.stl"
     )
 
     tolerance = 0.02
@@ -176,7 +185,23 @@ def main():
                     transform.rotation.z,
                     transform.rotation.w,
                 ]
+                arucoData[i].eulerAngles = tf3d.euler.quat2euler(
+                    arucoData[i].quaternions
+                )
 
+    for aruco in arucoData:
+        print(
+            "Aruco Name: ",
+            aruco.name,
+            "\nPosition: ",
+            aruco.position,
+            "\nQuaternions: ",
+            list(np.around(np.array(aruco.quaternions),2)),
+            "\nEuler Angles: ",
+            list(np.around(np.array(aruco.eulerAngles),2)),
+            "\n",
+        )
+    
     def moveWithServo(linear_speed, angular_speed):
         twist_msg = TwistStamped()
         twist_msg.header.frame_id = ur5.base_link_name()
@@ -188,6 +213,28 @@ def main():
         twist_msg.twist.angular.y = angular_speed[1]
         twist_msg.twist.angular.z = angular_speed[2]
         twist_pub.publish(twist_msg)
+
+    def addCollisionObject(objectType, id, position, orientation, frame_id):
+        if objectType == "box":
+            path = box_file_path
+        else:
+            path = floor_file_path
+        if orientation == "Front":
+            quat_xyzw = [0.0, 0.0, 0.0, 1.0]
+        elif orientation == "Left":
+            quat_xyzw = [ 0, 0, 0.7071068, 0.7071068 ]
+        elif orientation == "Right":
+            quat_xyzw = [ 0, 0, 0.7071068, 0.7071068 ]
+        else:
+            quat_xyzw = orientation
+        
+        for i in range(3):
+            moveit2.add_collision_mesh(filepath=path, 
+                                       id=id, 
+                                       position=position, 
+                                       quat_xyzw=quat_xyzw, 
+                                       frame_id=frame_id
+            )
 
     def getCurrentPose(TargetPose=[0.0, 0.0, 0.0], TargetQuats=[0.0, 0.0, 0.0, 1.0]):
         tempPose = [0, 0, 0]
@@ -448,6 +495,52 @@ def main():
             servoNode.destroy_node()
             jointStatesNode.destroy_node()
             break
+
+
+    arucoPossibleAngles = {"left":[0.0, 0.7, 0.7, 0.0], "front":[0.5, 0.5, 0.5, 0.5], "right":[0.7, 0.0, 0.0, 0.7]}
+    collisionObjectDistances = {"left":0.0, "front":0.0, "right":0.0}
+    # def decideRequiredCollisionRacks():
+    left_flag, front_flag, right_flag = False, False, False
+    for aruco in arucoData:
+        if left_flag == False:
+            if (round(aruco.quaternions[0], 1) == arucoPossibleAngles["left"][0] and 
+                round(aruco.quaternions[1], 1) == arucoPossibleAngles["left"][1] and 
+                round(aruco.quaternions[2], 1) == arucoPossibleAngles["left"][2] and 
+                round(aruco.quaternions[3], 1) == arucoPossibleAngles["left"][3]):
+                left_flag = True
+                collisionObjectDistances["left"] = round(aruco.position[1], 2)+0.08
+            # print("Left Flag: ", left_flag)
+        if front_flag == False:
+            print(aruco.name)
+            if (round(aruco.quaternions[0], 1) == arucoPossibleAngles["front"][0] and 
+                round(aruco.quaternions[1], 1) == arucoPossibleAngles["front"][1] and 
+                round(aruco.quaternions[2], 1) == arucoPossibleAngles["front"][2] and 
+                round(aruco.quaternions[3], 1) == arucoPossibleAngles["front"][3]):
+                front_flag = True
+                collisionObjectDistances["front"] = round(aruco.position[0], 2)+0.08
+            # print("Front Flag: ", front_flag)
+        if right_flag == False:
+            print(aruco.name)
+            if (round(aruco.quaternions[0], 1) == arucoPossibleAngles["right"][0] and 
+                round(aruco.quaternions[1], 1) == arucoPossibleAngles["right"][1] and 
+                round(aruco.quaternions[2], 1) == arucoPossibleAngles["right"][2] and 
+                round(aruco.quaternions[3], 1) == arucoPossibleAngles["right"][3]):
+                right_flag = True
+                collisionObjectDistances["right"] = round(aruco.position[2], 2)-0.08
+            # print("Right Flag: ", right_flag)
+    print("Left Flag: ", left_flag, "Front Flag: ", front_flag, "Right Flag: ", right_flag)
+    if left_flag:
+        print("Adding Left Collision Object")
+        # addCollisionObject("floor", "left_floor", [0.25, 0.71, 0.16], "Left", "base_link")
+        addCollisionObject("floor", "left_floor", [0.25, collisionObjectDistances["left"], 0.16], "Left", "base_link")
+    if front_flag:
+        print("Adding Front Collision Object")
+        # addCollisionObject("floor", "front_floor", [0.54, 0.07, 0.16], "Front", "base_link")
+        addCollisionObject("floor", "front_floor", [collisionObjectDistances["front"], 0.07, 0.16], "Front", "base_link")
+    if right_flag:
+        print("Adding Right Collision Object")
+        # addCollisionObject("floor", "right_floor", [0.25, -0.65, 0.16], "Right", "base_link")
+        addCollisionObject("floor", "right_floor", [0.25, -1*collisionObjectDistances["right"], 0.16], "Right", "base_link")
 
     for aruco, drop in zip(arucoData, Drop_Joints_List):
         moveToPose(aruco.position, aruco.quaternions, aruco.name, drop)
