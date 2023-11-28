@@ -1,126 +1,161 @@
 #!/usr/bin/env python3
 
-from geometry_msgs.msg import PoseStamped
-from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
+from nav_msgs.msg import Odometry
 import rclpy
-from rclpy.duration import Duration
-
-
+from threading import Thread
+import time
+from geometry_msgs.msg import PoseStamped
+import rclpy
+from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.node import Node
+from nav2_simple_commander.robot_navigator import BasicNavigator
+import tf2_ros
+from rclpy.duration import Duration # Handles time for ROS 2
+from scipy.spatial.transform import Rotation as R
+from std_msgs.msg import Bool
+from ebot_docking.srv import DockSw  # Import custom service message
+from tf_transformations import euler_from_quaternion
+import math
+from rcl_interfaces.srv import SetParameters
+from geometry_msgs.msg import Polygon,Point32
+from std_msgs.msg import String
 def main():
     rclpy.init()
-
     navigator = BasicNavigator()
+    node = Node("moveBot")
 
-    # Set our demo's initial pose
-    initial_pose = PoseStamped()
-    initial_pose.header.frame_id = 'map'
-    initial_pose.header.stamp = navigator.get_clock().now().to_msg()
-    initial_pose.pose.position.x = 0.0
-    initial_pose.pose.position.y = 0.0
-    initial_pose.pose.orientation.z = 1.0
-    initial_pose.pose.orientation.w = 0.0
-    navigator.setInitialPose(initial_pose)
+    # Create callback group that allows execution of callbacks in parallel without restrictions
+    callback_group = ReentrantCallbackGroup()
+    # Spin the node in background thread(s)
+    executor = rclpy.executors.MultiThreadedExecutor(2)
+    executor.add_node(node)
+    executor_thread = Thread(target=executor.spin, daemon=True, args=())
+    executor_thread.start()
+    tf_buffer = tf2_ros.buffer.Buffer()
+    tf_listener = tf2_ros.TransformListener(tf_buffer, node)
+    global botPosition, botOrientation
+    botPosition = []
+    botOrientation =[] 
+    global positionToGO
+    positionToGO = {
+        'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},
+        'rack1':{'xyz': [0.0, 4.4, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [1.26, 0.0]}, 
+        'rack2':{'xyz': [2.03, 2.06, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 1.24]},
+        'rack3':{'xyz': [2.13, -7.09, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -1.0]}, 
+        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]}, 
+        'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8]}, 
+        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72]}
+            }
+    withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
+    withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
+    def getGoalPoseStamped(goal):
+        global positionToGO
+        Goal = positionToGO[goal]
+        goalPose = PoseStamped()
+        goalPose.header.frame_id = 'map'
+        goalPose.header.stamp = navigator.get_clock().now().to_msg()
+        goalPose.pose.position.x = Goal['xyz'][0]
+        goalPose.pose.position.y = Goal['xyz'][1]
+        goalPose.pose.position.z = Goal['xyz'][2]
+        goalPose.pose.orientation.x = Goal['quaternions'][0]
+        goalPose.pose.orientation.y = Goal['quaternions'][1]
+        goalPose.pose.orientation.z = Goal['quaternions'][2]
+        goalPose.pose.orientation.w = Goal['quaternions'][3]
+        print(goalPose)
+        return goalPose  
+    def change_footprint(new_footprint,msg):
+        # Initialize ROS node
+        nodeFootprint = rclpy.create_node('change_footprint_node')
+        # Create a service client to set parameters
+        nodeFootprint.localFootPrintPub=nodeFootprint.create_publisher(Polygon, '/local_costmap/footprint', 10)
+        nodeFootprint.globalFootPrintPub=nodeFootprint.create_publisher(Polygon, '/global_costmap/footprint', 10)
+        p = Polygon()
+        p.points = [Point32(x=new_footprint[0][0], y=new_footprint[0][1]),
+                            Point32(x=new_footprint[1][0], y=new_footprint[1][1]),
+                            Point32(x=new_footprint[2][0], y=new_footprint[2][1]),
+                            Point32(x=new_footprint[3][0], y=new_footprint[3][1])]
+        for i in range (3):
+            nodeFootprint.globalFootPrintPub.publish(p)
+            nodeFootprint.localFootPrintPub.publish(p)
+            time.sleep(0.1)
+            print("publishing:" ,msg)
+            
+        nodeFootprint.destroy_node()
+    global racksAps
+    racksAps=[]
+    def getRacksAps(data):
+        global racksAps
+        racksAps = data.data.split()
+        
+    node.getRackApSub = node.create_subscription(String, "/getRacksAps", getRacksAps, 10)
+    node.getRackApSub
+    node.isDockingSub
+    node.dockingClient = node.create_client(DockSw, '/dock_control')
+    while not node.dockingClient.wait_for_service(timeout_sec=1.0):
+        print('service not available, waiting again...')
+    node.dockingRequest = DockSw.Request()
+    navigator.setInitialPose(getGoalPoseStamped("initalPose"))
 
-    # Activate navigation, if not autostarted. This should be called after setInitialPose()
-    # or this will initialize at the origin of the map and update the costmap with bogus readings.
-    # If autostart, you should `waitUntilNav2Active()` instead.
-    # navigator.lifecycleStartup()
-
-    # Wait for navigation to fully activate, since autostarting nav2
+    # Wait for navigation to fully activate
     navigator.waitUntilNav2Active()
+    # Go to the goal pose
+    
+    def moveToGoal(goalPose,rack_no,israck,positionName):
+        global botPosition, botOrientation
+        global positionToGO
+        
+        
+        # goalPose.pose.position.z=0.0
+        if not israck:
+            if rack_no=="initalPose":
+                change_footprint(withoutRackFootprint,"withoutRackFootprint")
+            else:
+                change_footprint(withRackFootprint,"withRackFootprint")
+        else:
+            change_footprint(withoutRackFootprint,"withoutRackFootprint")
+        navigator.goToPose(goalPose)
 
-    # If desired, you can change or load the map as well
-    # navigator.changeMap('/path/to/map.yaml')
+        i = 0
 
-    # You may use the navigator to clear or obtain costmaps
-    # navigator.clearAllCostmaps()  # also have clearLocalCostmap() and clearGlobalCostmap()
-    # global_costmap = navigator.getGlobalCostmap()
-    # local_costmap = navigator.getLocalCostmap()
+        # Keep doing stuff as long as the robot is moving towards the goal
+        while not navigator.isTaskComplete():
+            i = i + 1
+        result = navigator.getResult()
+        print(result)
+        quaternion_array = goalPose.pose.orientation
+        orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
+        _, _, yaw = euler_from_quaternion(orientation_list)
+        yaw = math.degrees(yaw)
+        Xoff = positionToGO[positionName]['XYoffsets'][0]
+        Yoff = positionToGO[positionName]['XYoffsets'][1]
+        node.dockingRequest.linear_dock = True
+        node.dockingRequest.orientation_dock = True
+        node.dockingRequest.goal_x = round(goalPose.pose.position.x+Xoff,2)
+        node.dockingRequest.goal_y = round(goalPose.pose.position.y+Yoff,2)
+        node.dockingRequest.orientation = round(yaw,2)
+        node.dockingRequest.rack_no = rack_no
+        node.dockingRequest.rack_attach=israck
+        future = node.dockingClient.call_async(node.dockingRequest)
+        print(node.dockingRequest)
+        while(future.result() is  None):
+            try:
+                print(future)
+            except:
+                pass
 
-    # Go to our demos first goal pose
-    goal_pose_1 = PoseStamped()
-    goal_pose_1.header.frame_id = 'map'
-    goal_pose_1.header.stamp = navigator.get_clock().now().to_msg()
-    goal_pose_1.pose.position.x = 1.8
-    goal_pose_1.pose.position.y = 1.5
+    # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True,"rack1")
+    # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False,"ap1")
+    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
+    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True,"rack2")
+    # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False,"ap2")
+    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
+    # moveToGoal(getGoalPoseStamped("rack3"),"rack3",True,"rack3")
+    # moveToGoal(getGoalPoseStamped("ap3"),"rack3",False,"ap3")
+    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
 
-
-    goal_pose_2 = PoseStamped()
-    goal_pose_2.header.frame_id = 'map'
-    goal_pose_2.header.stamp = navigator.get_clock().now().to_msg()
-    goal_pose_2.pose.position.x = 0.0
-    goal_pose_2.pose.position.y = 0.0
-    goal_pose_2.pose.orientation.w = 1.0
-
-    goal_pose_3 = PoseStamped()
-    goal_pose_3.header.frame_id = 'map'
-    goal_pose_3.header.stamp = navigator.get_clock().now().to_msg()
-    goal_pose_3.pose.position.x = 2.0
-    goal_pose_3.pose.position.y = 0.5
-    goal_pose_3.pose.orientation.w = 1.0
-
-    goal_pose_4 = PoseStamped()
-    goal_pose_4.header.frame_id = 'map'
-    goal_pose_4.header.stamp = navigator.get_clock().now().to_msg()
-    goal_pose_4.pose.position.x = 0.0
-    goal_pose_4.pose.position.y = 0.0
-    goal_pose_4.pose.orientation.w = 1.0
-
-    goal_pose_5 = PoseStamped()
-    goal_pose_5.header.frame_id = 'map'
-    goal_pose_5.header.stamp = navigator.get_clock().now().to_msg()
-    goal_pose_5.pose.position.x = -2.0
-    goal_pose_5.pose.position.y = -0.5
-    goal_pose_5.pose.orientation.w = 1.0
-
-
-    # sanity check a valid path exists
-    # path = navigator.getPath(initial_pose, goal_pose)
-
-    navigator.goToPose(goal_pose_1)
-
-    i = 0
-    while not navigator.isTaskComplete():
-        ################################################
-        #
-        # Implement some code here for your application!
-        #
-        ################################################
-
-        # Do something with the feedback
-        # i = i + 1
-        # feedback = navigator.getFeedback()
-        # if feedback and i % 5 == 0:
-        #     print('Estimated time of arrival: ' + '{0:.0f}'.format(
-        #           Duration.from_msg(feedback.estimated_time_remaining).nanoseconds / 1e9)
-        #           + ' seconds.')
-
-            # # Some navigation timeout to demo cancellation
-            # if Duration.from_msg(feedback.navigation_time) > Duration(seconds=600.0):
-            #     navigator.cancelTask()
-
-            # # Some navigation request change to demo preemption
-            # if Duration.from_msg(feedback.navigation_time) > Duration(seconds=18.0):
-            #     goal_pose.pose.position.x = -3.0
-            #     navigator.goToPose(goal_pose)
-        i += 1
-        feedback = navigator.getFeedback()
-        if i % 5 == 0:
-            print(feedback)
-
-    # Do something depending on the return code
-    result = navigator.getResult()
-    if result == TaskResult.SUCCEEDED:
-        print('Goal succeeded!')
-    elif result == TaskResult.CANCELED:
-        print('Goal was canceled!')
-    elif result == TaskResult.FAILED:
-        print('Goal failed!')
-    else:
-        print('Goal has an invalid return status!')
-
+    rclpy.spin(node)
+    rclpy.shutdown()
     navigator.lifecycleShutdown()
-
     exit(0)
 
 

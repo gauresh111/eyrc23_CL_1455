@@ -20,7 +20,7 @@ def generate_launch_description():
 
     start_perception = ExecuteProcess(
         cmd=[[
-            'ros2 run mani_stack task1ab-perception.py',
+            'ros2 run mani_stack ',
         ]],
         shell=True
     )

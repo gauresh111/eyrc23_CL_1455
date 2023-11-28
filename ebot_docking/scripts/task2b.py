@@ -161,8 +161,14 @@ def main():
         future = node.dockingClient.call_async(node.dockingRequest)
         print(node.dockingRequest)
         time.sleep(0.5)
-        while isDock!=True:
-            print("waiting")
+        print(future.result())
+        while(future.result() is  None):
+            try:
+                print(future)
+            except:
+                pass
+        # while isDock!=True:
+        #     print("waiting")
                     # node.publisher.publish(goalPose)
 
     # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True,"rack1")
