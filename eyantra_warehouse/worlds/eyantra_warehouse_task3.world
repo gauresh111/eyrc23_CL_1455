@@ -159,7 +159,7 @@
 	</include>
 
    <include>
-      <uri>model://boxes/box_1</uri>
+      <uri>model://boxes/box_3</uri>
       <name>box3</name>
       <pose>2.03 -8.17 1.35 0 -0 -1.57</pose>
 	</include>

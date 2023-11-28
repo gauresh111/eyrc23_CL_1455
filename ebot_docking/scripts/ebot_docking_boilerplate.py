@@ -94,9 +94,10 @@ class MyRobotDockingController(Node):
         self.ultrasonic_rr_sub = self.create_subscription(Range, '/ultrasonic_rr/scan', self.ultrasonic_rr_callback, 10)
 
         # Create a ROS2 service for controlling docking behavior, can add another custom service message
-        self.dock_control_srv = self.create_service(DockSw, 'dock_control', self.dock_control_callback, callback_group=self.callback_group)
+        self.dock_control_srv = self.create_service(DockSw, '/dock_control', self.dock_control_callback, callback_group=self.callback_group)
         self.isDocked = self.create_publisher(Bool, '/dockingSuccesfull', 10)
         self.speedPub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.workRack = self.create_publisher(String, '/workRack', 10)
         self.link_attach_cli = self.create_client(AttachLink, '/ATTACH_LINK')
         self.lind_detached_cli = self.create_client(DetachLink, '/DETACH_LINK')
         while not self.link_attach_cli.wait_for_service(timeout_sec=1.0):

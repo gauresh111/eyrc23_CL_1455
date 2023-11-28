@@ -297,8 +297,7 @@ def generate_launch_description():
                 'robot_description_semantic': robot_description_semantic,
                 'robot_description_kinematics': kinematics_config,
             }
-        ],
-        output='screen')
+        ])
     start_lifecycle_manager_cmd = Node(
             package='nav2_lifecycle_manager',
             executable='lifecycle_manager',
@@ -401,11 +400,12 @@ def generate_launch_description():
     ld.add_action(robot_state_publisher_arm)
     ld.add_action(spawn_controllers_manipulator)
     ld.add_action(spawn_controllers_state)
-    ld.add_action(start_rviz_cmd)
-    ld.add_action(robot_localization_node)
+    # ld.add_action(start_rviz_cmd)
     ld.add_action(ros2_control_node)
     ld.add_action(move_group_node)
     ld.add_action(servo_node)
+    ld.add_action(robot_localization_node)
+    
     ld.add_action(bringup_cmd_group)
     ld.add_action(start_lifecycle_manager_cmd)
     ld.add_action(start_map_server_cmd)
