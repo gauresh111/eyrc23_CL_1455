@@ -274,7 +274,7 @@ def main():
                     break
                 print(getApRack[0])
                 moveToGoal(getGoalPoseStamped(rackName),rackName,True,rackName)
-                moveToGoal(getGoalPoseStamped(getApRack),getApRack,False,getApRack)
+                moveToGoal(getGoalPoseStamped(getApRack),rackName,False,getApRack)
                 del dockingPosition[rackName]
             else:
                 print("Key not found")
