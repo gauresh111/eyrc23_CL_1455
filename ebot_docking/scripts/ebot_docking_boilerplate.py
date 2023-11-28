@@ -29,6 +29,7 @@ from sensor_msgs.msg import Imu
 rclpy.init()
 global robot_pose
 global ultrasonic_value
+from std_msgs.msg import String
 ultrasonic_value = [0.0, 0.0]
 robot_pose = [0.0, 0.0, 0.0,0.0]
 
@@ -94,9 +95,10 @@ class MyRobotDockingController(Node):
         self.ultrasonic_rr_sub = self.create_subscription(Range, '/ultrasonic_rr/scan', self.ultrasonic_rr_callback, 10)
 
         # Create a ROS2 service for controlling docking behavior, can add another custom service message
-        self.dock_control_srv = self.create_service(DockSw, 'dock_control', self.dock_control_callback, callback_group=self.callback_group)
+        self.dock_control_srv = self.create_service(DockSw, '/dock_control', self.dock_control_callback, callback_group=self.callback_group)
         self.isDocked = self.create_publisher(Bool, '/dockingSuccesfull', 10)
         self.speedPub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.workRack = self.create_publisher(String, '/pickup_Box', 10)
         self.link_attach_cli = self.create_client(AttachLink, '/ATTACH_LINK')
         self.lind_detached_cli = self.create_client(DetachLink, '/DETACH_LINK')
         while not self.link_attach_cli.wait_for_service(timeout_sec=1.0):
@@ -367,12 +369,18 @@ class MyRobotDockingController(Node):
                     self.attachRack(self.rackName)
                 else :
                     self.detachRack(self.rackName)
+                    boxID = String()
+                    tempBoxID = self.rackName
+                    boxID.data =  tempBoxID.join(tempBoxID)
+                    
                     time.sleep(0.5)
                     for i in range(5):
                             self.moveBot(1.0,0.0)
+                            self.workRack.publish(boxID)
                     time.sleep(0.6)
                     for i in range(5):
                         self.moveBot(0.0,0.0)
+                        self.workRack.publish(boxID)
             self.is_docking = False
             self.dock_aligned=True
             ## docking and orientation done

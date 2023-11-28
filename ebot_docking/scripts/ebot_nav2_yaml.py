@@ -5,7 +5,6 @@ import rclpy
 from threading import Thread
 import time
 from geometry_msgs.msg import PoseStamped
-import rclpy
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from nav2_simple_commander.robot_navigator import BasicNavigator
@@ -20,7 +19,7 @@ from rcl_interfaces.srv import SetParameters
 from geometry_msgs.msg import Polygon,Point32
 import yaml
 from ament_index_python.packages import get_package_share_directory
-
+from std_msgs.msg import String
 config_folder_name = 'ebot_docking'
 
 global dockingPosition
@@ -48,7 +47,7 @@ def add_docking_position(name, xyz, quaternions, xy_offsets):
     dockingPosition[name] = {
         'xyz': xyz,
         'quaternions': quaternions,
-        'xy_offsets': xy_offsets
+        'XYoffsets': xy_offsets
     }
 def switch_case(value,cordinates):
     x, y = cordinates[0],cordinates[1]
@@ -92,15 +91,16 @@ def switch_case(value,cordinates):
 def main():
     rclpy.init()
     navigator = BasicNavigator()
-    node = Node("moveBot")
+    node = Node("moveBotYaml")
 
     # Create callback group that allows execution of callbacks in parallel without restrictions
     callback_group = ReentrantCallbackGroup()
     # Spin the node in background thread(s)
-    executor = rclpy.executors.MultiThreadedExecutor(2)
+    executor = rclpy.executors.MultiThreadedExecutor(3)
     executor.add_node(node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
+    
     global dockingPosition
     config_yaml = load_yaml(config_file)
     
@@ -177,19 +177,42 @@ def main():
     node.isDockingSub = node.create_subscription(
         Bool, "/dockingSuccesfull", isDocking, 10
     )
+    global rackPresentSub
+    rackPresentSub = []
+    def getRack(data):
+        global rackPresentSub
+        data_list = data.data.split()
+        rackPresentSub = set(data_list)
+        # print(rackPresentSub)
+    
+    
+    node.getRackSub = node.create_subscription(String,"/ap_list",getRack,10)
     node.isDockingSub
     node.publisher = node.create_publisher(PoseStamped, '/dockingRequest', 10)
     node.dockingClient = node.create_client(DockSw, '/dock_control')
-    # while not node.dockingClient.wait_for_service(timeout_sec=1.0):
-    #     print(' docking service not available, waiting again...')
+    while not node.dockingClient.wait_for_service(timeout_sec=1.0):
+        print('service not available, waiting again...')
     node.dockingRequest = DockSw.Request()
     
     navigator.setInitialPose(getGoalPoseStamped("initalPose"))
 
     # Wait for navigation to fully activate
-    #navigator.waitUntilNav2Active()
+    navigator.waitUntilNav2Active()
+    change_footprint(withoutRackFootprint,"withoutRackFootprint")
     # Go to the goal pose
     
+    def getMissingPosition(givenList):
+        if len(givenList)>=3 :
+            return [0]
+        if givenList == [-2]:
+            return ["ap1"]
+        positionList = ["ap1","ap2","ap3"]
+        missingPosition = []
+        for position in positionList:
+            if position not in givenList:
+                missingPosition.append(position)
+        return missingPosition
+
     def moveToGoal(goalPose,rack_no,israck,positionName):
         global botPosition, botOrientation
         global dockingPosition
@@ -204,7 +227,6 @@ def main():
         else:
             change_footprint(withoutRackFootprint,"withoutRackFootprint")
         navigator.goToPose(goalPose)
-
         i = 0
 
         # Keep doing stuff as long as the robot is moving towards the goal
@@ -231,7 +253,7 @@ def main():
         while isDock!=True:
             print("waiting")
     for rackspresent in range(rackPresent):
-        
+        rackPresentSub=[-1]
         rackList=1
         foundRack = False
         #get name of rack
@@ -240,14 +262,28 @@ def main():
             rackName = "%s%d" % ("rack",rackList)
             value = dockingPosition.get(rackName)
             if value:
-                print("Key found:",rackName, value)
+                
                 foundRack = True
-                moveToGoal(getGoalPoseStamped(rackName),"rack3",True,"rack3")
+                while(-1 in rackPresentSub):
+                    time.sleep(0.1)
+                # print(rackPresentSub)
+                # print("Key found:",rackName, value)
+                getApRack = getMissingPosition(rackPresentSub)
+                getApRack=getApRack[0]
+                if getApRack==0:
+                    break
+                print(getApRack[0])
+                moveToGoal(getGoalPoseStamped(rackName),rackName,True,rackName)
+                moveToGoal(getGoalPoseStamped(getApRack),rackName,False,getApRack)
                 del dockingPosition[rackName]
             else:
                 print("Key not found")
             
             rackList +=1
-        
+    print("done")
+    rclpy.spin(node)
+    rclpy.shutdown()
+    navigator.lifecycleShutdown()
+    exit(0)
 if __name__ == '__main__':
     main()
