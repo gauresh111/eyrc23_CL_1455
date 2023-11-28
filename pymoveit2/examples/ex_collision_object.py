@@ -23,13 +23,15 @@ DEFAULT_EXAMPLE_MESH = path.join(
 box = path.join(
     path.dirname(path.realpath(__file__)), "assets", "box.stl"
 )
+# rack = path.join(
+#     path.dirname(path.realpath(__file__)), "assets", "rack.stl"
+# )
 rack = path.join(
-    path.dirname(path.realpath(__file__)), "assets", "rack.stl"
+    path.dirname(path.realpath(__file__)), "assets", "simpleRack.stl"
 )
 floor = path.join(
     path.dirname(path.realpath(__file__)), "assets", "floor.stl"
 )
-
 def main():
     rclpy.init()
 
@@ -71,21 +73,32 @@ def main():
             # moveit2.add_collision_mesh(
             #     filepath=box, id="currentBox", position=[0.0, -0.12, 0.09], quat_xyzw=[ -0.5, 0.5, 0.5, 0.5  ], frame_id='tool0',
             # )
-
+            #right_side#
             # moveit2.add_collision_mesh(
             #     filepath=rack, id="Right_rack", position=[0.25, -0.65, -0.57], quat_xyzw=[0, 0, 0.717356,0.696707], frame_id=ur5.base_link_name()
             # )
+            moveit2.add_collision_mesh(
+                filepath=rack, id="Right_rack", position=[0.25, -0.65, 0.16], quat_xyzw=[0, 0, 0.717356,0.696707], frame_id=ur5.base_link_name()
+            )
         
-            # #left_side#
+            #left_side#
             # moveit2.add_collision_mesh(
             #     filepath=rack, id="Left_rack", position=[0.25, 0.71, -0.57], quat_xyzw=[0, 0, 0.717356,0.696707],
             #     frame_id=ur5.base_link_name()
             # )
+            moveit2.add_collision_mesh(
+                filepath=rack, id="Left_rack", position=[0.25, 0.71, 0.16], quat_xyzw=[0, 0, 0.717356,0.696707],
+                frame_id=ur5.base_link_name()
+            )
             # center_side
             # moveit2.add_collision_mesh(
             #     filepath=rack, id="Center_rack", position=[0.54, 0.07, -0.57], quat_xyzw=[0, 0, 0, 1],
             #     frame_id=ur5.base_link_name()
             # )
+            moveit2.add_collision_mesh(
+                filepath=rack, id="Center_rack", position=[0.54, 0.07, 0.16], quat_xyzw=[0, 0, 0, 1],
+                frame_id=ur5.base_link_name()
+            )
             # moveit2.add_collision_mesh(
             #     filepath=box, id="Box_1", position=[0.48, 0.10, 0.55], quat_xyzw=[0, 0, 0, 1],
             #     frame_id=ur5.base_link_name()
@@ -94,25 +107,25 @@ def main():
             #     filepath=box, id="Box_2", position=[0.30, -0.56, 0.54], quat_xyzw=[0 ,0 ,0.706825 ,0.707388],
             #     frame_id=ur5.base_link_name()
             # )
-            moveit2.add_collision_mesh(
-                filepath=floor, id="Floor", position=[-0.04, 0.03, -0.04], quat_xyzw=[0.0, 0.0, 0.0, 1.0],
-                frame_id=ur5.base_link_name()
-            )
-            ##Left Floor
-            moveit2.add_collision_mesh(
-                filepath=floor, id="Floor_Left", position=[-0.10, 0.60, 0.30], quat_xyzw=[0.7071081, 0, 0, 0.7071055 ],
-                frame_id=ur5.base_link_name()
-            )
+            # moveit2.add_collision_mesh(
+            #     filepath=floor, id="Floor", position=[-0.04, 0.03, -0.04], quat_xyzw=[0.0, 0.0, 0.0, 1.0],
+            #     frame_id=ur5.base_link_name()
+            # )
+            # ##Left Floor
+            # moveit2.add_collision_mesh(
+            #     filepath=floor, id="Floor_Left", position=[-0.10, 0.60, 0.30], quat_xyzw=[0.7071081, 0, 0, 0.7071055 ],
+            #     frame_id=ur5.base_link_name()
+            # )
             ##Middle Floor
             # moveit2.add_collision_mesh(
             #     filepath=floor, id="Floor_Center", position=[0.40, 0.05, 0.4], quat_xyzw=[ 0, 0.7071081, 0, 0.7071055 ],
             #     frame_id=ur5.base_link_name()
             # )
             ##Right Floor
-            moveit2.add_collision_mesh(
-                filepath=floor, id="Floor_Right", position=[-0.10, -0.47, 0.30], quat_xyzw=[0.7071081, 0, 0, 0.7071055 ],
-                frame_id=ur5.base_link_name()
-            )
+            # moveit2.add_collision_mesh(
+            #     filepath=floor, id="Floor_Right", position=[-0.10, -0.47, 0.30], quat_xyzw=[0.7071081, 0, 0, 0.7071055 ],
+            #     frame_id=ur5.base_link_name()
+            # )
         
     else:
         print("remove")
