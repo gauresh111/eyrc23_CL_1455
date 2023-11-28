@@ -242,7 +242,8 @@ def main():
             if value:
                 print("Key found:",rackName, value)
                 foundRack = True
-                moveToGoal(getGoalPoseStamped(rackName),"rack3",True,"rack3")
+                moveToGoal(getGoalPoseStamped(rackName),rackName,True,rackName)
+                
                 del dockingPosition[rackName]
             else:
                 print("Key not found")
