@@ -52,11 +52,22 @@ install(
   PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
-
 install(PROGRAMS
 	scripts/ebot_docking_boilerplate.py
   scripts/task2b.py
+  scripts/ebot_nav2_yaml.py
+  config.yaml
   DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  PROGRAMS
+  DESTINATION share/${PROJECT_NAME}
+)
+install(
+  PROGRAMS
+  config.yaml
+  DESTINATION share/${PROJECT_NAME}
 )
 
 ament_package()
