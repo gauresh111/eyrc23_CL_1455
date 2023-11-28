@@ -299,12 +299,8 @@ def generate_launch_description():
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
-    ld.add_action(start_rviz_cmd)
-    ld.add_action(robot_localization_node)
-    ld.add_action(bringup_cmd_group)
-    ld.add_action(start_lifecycle_manager_cmd)
-    ld.add_action(start_map_server_cmd)
-    ld.add_action(start_costmap_filter_info_server_cmd)
+    # ld.add_action(start_rviz_cmd)
+    
     # ld.add_action(declare_mapper_online_async_param_cmd)
     # ld.add_action(mapper_online_async_param_launch)
     ld.add_action(start_world)
@@ -312,17 +308,10 @@ def generate_launch_description():
     ld.add_action(spawn_ebot)
     ld.add_action(static_transform)
     ld.add_action(spawn_arm)
-
-                                                 
-    # return ld,launch.LaunchDescription([
-    #     launch.actions.DeclareLaunchArgument(name='gui', default_value='True',
-    #                                         description='Flag to enable joint_state_publisher_gui'),
-    #     launch.actions.DeclareLaunchArgument(name='use_sim_time', default_value='True',
-    #                                         description='Flag to enable use_sim_time'),
-    #     start_world,
-    #     robot_state_publisher_node_ebot,
-    #     spawn_ebot,
-    #     static_transform,
-    #     spawn_arm
-    # ])
+    ld.add_action(robot_localization_node)
+    ld.add_action(bringup_cmd_group)
+    ld.add_action(start_lifecycle_manager_cmd)
+    ld.add_action(start_map_server_cmd)
+    ld.add_action(start_costmap_filter_info_server_cmd)
+                                                
     return ld
