@@ -103,7 +103,7 @@ class MyRobotDockingController(Node):
         self.lind_detached_cli = self.create_client(DetachLink, '/DETACH_LINK')
         while not self.link_attach_cli.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('Link attacher service not available, waiting again...')
-
+        
         # Initialize all  flags and parameters here
         self.is_docking = False
         self.dock_aligned=False
@@ -260,7 +260,7 @@ class MyRobotDockingController(Node):
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
         reached =False
-        if InputDistance <0.1:
+        if InputDistance <0.12:
             reached = True
             return 0.0
         return odomlinearPid.odomComputeLinear(InputDistance,Setpoint)
@@ -369,18 +369,12 @@ class MyRobotDockingController(Node):
                     self.attachRack(self.rackName)
                 else :
                     self.detachRack(self.rackName)
-                    boxID = String()
-                    tempBoxID = self.rackName
-                    boxID.data =  tempBoxID.join(tempBoxID)
-                    
                     time.sleep(0.5)
                     for i in range(5):
                             self.moveBot(1.0,0.0)
-                            self.workRack.publish(boxID)
                     time.sleep(0.6)
                     for i in range(5):
                         self.moveBot(0.0,0.0)
-                        self.workRack.publish(boxID)
             self.is_docking = False
             self.dock_aligned=True
             ## docking and orientation done

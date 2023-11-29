@@ -12,7 +12,7 @@ import tf2_ros
 from rclpy.duration import Duration # Handles time for ROS 2
 from scipy.spatial.transform import Rotation as R
 from std_msgs.msg import Bool
-from ebot_docking.srv import DockSw  # Import custom service message
+from ebot_docking.srv import RackSw  # Import custom service message
 from tf_transformations import euler_from_quaternion
 import math
 from rcl_interfaces.srv import SetParameters
@@ -86,7 +86,11 @@ def switch_case(value,cordinates):
         print("down")
 
     return x,y,offsetXY
-    
+def find_string_in_list(string, list):
+    for index, item in enumerate(list):
+        if item == string:
+            return index
+    return -1
     
 def main():
     rclpy.init()
@@ -100,106 +104,45 @@ def main():
     executor.add_node(node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
-    
+    node.racksApsPub=node.create_publisher(String, '/getRacksAps', 10)
+    node.nav2RackClient = node.create_client(RackSw, '/RackNav2Sw')
+    while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
+        print(' Nav2 Client service not available, waiting again...')
+    node.nav2RackRequest = RackSw.Request()
     global dockingPosition
-    config_yaml = load_yaml(config_file)
-    
-    withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
-    withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
-    global rackPresent
-    rackPresent = 0
-    for rack in config_yaml['position']:
-        # rackName = 
-        # add_docking_position('initalPose', [0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], [0.0, 0.0])
-        listNO = 1
-        append = False
-        #get name of rack
-        while append ==False:
-            try :
-                rackName = "%s%d" % ("rack",listNO)
-                #get xyz of rack
-                xyz = [rack[rackName][0],rack[rackName][1],0]
-                #get quaternions from eucler of rack
-                euler = [0,rack[rackName][2],0]
-                quaternions = R.from_euler('xyz', euler).as_quat().tolist()
-                degree = math.degrees(rack[rackName][2])
-                x,y,offsetXY=switch_case(math.ceil(degree),xyz)
-                xyz=[x,y,0.0]
-                rackPresent +=1
-                append = True
-            except:
-                pass
-            listNO += 1
-        add_docking_position(rackName,xyz,quaternions,offsetXY)
-        # print("rackName",rackName,"xyz",xyz,"quaternions",quaternions,"degree",degree,"offsetXY",offsetXY)
-    
-    def getGoalPoseStamped(goal):
-        global dockingPosition
-        Goal = dockingPosition[goal]
-        goalPose = PoseStamped()
-        goalPose.header.frame_id = 'map'
-        goalPose.header.stamp = navigator.get_clock().now().to_msg()
-        goalPose.pose.position.x = Goal['xyz'][0]
-        goalPose.pose.position.y = Goal['xyz'][1]
-        goalPose.pose.position.z = Goal['xyz'][2]
-        goalPose.pose.orientation.x = Goal['quaternions'][0]
-        goalPose.pose.orientation.y = Goal['quaternions'][1]
-        goalPose.pose.orientation.z = Goal['quaternions'][2]
-        goalPose.pose.orientation.w = Goal['quaternions'][3]
-        # print(goalPose)
-        return goalPose  
-    global isDock
-    isDock = False
-    def change_footprint(new_footprint,msg):
-        # Initialize ROS node
-        nodeFootprint = rclpy.create_node('change_footprint_node')
-        # Create a service client to set parameters
-        nodeFootprint.localFootPrintPub=nodeFootprint.create_publisher(Polygon, '/local_costmap/footprint', 10)
-        nodeFootprint.globalFootPrintPub=nodeFootprint.create_publisher(Polygon, '/global_costmap/footprint', 10)
-        p = Polygon()
-        p.points = [Point32(x=new_footprint[0][0], y=new_footprint[0][1]),
-                            Point32(x=new_footprint[1][0], y=new_footprint[1][1]),
-                            Point32(x=new_footprint[2][0], y=new_footprint[2][1]),
-                            Point32(x=new_footprint[3][0], y=new_footprint[3][1])]
-        for i in range (3):
-            nodeFootprint.globalFootPrintPub.publish(p)
-            nodeFootprint.localFootPrintPub.publish(p)
-            time.sleep(0.1)
-            print("publishing:" ,msg)
-            
-        nodeFootprint.destroy_node()
-    def isDocking(data):
-        global isDock 
-        isDock = data.data
-        # print(isDock)
-        print(isDock,type(isDock),"callback")
-    
-    node.isDockingSub = node.create_subscription(
-        Bool, "/dockingSuccesfull", isDocking, 10
-    )
     global rackPresentSub
     rackPresentSub = []
-    def getRack(data):
-        global rackPresentSub
-        data_list = data.data.split()
-        rackPresentSub = set(data_list)
-        # print(rackPresentSub)
-    
-    
-    node.getRackSub = node.create_subscription(String,"/ap_list",getRack,10)
-    node.isDockingSub
-    node.publisher = node.create_publisher(PoseStamped, '/dockingRequest', 10)
-    node.dockingClient = node.create_client(DockSw, '/dock_control')
-    while not node.dockingClient.wait_for_service(timeout_sec=1.0):
-        print('service not available, waiting again...')
-    node.dockingRequest = DockSw.Request()
-    
-    navigator.setInitialPose(getGoalPoseStamped("initalPose"))
-
-    # Wait for navigation to fully activate
-    navigator.waitUntilNav2Active()
-    change_footprint(withoutRackFootprint,"withoutRackFootprint")
-    # Go to the goal pose
+    def getRackFromCamera(data):
+        global rackPresentSub        
+        rackPresentSub=data.data.split()
+        rackPresentSub=set(rackPresentSub)
+        print(rackPresentSub)
+    node.getpresentRacksSub = node.create_subscription(String, '/ap_list',getRackFromCamera, 10)
+    node.getpresentRacksSub
+    node.sendBoxIdSub = node.create_publisher(String, '/sendBoxId', 10)
+    config_yaml = load_yaml(config_file)
+    global rackPresent,package_id
+    rackPresent = 0
+    racknameData = []
+    package_id=[]
+    for data in config_yaml["position"]:
+        racknameData.append(list(data.keys())[0])
+    package_id = config_yaml["package_id"]
+    for data in range(len(package_id)):
+        
+        rackIndex = find_string_in_list("rack" + str(data+1),racknameData)
+        print("rackIndex ",rackIndex)
+        rackName = racknameData[rackIndex]
+        #get xyz of rack
+        xyz = [config_yaml["position"][rackIndex][rackName][0],config_yaml["position"][rackIndex][rackName][1],0]
+        #get quaternions from eucler of rack
+        euler = [0,config_yaml["position"][rackIndex][rackName][2],0]
+        quaternions = R.from_euler('xyz', euler).as_quat().tolist()
+        degree = math.degrees(config_yaml["position"][rackIndex][rackName][2])
+        x,y,offsetXY=switch_case(math.ceil(degree),xyz)
+        xyz=[x,y,0.0]
+        add_docking_position(rackName,xyz,quaternions,offsetXY)
+    print(dockingPosition)        
     
     def getMissingPosition(givenList):
         if len(givenList)>=3 :
@@ -212,74 +155,41 @@ def main():
             if position not in givenList:
                 missingPosition.append(position)
         return missingPosition
-
-    def moveToGoal(goalPose,rack_no,israck,positionName):
-        global botPosition, botOrientation
-        global dockingPosition
+    #3
+    for data in range(len(package_id)):
         
-        
-        # goalPose.pose.position.z=0.0
-        if not israck:
-            if rack_no=="initalPose":
-                change_footprint(withoutRackFootprint,"withoutRackFootprint")
-            else:
-                change_footprint(withRackFootprint,"withRackFootprint")
-        else:
-            change_footprint(withoutRackFootprint,"withoutRackFootprint")
-        navigator.goToPose(goalPose)
-        i = 0
-
-        # Keep doing stuff as long as the robot is moving towards the goal
-        while not navigator.isTaskComplete():
-            i = i + 1
-        result = navigator.getResult()
-        print(result)
-        quaternion_array = goalPose.pose.orientation
-        orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
-        _, _, yaw = euler_from_quaternion(orientation_list)
-        yaw = math.degrees(yaw)
-        Xoff = dockingPosition[positionName]['XYoffsets'][0]
-        Yoff = dockingPosition[positionName]['XYoffsets'][1]
-        node.dockingRequest.linear_dock = True
-        node.dockingRequest.orientation_dock = True
-        node.dockingRequest.goal_x = round(goalPose.pose.position.x+Xoff,2)
-        node.dockingRequest.goal_y = round(goalPose.pose.position.y+Yoff,2)
-        node.dockingRequest.orientation = round(yaw,2)
-        node.dockingRequest.rack_no = rack_no
-        node.dockingRequest.rack_attach=israck
-        future = node.dockingClient.call_async(node.dockingRequest)
-        print(node.dockingRequest)
-        time.sleep(0.5)
-        while isDock!=True:
-            print("waiting")
-    for rackspresent in range(rackPresent):
         rackPresentSub=[-1]
-        rackList=1
-        foundRack = False
-        #get name of rack
-        while foundRack ==False:
-            
-            rackName = "%s%d" % ("rack",rackList)
-            value = dockingPosition.get(rackName)
-            if value:
-                
-                foundRack = True
-                while(-1 in rackPresentSub):
+        while(-1 in rackPresentSub):
                     time.sleep(0.1)
                 # print(rackPresentSub)
                 # print("Key found:",rackName, value)
-                getApRack = getMissingPosition(rackPresentSub)
-                getApRack=getApRack[0]
-                if getApRack==0:
-                    break
-                print(getApRack[0])
-                moveToGoal(getGoalPoseStamped(rackName),rackName,True,rackName)
-                moveToGoal(getGoalPoseStamped(getApRack),rackName,False,getApRack)
-                del dockingPosition[rackName]
-            else:
-                print("Key not found")
-            
-            rackList +=1
+        getApRack = getMissingPosition(rackPresentSub)
+        getApRack=getApRack[0]
+        
+        rackName="rack"+str(package_id[data])
+        node.nav2RackRequest.rack_name = rackName
+        node.nav2RackRequest.box_id = package_id[data]
+        node.nav2RackRequest.ap_name = getApRack
+        future = node.nav2RackClient.call_async(node.nav2RackRequest)
+        print(node.nav2RackRequest)
+        time.sleep(0.5)
+        print(future.result())
+        tempStr=""
+        box_string = String()
+        while(future.result() is  None):
+            try:
+                # node.aruco_name_publisher.publish(box_string)
+                print("going to racks",node.nav2RackRequest)
+            except:
+                pass
+        # rclpy.spin_once(node)
+        time.sleep(2)
+        # racksApsList =[racknameData[i],getApRack]
+        # tempStr = ''
+        # rack_string = String()
+        # rack_string.data =  tempStr.join(rack_string)
+        # node.racksApsPub.publish(rack_string)
+    
     print("done")
     rclpy.spin(node)
     rclpy.shutdown()

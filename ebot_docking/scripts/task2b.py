@@ -18,7 +18,7 @@ from tf_transformations import euler_from_quaternion
 import math
 from rcl_interfaces.srv import SetParameters
 from geometry_msgs.msg import Polygon,Point32
-
+from ebot_docking.srv import RackSw
 def main():
     rclpy.init()
     navigator = BasicNavigator()
@@ -161,20 +161,33 @@ def main():
         future = node.dockingClient.call_async(node.dockingRequest)
         print(node.dockingRequest)
         time.sleep(0.5)
-        while isDock!=True:
-            print("waiting")
+        print(future.result())
+        while(future.result() is  None):
+            try:
+                print(future)
+            except:
+                pass
+        # while isDock!=True:
+        #     print("waiting")
                     # node.publisher.publish(goalPose)
 
-    # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True,"rack1")
-    # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False,"ap1")
-    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
-    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True,"rack2")
-    # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False,"ap2")
-    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
-    moveToGoal(getGoalPoseStamped("rack3"),"rack3",True,"rack3")
-    moveToGoal(getGoalPoseStamped("ap3"),"rack3",False,"ap3")
-    moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
-
+    def Rack_control_callback(Request,Response):
+        node.get_logger().info("Request Arrived")
+        RackRequest=Request.rack_name
+        ApRequest=Request.ap_name
+        
+        #goes to rack
+        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
+        node.get_logger().info("Going to Rack")
+        #goes to ap    
+        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest)
+        node.get_logger().info("Going to Ap")
+        Response.success = True
+        Response.message = "Success"
+        node.get_logger().info("Request done with Succes")
+        return Response
+    dock_control_srv = node.create_service(RackSw, '/RackNav2Sw', Rack_control_callback, callback_group=callback_group)
+  
     rclpy.spin(node)
     rclpy.shutdown()
     navigator.lifecycleShutdown()

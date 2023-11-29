@@ -531,9 +531,6 @@ class aruco_tf(Node):
                 rackName.append(self.get_rack_name(self.nearest_angle(angleDegree)))
             except:
                 pass
-
-        
-
         #   ->  At last show cv2 image window having detected markers drawn and center points located using 'cv2.imshow' function.
         #       Refer MD book on portal for sample image -> https://portal.e-yantra.org/
         tempStr = " "

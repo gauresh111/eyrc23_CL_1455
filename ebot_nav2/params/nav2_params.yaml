@@ -145,12 +145,12 @@ controller_server:
       max_speed_xy: 0.30
       min_speed_theta: 0.0
 
-      acc_lim_x: 1.5
+      acc_lim_x: 3.5
       acc_lim_y: 0.0
-      acc_lim_theta: 2.0
-      decel_lim_x: -1.5
+      acc_lim_theta: 1.0
+      decel_lim_x: -3.5
       decel_lim_y: 0.0
-      decel_lim_theta: -2.0
+      decel_lim_theta: -1.0
 
       vx_samples: 20
       vy_samples: 5
@@ -345,13 +345,14 @@ waypoint_follower:
 
 velocity_smoother:
   ros__parameters:
+    use_sim_time: True
     smoothing_frequency: 20.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
     max_velocity: [3.0, 0.0, 3.0]
     min_velocity: [-3.0, 0.0, -3.0]
-    max_accel: [1.5, 0.0, 2.0]
-    max_decel: [-1.5, 0.0, -2.0]
+    max_accel: [2.5, 0.0, 0.6]
+    max_decel: [-2.5, 0.0, -0.6]
     odom_topic: "/odometry/filtered"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
