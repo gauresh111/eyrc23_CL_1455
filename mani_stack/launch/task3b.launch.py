@@ -1,10 +1,24 @@
+from launch.actions import ExecuteProcess
 import os
+import yaml
+import launch_ros
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from launch.actions import ExecuteProcess
+from launch.conditions import IfCondition
+from ament_index_python import get_package_share_directory
+from launch.actions import IncludeLaunchDescription
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import TimerAction
+from ament_index_python.packages import get_package_share_directory
+from launch.actions import (DeclareLaunchArgument, GroupAction,
+                            IncludeLaunchDescription, SetEnvironmentVariable)
 
+
+from launch.substitutions import LaunchConfiguration, PythonExpression
+
+from launch_ros.actions import PushRosNamespace
+from nav2_common.launch import RewrittenYaml
 def generate_launch_description():
-
     # start_perception = Node(
     # package='mani_stack',
     # executable='task1ab-perception',
@@ -17,10 +31,14 @@ def generate_launch_description():
     # package='ebot_docking',
     # executable='task2b',
     # )
-
+    start_Rviz = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('ebot_nav2'), 'launch', 'ebot_bringup_launch.py'),
+        )
+    )
     start_perception = ExecuteProcess(
         cmd=[[
-            'ros2 run mani_stack ',
+            'ros2 run mani_stack perception.py ',
         ]],
         shell=True
     )
@@ -32,16 +50,10 @@ def generate_launch_description():
         shell=True
     )
 
-    start_navigation = ExecuteProcess(
-        cmd=[[
-            'ros2 run ebot_docking task2b.py',
-        ]],
-        shell=True
-    )
+    
  
     return LaunchDescription([
-    start_perception,
-     start_docking,
-     start_navigation
+     start_perception,
+     start_docking
     ])
 

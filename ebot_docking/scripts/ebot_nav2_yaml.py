@@ -12,7 +12,7 @@ import tf2_ros
 from rclpy.duration import Duration # Handles time for ROS 2
 from scipy.spatial.transform import Rotation as R
 from std_msgs.msg import Bool
-from ebot_docking.srv import DockSw  # Import custom service message
+from ebot_docking.srv import RackSw  # Import custom service message
 from tf_transformations import euler_from_quaternion
 import math
 from rcl_interfaces.srv import SetParameters
@@ -86,7 +86,11 @@ def switch_case(value,cordinates):
         print("down")
 
     return x,y,offsetXY
-    
+def find_string_in_list(string, list):
+    for index, item in enumerate(list):
+        if item == string:
+            return index
+    return -1
     
 def main():
     rclpy.init()
@@ -101,25 +105,40 @@ def main():
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
     node.racksApsPub=node.create_publisher(String, '/getRacksAps', 10)
+    node.nav2RackClient = node.create_client(RackSw, '/RackNav2Sw')
+    while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
+        print(' Nav2 Client service not available, waiting again...')
+    node.nav2RackRequest = RackSw.Request()
     global dockingPosition
+    global rackPresentSub
+    rackPresentSub = []
+    def getRackFromCamera(data):
+        global rackPresentSub        
+        rackPresentSub=data.data.split()
+        rackPresentSub=set(rackPresentSub)
+        print(rackPresentSub)
+    node.getpresentRacksSub = node.create_subscription(String, '/ap_list',getRackFromCamera, 10)
+    node.getpresentRacksSub
+    node.sendBoxIdSub = node.create_publisher(String, '/sendBoxId', 10)
     config_yaml = load_yaml(config_file)
-    
-    withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
-    withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
-    global rackPresent
+    global rackPresent,package_id
     rackPresent = 0
     racknameData = []
+    package_id=[]
     for data in config_yaml["position"]:
         racknameData.append(list(data.keys())[0])
-   
-    for data in range(len(racknameData)):
-        rackName = racknameData[data]
+    package_id = config_yaml["package_id"]
+    for data in range(len(package_id)):
+        
+        rackIndex = find_string_in_list("rack" + str(data+1),racknameData)
+        print("rackIndex ",rackIndex)
+        rackName = racknameData[rackIndex]
         #get xyz of rack
-        xyz = [config_yaml["position"][data][rackName][0],config_yaml["position"][data][rackName][1],0]
+        xyz = [config_yaml["position"][rackIndex][rackName][0],config_yaml["position"][rackIndex][rackName][1],0]
         #get quaternions from eucler of rack
-        euler = [0,config_yaml["position"][data][rackName][2],0]
+        euler = [0,config_yaml["position"][rackIndex][rackName][2],0]
         quaternions = R.from_euler('xyz', euler).as_quat().tolist()
-        degree = math.degrees(config_yaml["position"][data][rackName][2])
+        degree = math.degrees(config_yaml["position"][rackIndex][rackName][2])
         x,y,offsetXY=switch_case(math.ceil(degree),xyz)
         xyz=[x,y,0.0]
         add_docking_position(rackName,xyz,quaternions,offsetXY)
@@ -136,8 +155,9 @@ def main():
             if position not in givenList:
                 missingPosition.append(position)
         return missingPosition
-
-    for i in range(len(racknameData)):
+    #3
+    for data in range(len(package_id)):
+        
         rackPresentSub=[-1]
         while(-1 in rackPresentSub):
                     time.sleep(0.1)
@@ -145,11 +165,29 @@ def main():
                 # print("Key found:",rackName, value)
         getApRack = getMissingPosition(rackPresentSub)
         getApRack=getApRack[0]
-        racksApsList =[racknameData[i],getApRack]
-        tempStr = ''
-        rack_string = String()
-        rack_string.data =  tempStr.join(rack_string)
-        node.racksApsPub.publish(rack_string)
+        
+        rackName="rack"+str(package_id[data])
+        node.nav2RackRequest.rack_name = rackName
+        node.nav2RackRequest.box_id = package_id[data]
+        node.nav2RackRequest.ap_name = getApRack
+        future = node.nav2RackClient.call_async(node.nav2RackRequest)
+        print(node.nav2RackRequest)
+        time.sleep(0.5)
+        print(future.result())
+        tempStr=""
+        box_string = String()
+        while(future.result() is  None):
+            try:
+                # node.aruco_name_publisher.publish(box_string)
+                print(future)
+            except:
+                pass
+        # racksApsList =[racknameData[i],getApRack]
+        # tempStr = ''
+        # rack_string = String()
+        # rack_string.data =  tempStr.join(rack_string)
+        # node.racksApsPub.publish(rack_string)
+    
     print("done")
     rclpy.spin(node)
     rclpy.shutdown()
