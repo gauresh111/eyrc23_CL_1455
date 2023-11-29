@@ -179,9 +179,11 @@ def main():
         while(future.result() is  None):
             try:
                 # node.aruco_name_publisher.publish(box_string)
-                print(future)
+                print("going to racks",node.nav2RackRequest)
             except:
                 pass
+        # rclpy.spin_once(node)
+        time.sleep(2)
         # racksApsList =[racknameData[i],getApRack]
         # tempStr = ''
         # rack_string = String()

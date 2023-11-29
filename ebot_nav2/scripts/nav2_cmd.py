@@ -86,6 +86,7 @@ def main():
             
         nodeFootprint.destroy_node()
     def moveToGoal(goalPose,rack_no,israck,positionName):
+        
         global botPosition, botOrientation
         global positionToGO
         dockingNodecli = Node("NodeDockingClient")
@@ -133,10 +134,11 @@ def main():
         print(future.result())
         while(future.result() is  None):
             try:
-                print(future)
+                print("docking request send")
             except:
                 pass
         dockingNodecli.destroy_node()
+        time.sleep(1)
     navigator.setInitialPose(getGoalPoseStamped("initalPose"))
     # Wait for navigation to fully activate
     navigator.waitUntilNav2Active()
