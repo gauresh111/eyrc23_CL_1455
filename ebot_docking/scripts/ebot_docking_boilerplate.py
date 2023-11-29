@@ -103,7 +103,7 @@ class MyRobotDockingController(Node):
         self.lind_detached_cli = self.create_client(DetachLink, '/DETACH_LINK')
         while not self.link_attach_cli.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('Link attacher service not available, waiting again...')
-
+        
         # Initialize all  flags and parameters here
         self.is_docking = False
         self.dock_aligned=False

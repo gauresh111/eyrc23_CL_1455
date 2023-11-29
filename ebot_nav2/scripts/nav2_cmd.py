@@ -19,6 +19,8 @@ import math
 from rcl_interfaces.srv import SetParameters
 from geometry_msgs.msg import Polygon,Point32
 from std_msgs.msg import String
+from ebot_docking.srv import RackSw
+
 def main():
     rclpy.init()
     navigator = BasicNavigator()
@@ -27,16 +29,18 @@ def main():
     # Create callback group that allows execution of callbacks in parallel without restrictions
     callback_group = ReentrantCallbackGroup()
     # Spin the node in background thread(s)
-    executor = rclpy.executors.MultiThreadedExecutor(2)
+    executor = rclpy.executors.MultiThreadedExecutor(4)
     executor.add_node(node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
-    tf_buffer = tf2_ros.buffer.Buffer()
-    tf_listener = tf2_ros.TransformListener(tf_buffer, node)
+    
     global botPosition, botOrientation
     botPosition = []
     botOrientation =[] 
-    global positionToGO
+    global positionToGO,DockingRacks,RackRequest,ApRequest
+    DockingRacks=True
+    RackRequest=""
+    ApRequest=""
     positionToGO = {
         'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},
         'rack1':{'xyz': [0.0, 4.4, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [1.26, 0.0]}, 
@@ -81,29 +85,18 @@ def main():
             print("publishing:" ,msg)
             
         nodeFootprint.destroy_node()
-    global racksAps
-    racksAps=[]
-    def getRacksAps(data):
-        global racksAps
-        racksAps = data.data.split()
-        
-    node.getRackApSub = node.create_subscription(String, "/getRacksAps", getRacksAps, 10)
-    node.getRackApSub
-    node.isDockingSub
-    node.dockingClient = node.create_client(DockSw, '/dock_control')
-    while not node.dockingClient.wait_for_service(timeout_sec=1.0):
-        print('service not available, waiting again...')
-    node.dockingRequest = DockSw.Request()
-    navigator.setInitialPose(getGoalPoseStamped("initalPose"))
-
-    # Wait for navigation to fully activate
-    navigator.waitUntilNav2Active()
-    # Go to the goal pose
-    
     def moveToGoal(goalPose,rack_no,israck,positionName):
         global botPosition, botOrientation
         global positionToGO
-        
+        dockingNodecli = Node("NodeDockingClient")
+        executor = rclpy.executors.MultiThreadedExecutor(3)
+        executor.add_node(dockingNodecli)
+        executor_thread = Thread(target=executor.spin, daemon=True, args=())
+        executor_thread.start()
+        dockingNodecli.dockingClient = dockingNodecli.create_client(DockSw, '/dock_control')
+        while not dockingNodecli.dockingClient.wait_for_service(timeout_sec=1.0):
+            print('docking Client service not available, waiting again...')
+        dockingNodecli.dockingRequest = DockSw.Request()
         
         # goalPose.pose.position.z=0.0
         if not israck:
@@ -128,31 +121,41 @@ def main():
         yaw = math.degrees(yaw)
         Xoff = positionToGO[positionName]['XYoffsets'][0]
         Yoff = positionToGO[positionName]['XYoffsets'][1]
-        node.dockingRequest.linear_dock = True
-        node.dockingRequest.orientation_dock = True
-        node.dockingRequest.goal_x = round(goalPose.pose.position.x+Xoff,2)
-        node.dockingRequest.goal_y = round(goalPose.pose.position.y+Yoff,2)
-        node.dockingRequest.orientation = round(yaw,2)
-        node.dockingRequest.rack_no = rack_no
-        node.dockingRequest.rack_attach=israck
-        future = node.dockingClient.call_async(node.dockingRequest)
-        print(node.dockingRequest)
+        dockingNodecli.dockingRequest.linear_dock = True
+        dockingNodecli.dockingRequest.orientation_dock = True
+        dockingNodecli.dockingRequest.goal_x = round(goalPose.pose.position.x+Xoff,2)
+        dockingNodecli.dockingRequest.goal_y = round(goalPose.pose.position.y+Yoff,2)
+        dockingNodecli.dockingRequest.orientation = round(yaw,2)
+        dockingNodecli.dockingRequest.rack_no = rack_no
+        dockingNodecli.dockingRequest.rack_attach=israck
+        future = dockingNodecli.dockingClient.call_async(dockingNodecli.dockingRequest)
+        time.sleep(0.5)
+        print(future.result())
         while(future.result() is  None):
             try:
                 print(future)
             except:
                 pass
-
-    # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True,"rack1")
-    # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False,"ap1")
-    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
-    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True,"rack2")
-    # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False,"ap2")
-    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
-    # moveToGoal(getGoalPoseStamped("rack3"),"rack3",True,"rack3")
-    # moveToGoal(getGoalPoseStamped("ap3"),"rack3",False,"ap3")
-    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False,"initalPose")
-
+        dockingNodecli.destroy_node()
+    navigator.setInitialPose(getGoalPoseStamped("initalPose"))
+    # Wait for navigation to fully activate
+    navigator.waitUntilNav2Active()
+    def Rack_control_callback(Request,Response):
+        node.get_logger().info("Request Arrived")
+        RackRequest=Request.rack_name
+        ApRequest=Request.ap_name
+        
+        #goes to rack
+        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
+        node.get_logger().info("Going to Rack")
+        #goes to ap    
+        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest)
+        node.get_logger().info("Going to Ap")
+        Response.success = True
+        Response.message = "Success"
+        node.get_logger().info("Request done with Succes")
+        return Response
+    dock_control_srv = node.create_service(RackSw, '/RackNav2Sw', Rack_control_callback, callback_group=callback_group)
     rclpy.spin(node)
     rclpy.shutdown()
     navigator.lifecycleShutdown()
