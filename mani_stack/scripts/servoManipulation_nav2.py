@@ -27,7 +27,7 @@ global servo_status
 servo_status = 5
 joint_states = [0, 0, 0, 0, 0, 0]
 global StartBox
-
+StartBox = False
 class ArucoNameCoordinate:
     def __init__(self):
         self.name = None
