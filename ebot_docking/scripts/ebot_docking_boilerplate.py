@@ -247,7 +247,7 @@ class MyRobotDockingController(Node):
     def UltralinearDockingprocess(self,leftUltraSonic,rightUltraSonic):
         avgUltraSonic = (leftUltraSonic+rightUltraSonic)/2
         reached = False
-        if avgUltraSonic <0.1:
+        if avgUltraSonic <0.14:
             reached = True
         linearPid = pid()
         return linearPid.computeLinear(avgUltraSonic,0.1),reached
