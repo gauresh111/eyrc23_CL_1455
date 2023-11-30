@@ -139,7 +139,7 @@ To launch task 3A, use this commands in seperate terminals-
     ros2 run ebot_nav2 nav2_cmd.py
     ```
     ```sh
-    ros2 run mani_stack manipulation_nav2.py
+    ros2 run mani_stack servoManipulation_nav2.py
     ```
     ```sh
     ros2 run pymoveit2 ex_collision_object.py
