@@ -151,6 +151,7 @@ def main():
         moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
         node.get_logger().info("Going to Rack")
         #goes to ap    
+        time.sleep(1)
         moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest)
         node.get_logger().info("Going to Ap")
         Response.success = True
