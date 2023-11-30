@@ -10,13 +10,13 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 
 from std_msgs.msg import String
-
+from std_msgs.msg import Bool
 from pymoveit2 import MoveIt2
 from pymoveit2.robots import ur5
 import tf2_ros
 from ebot_docking.srv import RackSw
 aruco_name_list = []
-BoxId=[]
+StartBox=False
 class ArucoNameCoordinate:
     def __init__(self):
         self.name = None
@@ -33,8 +33,8 @@ def aruco_name_list_updater(msg):
     aruco_name_list = msg.data.split()
 
 def getBox_id(msg):
-    global BoxId
-    BoxId = msg.data.split()
+    global StartBox
+    StartBox = msg.data
 
 def main():
     rclpy.init()
@@ -57,7 +57,7 @@ def main():
     Drop.quaternions = [ 0.5414804, -0.4547516, -0.5414804, 0.4547516 ]
 
     global aruco_name_list
-
+    global StartBox
     # Create node for this example
     node = Node("pick_aruco")
 
@@ -75,7 +75,7 @@ def main():
     )
 
     # Spin the node in background thread(s)
-    executor = rclpy.executors.MultiThreadedExecutor(2)
+    executor = rclpy.executors.MultiThreadedExecutor(4)
     executor.add_node(node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
@@ -84,9 +84,16 @@ def main():
     aruco_name_subscriber = node.create_subscription(
             String, "/aruco_list", aruco_name_list_updater, 10
         )
+    ManipulationStart = node.create_subscription(
+            Bool, "/StartArnManipulation", getBox_id, 10
+        )
     time.sleep(5)
 
     arucoData = []
+    
+    while StartBox == False:
+        time.sleep(0.1)
+        
     while len(arucoData) <1:
         flag = True
         for aruco in aruco_name_list:
