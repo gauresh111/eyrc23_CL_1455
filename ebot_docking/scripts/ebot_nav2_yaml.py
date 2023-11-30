@@ -20,6 +20,7 @@ from geometry_msgs.msg import Polygon,Point32
 import yaml
 from ament_index_python.packages import get_package_share_directory
 from std_msgs.msg import String
+from std_msgs.msg import Bool
 config_folder_name = 'ebot_docking'
 
 global dockingPosition
@@ -104,7 +105,7 @@ def main():
     executor.add_node(node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
-    node.racksApsPub=node.create_publisher(String, '/getRacksAps', 10)
+    node.racksApsPub=node.create_publisher(Bool, '/StartArnManipulation', 10)
     node.nav2RackClient = node.create_client(RackSw, '/RackNav2Sw')
     while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
         print(' Nav2 Client service not available, waiting again...')
@@ -184,6 +185,11 @@ def main():
                 pass
         # rclpy.spin_once(node)
         time.sleep(2)
+        for i in range(10):
+            msg = Bool()
+            msg.data = True
+            node.racksApsPub.publish(msg)
+            time.sleep(0.1)
         # racksApsList =[racknameData[i],getApRack]
         # tempStr = ''
         # rack_string = String()

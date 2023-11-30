@@ -124,22 +124,22 @@ To launch task 3A, use this commands in seperate terminals-
 - Task 3B: Moving Racks with Aruco Boxes towards Robotic Arm with Ebot and pick & place Boxes with Robotic Arm in Simulation Environment-
 
     ```sh
-    ros2 launch eyantra_warehouse task3a_with_nav2.launch.py
+    ros2 launch eyantra_warehouse task3a.launch.py
     ```
     ```sh
-    ros2 launch ur5_moveit spawn_ur5_launch_moveit.launch.py
+    ros2 launch mani_stack task3b.launch.py
     ```
     ```sh
-    ros2 run ebot_docking task2b.py
+    ros2 launch ebot_nav2 ebot_bringup_launch.py
     ```
     ```sh
-    ros2 run ebot_docking ebot_docking_boilerplate.py
+    ros2 run ebot_docking ebot_nav2_yaml.py
     ```
     ```sh
-    ros2 launch ur_description ur5_gazebo_launch.py
+    ros2 run ebot_nav2 nav2_cmd.py
     ```
     ```sh
-    ros2 run mani_stack task1ab-perception.py
+    ros2 run mani_stack servoManipulation_nav2.py
     ```
     ```sh
     ros2 run pymoveit2 ex_collision_object.py
