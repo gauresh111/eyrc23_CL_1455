@@ -31,11 +31,7 @@ def generate_launch_description():
     # package='ebot_docking',
     # executable='task2b',
     # )
-    # start_Rviz = IncludeLaunchDescription(
-    #     PythonLaunchDescriptionSource(
-    #         os.path.join(get_package_share_directory('ebot_nav2'), 'launch', 'ebot_bringup_launch.py'),
-    #     )
-    # )
+    
     start_perception = ExecuteProcess(
         cmd=[[
             'ros2 run mani_stack perception.py ',
