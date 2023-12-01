@@ -1,24 +1,17 @@
 #!/usr/bin/env python3
-
-from nav_msgs.msg import Odometry
+# -*- coding: utf-8 -*-
 import rclpy
+from rclpy.node import Node
 from threading import Thread
 import time
 from geometry_msgs.msg import PoseStamped
-import rclpy
 from rclpy.callback_groups import ReentrantCallbackGroup
-from rclpy.node import Node
 from nav2_simple_commander.robot_navigator import BasicNavigator
-import tf2_ros
-from rclpy.duration import Duration # Handles time for ROS 2
 from scipy.spatial.transform import Rotation as R
-from std_msgs.msg import Bool
 from ebot_docking.srv import DockSw  # Import custom service message
 from tf_transformations import euler_from_quaternion
 import math
-from rcl_interfaces.srv import SetParameters
 from geometry_msgs.msg import Polygon,Point32
-from std_msgs.msg import String
 from ebot_docking.srv import RackSw
 
 def main():
@@ -29,7 +22,7 @@ def main():
     # Create callback group that allows execution of callbacks in parallel without restrictions
     callback_group = ReentrantCallbackGroup()
     # Spin the node in background thread(s)
-    executor = rclpy.executors.MultiThreadedExecutor(4)
+    executor = rclpy.executors.MultiThreadedExecutor(1)
     executor.add_node(node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
@@ -90,10 +83,6 @@ def main():
         global botPosition, botOrientation
         global positionToGO
         dockingNodecli = Node("NodeDockingClient")
-        executor = rclpy.executors.MultiThreadedExecutor(3)
-        executor.add_node(dockingNodecli)
-        executor_thread = Thread(target=executor.spin, daemon=True, args=())
-        executor_thread.start()
         dockingNodecli.dockingClient = dockingNodecli.create_client(DockSw, '/dock_control')
         while not dockingNodecli.dockingClient.wait_for_service(timeout_sec=1.0):
             print('docking Client service not available, waiting again...')
@@ -148,12 +137,14 @@ def main():
         ApRequest=Request.ap_name
         
         #goes to rack
-        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
         node.get_logger().info("Going to Rack")
+        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
+        
         #goes to ap    
         time.sleep(1)
-        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest)
         node.get_logger().info("Going to Ap")
+        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest)
+        
         Response.success = True
         Response.message = "Success"
         node.get_logger().info("Request done with Succes")
