@@ -125,19 +125,19 @@ def generate_launch_description():
     )
 
     #  Visualization (parameters needed for MoveIt display plugin)
-    rviz = Node(
-        name='rviz',
-        package='rviz2',
-        executable='rviz2',
-        output='screen',
-        parameters=[
-            {
-                'robot_description': robot_description_arm,
-                'robot_description_semantic': robot_description_semantic,
-                'robot_description_kinematics': kinematics_config,
-            }
-        ],
-    )
+    # rviz = Node(
+    #     name='rviz',
+    #     package='rviz2',
+    #     executable='rviz2',
+    #     output='screen',
+    #     parameters=[
+    #         {
+    #             'robot_description': robot_description_arm,
+    #             'robot_description_semantic': robot_description_semantic,
+    #             'robot_description_kinematics': kinematics_config,
+    #         }
+    #     ],
+    # )
     # Controller manager for realtime interactions
     ros2_control_node = Node(
         package="controller_manager",
