@@ -137,12 +137,12 @@ def generate_launch_description():
     
 
     # Launch rviz
-    # start_rviz_cmd = Node(
-    #     package='rviz2',
-    #     executable='rviz2',
-    #     name='rviz2',
-    #     arguments=['-d', rviz_config_file],
-    #     output='screen')
+    start_rviz_cmd = Node(
+        package='rviz2',
+        executable='rviz2',
+        name='rviz2',
+        arguments=['-d', rviz_config_file],
+        output='screen')
     start_lifecycle_manager_cmd = Node(
             package='nav2_lifecycle_manager',
             executable='lifecycle_manager',
@@ -242,19 +242,12 @@ def generate_launch_description():
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
-    # ld.add_action(start_rviz_cmd)
-    # ld.add_action(declare_mapper_online_async_param_cmd)
-    # ld.add_action(mapper_online_async_param_launch)
-    # ld.add_action(start_world)
-    # ld.add_action(robot_state_publisher_node_ebot)
-    # ld.add_action(spawn_ebot)
-    # ld.add_action(static_transform)
-    # ld.add_action(spawn_arm)
+    ld.add_action(start_rviz_cmd)
     ld.add_action(robot_localization_node)
     ld.add_action(bringup_cmd_group)
     ld.add_action(start_map_server_cmd)
     ld.add_action(start_costmap_filter_info_server_cmd)
     ld.add_action(start_lifecycle_manager_cmd)
-  
+    
                                                 
     return ld

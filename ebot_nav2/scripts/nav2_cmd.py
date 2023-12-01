@@ -78,16 +78,16 @@ def main():
             print("publishing:" ,msg)
             
         nodeFootprint.destroy_node()
-    def moveToGoal(goalPose,rack_no,israck,positionName):
+    def moveToGoal(goalPose,rack_no,israck,positionName,init_pose):
         
         global botPosition, botOrientation
         global positionToGO
-        dockingNodecli = Node("NodeDockingClient")
+        dockingNodecli = rclpy.create_node("NodeDockingClient")
         dockingNodecli.dockingClient = dockingNodecli.create_client(DockSw, '/dock_control')
         while not dockingNodecli.dockingClient.wait_for_service(timeout_sec=1.0):
             print('docking Client service not available, waiting again...')
         dockingNodecli.dockingRequest = DockSw.Request()
-        
+        # navigator.waitUntilNav2Active()
         # goalPose.pose.position.z=0.0
         if not israck:
             if rack_no=="initalPose":
@@ -96,6 +96,9 @@ def main():
                 change_footprint(withRackFootprint,"withRackFootprint")
         else:
             change_footprint(withoutRackFootprint,"withoutRackFootprint")
+        navigator.lifecycleStartup()
+        path = navigator.getPath(init_pose, goalPose)
+        # smoothed_path = navigator.smoothPath(path)
         navigator.goToPose(goalPose)
 
         i = 0
@@ -121,12 +124,14 @@ def main():
         future = dockingNodecli.dockingClient.call_async(dockingNodecli.dockingRequest)
         time.sleep(0.5)
         print(future.result())
-        while(future.result() is  None):
-            try:
-                print("docking request send")
-            except:
-                pass
+        # while(future.result() is  None):
+        #     try:
+        #         print("docking request send")
+        #     except:
+        #         pass
+        rclpy.spin_until_future_complete(dockingNodecli, future)
         dockingNodecli.destroy_node()
+        # navigator.lifecycleShutdown()
         time.sleep(1)
     navigator.setInitialPose(getGoalPoseStamped("initalPose"))
     # Wait for navigation to fully activate
@@ -138,12 +143,12 @@ def main():
         
         #goes to rack
         node.get_logger().info("Going to Rack")
-        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
+        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest,getGoalPoseStamped(RackRequest))
         
         #goes to ap    
         time.sleep(1)
         node.get_logger().info("Going to Ap")
-        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest)
+        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest,getGoalPoseStamped(ApRequest))
         
         Response.success = True
         Response.message = "Success"

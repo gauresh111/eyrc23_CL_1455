@@ -147,14 +147,14 @@ controller_server:
 
       acc_lim_x: 3.5
       acc_lim_y: 0.0
-      acc_lim_theta: 1.0
+      acc_lim_theta: 2.0
       decel_lim_x: -3.5
       decel_lim_y: 0.0
-      decel_lim_theta: -1.0
+      decel_lim_theta: -2.0
 
-      vx_samples: 20
+      vx_samples: 40
       vy_samples: 5
-      vtheta_samples: 20
+      vtheta_samples: 40
 
       sim_time: 1.7
       linear_granularity: 0.01
@@ -179,7 +179,7 @@ controller_server:
       GoalDist.scale: 24.0
 
       RotateToGoal.scale: 32.0
-      RotateToGoal.slowing_factor: 5.0
+      RotateToGoal.slowing_factor: 10.0
       RotateToGoal.lookahead_time: -1.0
       
 controller_server_rclcpp_node:
@@ -375,3 +375,10 @@ filter_mask_server:
     frame_id: "map"
     topic_name: "/keepout_filter_mask"
     yaml_filename: "keepout_mask.yaml"
+lifecycle_manager:
+  ros__parameters:
+    autostart: true
+    node_names: ['controller_server', 'planner_server', 'behavior_server', 'bt_navigator', 'waypoint_follower']
+    bond_timeout: 4.0
+    attempt_respawn_reconnection: true
+    bond_respawn_max_duration: 10.0
