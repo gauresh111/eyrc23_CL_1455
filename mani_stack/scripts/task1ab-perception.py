@@ -164,7 +164,10 @@ def detect_aruco(image):
     #   ->  Use these aruco parameters-
     #       ->  Dictionary: 4x4_50 (4x4 only until 50 aruco IDs)
     arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
-    arucoParams = cv2.aruco.DetectorParameters_create()
+    try:
+        arucoParams = cv2.aruco.DetectorParameters_create()
+    except:
+        arucoParams = cv2.aruco.DetectorParameters()
 
     #   ->  Detect aruco marker in the image and store 'corners' and 'ids'
     #       ->  HINT: Handle cases for empty markers detection.

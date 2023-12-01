@@ -304,6 +304,7 @@ def main():
         def joint_states_updater(msg):
             global joint_states
             joint_states = list([states for states in msg.position])
+            print("Joint States: ", joint_states)
 
         servoNode = Node("ServoNode")
         callback_group = ReentrantCallbackGroup()
@@ -469,14 +470,12 @@ def main():
 
             # Move to Pre Drop Pose
             print("Moving to ", "Pre Drop Pose")
-            moveit2.move_to_configuration(Pre_Drop_Joints.joint_states)
-            moveit2.wait_until_executed()
+            moveToJointStates(Pre_Drop_Joints.joint_states)
             print("Reached Pre-Drop")
 
             # Move to Drop Pose
             print("Moving to ", dropData.name)
-            moveit2.move_to_configuration(dropData.joint_states)
-            moveit2.wait_until_executed()
+            moveToJointStates(dropData.joint_states)
             print("Reached Drop")
 
             controlGripper("OFF", box_name)
@@ -488,8 +487,7 @@ def main():
 
             # Move to Pre Drop Pose
             print("Moving to ", "Pre Drop Pose")
-            moveit2.move_to_configuration(Pre_Drop_Joints.joint_states)
-            moveit2.wait_until_executed()
+            moveToJointStates(Pre_Drop_Joints.joint_states)
             print("Reached Pre-Drop")
 
             servoNode.destroy_node()
