@@ -112,11 +112,11 @@
       <pose>0 0 -0.21 0 0 0</pose>
 	</include>
 
-  <!-- <include>
+  <include>
       <uri>model://rack_base</uri>
       <name>rack_base</name>
       <pose>1.421 4.35 0.05 0 -0 -1.57</pose>
-	</include> -->
+	</include>
 
   <!-- NOISE BOX -->
   <!-- <include>
@@ -128,7 +128,7 @@
 
 
   <!-- RACK 1 -->
-  <!-- <include>
+  <include>
       <uri>model://rack</uri>
       <name>rack1</name>
       <pose>1.26 4.35 0.1 0 -0 3.14</pose>
@@ -138,16 +138,16 @@
       <uri>model://boxes/box_1</uri>
       <name>box1</name>
       <pose>1.33 4.35 1.35 0 -0 0</pose>
-	</include> -->
+	</include>
 
   <!-- RACK 1 -->
 
   <!-- RACK 2 -->
-  <!-- <include>
+  <include>
       <uri>model://rack</uri>
       <name>rack2</name>
       <pose>2.03 3.30 0.1 0 -0 -1.57</pose>
-	</include> -->
+	</include>
 
   <!-- RACK 2 -->
 
@@ -165,7 +165,7 @@
 	</include>
 
   <!-- RACK 3 -->
-<!-- 
+
   <include>
       <uri>model://rack</uri>
       <name>rack4</name>
@@ -194,7 +194,7 @@
       <uri>model://rack</uri>
       <name>rack8</name>
       <pose>-3.24 4.28 0.1 0 -0 0.0</pose>
-	</include> -->
+	</include> 
 
   <!-- <include>
       <uri>model://aws_robomaker_warehouse_ClutteringC_01</uri>
