@@ -330,7 +330,7 @@ class MyRobotDockingController(Node):
             global ultrasonic_value
             dockingNode = Node("GlobalNodeDocking")
             
-            executor = MultiThreadedExecutor(3)
+            executor = MultiThreadedExecutor(1)
             executor.add_node(dockingNode)
             executor_thread = Thread(target=executor.spin, daemon=True, args=())
             executor_thread.start()
@@ -342,39 +342,44 @@ class MyRobotDockingController(Node):
             dockingNode.ultrasonic_rl_sub
             dockingNode.ultrasonic_rr_sub = dockingNode.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10)
             dockingNode.ultrasonic_rr_sub
-            time.sleep(0.5)
+            rateDocking = dockingNode.create_rate(2, self.get_clock())
+            rateDocking.sleep(0.5)
 
             self.AngularDocking()
             for i in range(5):
-                self.moveBot(0.0,0.0)     
+                self.moveBot(0.0,0.0)   
+                rateDocking.sleep(0.1)  
             #orientation done
             if not self.rackName=="initalPose":
                 if self.isAttach:
                     self.UltraLinearDocking()
                     for i in range(5):
                         self.moveBot(0.0,0.0)
-                    time.sleep(0.5)
+                    rateDocking.sleep(0.1)
                 else:
                     self.odomLinearDocking()
                     for i in range(5):
                         self.moveBot(0.0,0.0)
-                    time.sleep(0.5)
+                    rateDocking.sleep(0.1)
                 #linear done
                 self.AngularDocking()
                 for i in range(5):
                     self.moveBot(0.0,0.0)
+                    rateDocking.sleep(0.1)
                 #orientation done
                 print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
                 if self.isAttach:
                     self.attachRack(self.rackName)
                 else :
                     self.detachRack(self.rackName)
-                    time.sleep(0.5)
+                    rateDocking.sleep(0.5)
                     for i in range(5):
                             self.moveBot(1.0,0.0)
-                    time.sleep(0.6)
+                            rateDocking.sleep(0.1)
+                    rateDocking.sleep(0.6)
                     for i in range(5):
                         self.moveBot(0.0,0.0)
+                        rateDocking.sleep(0.1)
             self.is_docking = False
             self.dock_aligned=True
             ## docking and orientation done
