@@ -45,10 +45,10 @@ def generate_launch_description():
         ]],
         shell=True
     )
-    star_ServoManipulation = ExecuteProcess(
-    cmd=[['ros2 run mani_stack servoManipulation_nav2.py']],
-    shell=True
-    )
+    # star_ServoManipulation = ExecuteProcess(
+    # cmd=[['ros2 run mani_stack servoManipulation_nav2.py']],
+    # shell=True
+    # )
     start_yaml_controller = ExecuteProcess(
         cmd=[[
             'ros2 run ebot_docking ebot_nav2_yaml.py',
