@@ -10,7 +10,7 @@
 *  Filename:			eyantra_warehouse.world
 *  Created:				12/07/2023
 *  Last Modified:	12/09/2023
-*  Modified by:   Ravi
+*  Modified by:   Ravi, Jaison
 *  Author:				e-Yantra Team
 *  
 *****************************************************************************************
@@ -36,8 +36,12 @@
       <camera name="user_default">
         <!-- <pose>-24.307 -9.572 4.851 0 0.071 0.316</pose> -->
         <pose>2.080 5.1277 2.710 0.0 0.211 -1.664</pose>
-        <render_rate> 5.0 </render_rate>
       </camera>
+    <render>
+    <rate>
+    1
+    </rate>
+    </render>
     </gui>
     <!-- <plugin name="ros_link_attacher_plugin" filename="libgazebo_ros_link_attacher.so"/> -->
 
@@ -109,10 +113,10 @@
       <pose>0 0 -0.25 0 0 0</pose>
 	</include>
 
-  <!-- <include>
+  <include>
       <uri>model://warehouse_boundary</uri>
       <pose>0 0 -0.21 0 0 0</pose>
-	</include> -->
+	</include>
 
   <include>
       <uri>model://rack_base</uri>
@@ -121,11 +125,11 @@
 	</include>
 
   <!-- NOISE BOX -->
-  <!-- <include>
+  <include>
       <uri>model://boxes/box_1</uri>
       <name>box1_dup</name>
       <pose>-4 -2.6 3 0 0 0</pose>
-	</include> -->
+	</include>
   <!-- NOISE BOX -->
 
 
@@ -167,7 +171,7 @@
 	</include>
 
   <!-- RACK 3 -->
-
+<!-- 
   <include>
       <uri>model://rack</uri>
       <name>rack4</name>
@@ -196,9 +200,9 @@
       <uri>model://rack</uri>
       <name>rack8</name>
       <pose>-3.24 4.28 0.1 0 -0 0.0</pose>
-	</include> 
+	</include> -->
 
-  <!-- <include>
+  <include>
       <uri>model://aws_robomaker_warehouse_ClutteringC_01</uri>
       <name>boxes</name>
       <pose>-4.02 -2.62 0 0 -0 0</pose>
@@ -208,13 +212,13 @@
       <uri>model://aws_robomaker_warehouse_DeskC_01</uri>
       <name>desk</name>
       <pose>-1.33 -6.52 0 0 -0 -1.57</pose>
-	</include> -->
+	</include>
 
-    <!-- <include>
+    <include>
       <uri>model://aws_robomaker_warehouse_PalletJackB_01</uri>
       <name>palletjab</name>
       <pose>-2.97 -0.21 0 0 -0 -1.29</pose>
-	</include>  -->
+	</include> 
 
   <include>
       <uri>model://arm_base</uri>
@@ -222,11 +226,11 @@
       <pose>1.78 -2.4 0.253 0 -0 0.0</pose>
 	</include>
 
-  <!-- <include>
-      <uri>model://drop_table</uri>
+  <include>
+      <uri>model://table</uri>
       <name>table</name>
       <pose>2.4 -2.45 0 0 -0 0.0</pose>
-	</include> -->
+	</include>
 
   <plugin name="gazebo_link_attacher" filename="libgazebo_link_attacher.so"/>
   <plugin name="gazebo_link_ur5_attacher" filename="libgazebo_link_ur5_attacher.so"/>

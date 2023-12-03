@@ -187,7 +187,10 @@ def main():
                 print("going to racks",node.nav2RackRequest)
                 # rclpy.spin_once(node)
             except KeyboardInterrupt:
-                break
+                rclpy.spin(node)
+                rclpy.shutdown()
+                navigator.lifecycleShutdown()
+                exit(0)
         # rclpy.spin_until_future_complete(node, future, timeout_sec=90)
         # rclpy.spin_once(node)
         print("Next Iteration")
