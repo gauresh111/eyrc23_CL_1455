@@ -139,28 +139,28 @@ controller_server:
       debug_trajectory_details: True
       min_vel_x: 0.0
       min_vel_y: 0.0
-      max_vel_x: 0.26
+      max_vel_x: 0.30
       max_vel_y: 0.0
-      max_vel_theta: 1.0
+      max_vel_theta: 3.0
       min_speed_xy: 0.0
-      max_speed_xy: 0.26
+      max_speed_xy: 0.30
       min_speed_theta: 0.0
 
-      acc_lim_x: 2.5
+      acc_lim_x: 3.5
       acc_lim_y: 0.0
-      acc_lim_theta: 3.2
-      decel_lim_x: -2.5
+      acc_lim_theta: 2.0
+      decel_lim_x: -3.5
       decel_lim_y: 0.0
-      decel_lim_theta: -3.2
+      decel_lim_theta: -2.0
 
-      vx_samples: 20
+      vx_samples: 40
       vy_samples: 5
-      vtheta_samples: 20
+      vtheta_samples: 40
 
       sim_time: 1.7
-      linear_granularity: 0.05
-      angular_granularity: 0.025
-      transform_tolerance: 1.0
+      linear_granularity: 0.01
+      angular_granularity: 0.05
+      transform_tolerance: 0.1
       xy_goal_tolerance: 0.08
       trans_stopped_velocity: 0.25
       short_circuit_trajectory_evaluation: True
@@ -204,7 +204,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        inflation_radius: 0.4
       voxel_layer:
         plugin: "nav2_costmap_2d::VoxelLayer"
         enabled: True
@@ -266,8 +266,8 @@ global_costmap:
         map_subscribe_transient_local: True
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
-        cost_scaling_factor: 3.0
-        inflation_radius: 0.55
+        cost_scaling_factor: 2.0
+        inflation_radius: 0.7
       always_send_full_costmap: True
   global_costmap_client:
     ros__parameters:
