@@ -35,16 +35,21 @@ def main():
     RackRequest=""
     ApRequest=""
     positionToGO = {
-        'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},
-        'rack1':{'xyz': [0.0, 4.2, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [1.26, 0.0]}, 
-        'rack2':{'xyz': [2.03, 2.06, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 1.24]},
-        'rack3':{'xyz': [2.13, -7.09, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -1.0]}, 
-        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]}, 
-        'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8]}, 
-        'ap3':{'xyz': [1.37, -1.00, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72]}
-            }
+        'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},'Yaw':180,
+        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]},'Yaw':180, 
+        'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7078252, 0.7073883], 'XYoffsets': [0.0, 0.8]},'Yaw':-1.57, 
+        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7078252, 0.7073883], 'XYoffsets': [0.0, -0.72],'Yaw':1.57}           
+        }
     withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
+    def add_docking_position(name, xyz, quaternions, xy_offsets,yaw):
+        global positionToGO
+        positionToGO[name] = {
+            'xyz': xyz,
+            'quaternions': quaternions,
+            'XYoffsets': xy_offsets,
+            'Yaw':yaw
+        }
     def getGoalPoseStamped(goal):
         global positionToGO
         Goal = positionToGO[goal]
@@ -134,15 +139,26 @@ def main():
         rclpy.spin_until_future_complete(dockingNodecli, future)
         dockingNodecli.destroy_node()
         # navigator.lifecycleShutdown()
+        navigator.clearAllCostmaps()
         time.sleep(1)
-    navigator.setInitialPose(getGoalPoseStamped("initalPose"))
+    # navigator.setInitialPose(getGoalPoseStamped("initalPose"))
     # Wait for navigation to fully activate
     navigator.waitUntilNav2Active()
     def Rack_control_callback(Request,Response):
+        global positionToGO
         node.get_logger().info("Request Arrived")
         RackRequest=Request.rack_name
         ApRequest=Request.ap_name
-        
+        x=Request.x
+        y=Request.y
+        yaw=Request.yaw
+        x_offset=Request.offset_x
+        y_offset=Request.offset_y
+        xyz=[x,y,0.0]
+        euler = [0,0,yaw]
+        quaternions = R.from_euler('xyz', euler).as_quat().tolist()
+        offsetXY=[x_offset,y_offset]
+        add_docking_position(RackRequest,xyz,quaternions,offsetXY,yaw)
         #goes to rack
         node.get_logger().info("Going to Rack")
         moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest,getGoalPoseStamped(RackRequest))
