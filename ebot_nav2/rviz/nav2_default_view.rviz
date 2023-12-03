@@ -104,7 +104,7 @@ Visualization Manager:
       Min Intensity: 0
       Name: LaserScan
       Position Transformer: XYZ
-      Selectable: true
+      Selectable: false
       Size (Pixels): 3
       Size (m): 0.009999999776482582
       Style: Points
@@ -117,7 +117,7 @@ Visualization Manager:
         Value: /scan
       Use Fixed Frame: true
       Use rainbow: true
-      Value: true
+      Value: false
     - Alpha: 1
       Autocompute Intensity Bounds: true
       Autocompute Value Bounds:
@@ -490,7 +490,7 @@ Visualization Manager:
   Global Options:
     Background Color: 48; 48; 48
     Fixed Frame: map
-    Frame Rate: 30
+    Frame Rate: 10
   Name: root
   Tools:
     - Class: rviz_default_plugins/MoveCamera

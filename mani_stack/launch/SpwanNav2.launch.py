@@ -49,7 +49,13 @@ def generate_launch_description():
     launch_dir = os.path.join(bringup_dir, 'launch')
     ebot_nav2_dir = get_package_share_directory('ebot_nav2')
     # Create our own temporary YAML files that include substitutions
-    lifecycle_nodes = ['filter_mask_server', 'costmap_filter_info_server']
+    lifecycle_nodes = ['filter_mask_server', 'costmap_filter_info_server','controller_server',
+                       'smoother_server',
+                       'planner_server',
+                       'behavior_server',
+                       'bt_navigator',
+                       'waypoint_follower',
+                       'velocity_smoother']
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
     slam = LaunchConfiguration('slam')
@@ -59,7 +65,7 @@ def generate_launch_description():
     use_composition = LaunchConfiguration('use_composition')
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
-    rviz_config_file = LaunchConfiguration('rviz_config')
+    # rviz_config_file = LaunchConfiguration('rviz_config')
     params_file = LaunchConfiguration('params_file')
     mask_yaml_file = LaunchConfiguration('mask_yaml_file')
     remappings = [('/tf', 'tf'),
@@ -128,21 +134,21 @@ def generate_launch_description():
         description='log level')
     # Adding slam-toolbox, with online_async_launch.py
    
-    declare_rviz_config_file_cmd = DeclareLaunchArgument(
-        'rviz_config',
-        default_value=os.path.join(ebot_nav2_dir, 'rviz', 'nav2_default_view.rviz'),
-        description='Full path to the RVIZ config file to use')
+    # declare_rviz_config_file_cmd = DeclareLaunchArgument(
+    #     'rviz_config',
+    #     default_value=os.path.join(ebot_nav2_dir, 'rviz', 'nav2_default_view.rviz'),
+    #     description='Full path to the RVIZ config file to use')
 
      # Make re-written yaml
     
 
     # Launch rviz
-    start_rviz_cmd = Node(
-        package='rviz2',
-        executable='rviz2',
-        name='rviz2',
-        arguments=['-d', rviz_config_file],
-        output='screen')
+    # start_rviz_cmd = Node(
+    #     package='rviz2',
+    #     executable='rviz2',
+    #     name='rviz2',
+    #     arguments=['-d', rviz_config_file],
+    #     output='screen')
     start_lifecycle_manager_cmd = Node(
             package='nav2_lifecycle_manager',
             executable='lifecycle_manager',
@@ -241,13 +247,14 @@ def generate_launch_description():
     ld.add_action(declare_use_composition_cmd)
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
-    ld.add_action(declare_rviz_config_file_cmd)
-    ld.add_action(start_rviz_cmd)
+    # ld.add_action(declare_rviz_config_file_cmd)
+    # ld.add_action(start_rviz_cmd)
     ld.add_action(robot_localization_node)
     ld.add_action(bringup_cmd_group)
+    ld.add_action(start_lifecycle_manager_cmd)
     ld.add_action(start_map_server_cmd)
     ld.add_action(start_costmap_filter_info_server_cmd)
-    ld.add_action(start_lifecycle_manager_cmd)
+
     
                                                 
     return ld

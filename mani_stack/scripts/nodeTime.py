@@ -25,22 +25,50 @@ from rclpy.duration import Duration
 from rclpy.time import Time
 def main():
     rclpy.init()
-    node = Node("moveBotYaml")
-    def convert_nanoseconds_to_seconds(nanoseconds):
-        return nanoseconds / 1e9
+    navigator = BasicNavigator()
+    node = Node("moveBot")
+
     # Create callback group that allows execution of callbacks in parallel without restrictions
     callback_group = ReentrantCallbackGroup()
     # Spin the node in background thread(s)
-    executor = rclpy.executors.MultiThreadedExecutor(3)
+    executor = rclpy.executors.MultiThreadedExecutor(1)
     executor.add_node(node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
-    nodeStopClock = node.get_clock()
-    
-    while True:
-        future_time = Time(seconds=nodeStopClock.now().nanoseconds / 1e9 + 1, clock_type=nodeStopClock.clock_type)
-        nodeStopClock.sleep_until(future_time)
-        print("Time: ",nodeStopClock.now().nanoseconds / 1e9)
-        time.sleep(1)
+    global positionToGO
+    positionToGO = {
+        'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},
+        'rack1':{'xyz': [0.0, 4.4, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [1.26, 0.0]}, 
+        'rack2':{'xyz': [2.03, 2.06, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 1.24]},
+        'rack3':{'xyz': [2.13, -7.09, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -1.0]}, 
+        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]}, 
+        'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8]}, 
+        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72]}
+            }
+    def getGoalPoseStamped(goal):
+        global positionToGO
+        Goal = positionToGO[goal]
+        goalPose = PoseStamped()
+        goalPose.header.frame_id = 'map'
+        goalPose.header.stamp = navigator.get_clock().now().to_msg()
+        goalPose.pose.position.x = Goal['xyz'][0]
+        goalPose.pose.position.y = Goal['xyz'][1]
+        goalPose.pose.position.z = Goal['xyz'][2]
+        goalPose.pose.orientation.x = Goal['quaternions'][0]
+        goalPose.pose.orientation.y = Goal['quaternions'][1]
+        goalPose.pose.orientation.z = Goal['quaternions'][2]
+        goalPose.pose.orientation.w = Goal['quaternions'][3]
+        print(goalPose)
+        return goalPose  
+    navigator.setInitialPose(getGoalPoseStamped("initalPose"))
+    # Wait for navigation to fully activate
+    navigator.waitUntilNav2Active()
+    navigator.goToPose(getGoalPoseStamped("ap1"),"navigate_through_poses_w_replanning_and_recovery")
+    # navigator.lifecycleShutdown()
+    # time.sleep(15)
+    # navigator.lifecycleStartup()
+    # navigator.setInitialPose(getGoalPoseStamped("initalPose"))
+    # # Wait for navigation to fully activate
+    # navigator.waitUntilNav2Active()
 if __name__ == '__main__':
     main()
