@@ -171,7 +171,7 @@ def generate_launch_description():
         TimerAction(period=1.0, 
                     actions=[spawn_controllers_manipulator,
                             spawn_controllers_state,
-                            # rviz,
+                            rviz,
                             ros2_control_node,
                             move_group_node,
                             servo_node
