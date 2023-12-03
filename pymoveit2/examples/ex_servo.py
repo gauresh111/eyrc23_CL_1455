@@ -60,12 +60,13 @@ def main():
         """
         Move end effector in a circular motion.
         """
+        now_sec = node.get_clock().now().nanoseconds * 1e-9
         __twist_msg = TwistStamped()
         __twist_msg.header.stamp = node.get_clock().now().to_msg()
         __twist_msg.header.frame_id = ur5.base_link_name()
-        __twist_msg.twist.linear.x = 0.0
-        __twist_msg.twist.linear.y = 0.0
-        __twist_msg.twist.linear.z = 0.10
+        __twist_msg.twist.linear.x = -sin(now_sec)/5
+        __twist_msg.twist.linear.y = sin(now_sec)/5
+        __twist_msg.twist.linear.z = 0.0
         __twist_msg.twist.angular.x = 0.0
         __twist_msg.twist.angular.y = 0.0
         __twist_msg.twist.angular.z = 0.0

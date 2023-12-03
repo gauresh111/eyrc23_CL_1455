@@ -42,9 +42,6 @@ def get_package_file(package, file_path):
 
 def generate_launch_description():
     
-    
-    
-    
     bringup_dir = get_package_share_directory('nav2_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
     ebot_nav2_dir = get_package_share_directory('ebot_nav2')

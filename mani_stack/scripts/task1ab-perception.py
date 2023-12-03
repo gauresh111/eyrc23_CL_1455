@@ -164,7 +164,10 @@ def detect_aruco(image):
     #   ->  Use these aruco parameters-
     #       ->  Dictionary: 4x4_50 (4x4 only until 50 aruco IDs)
     arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
-    arucoParams = cv2.aruco.DetectorParameters_create()
+    try:
+        arucoParams = cv2.aruco.DetectorParameters_create()
+    except:
+        arucoParams = cv2.aruco.DetectorParameters()
 
     #   ->  Detect aruco marker in the image and store 'corners' and 'ids'
     #       ->  HINT: Handle cases for empty markers detection.
@@ -516,11 +519,11 @@ class aruco_tf(Node):
         aruco_string.data =  tempStr.join(aruco_name_list)
         print("Aruco_List:", aruco_string)
         self.aruco_name_publisher.publish(aruco_string)
-        try:
-            cv2.imshow("aruco_image", arucoImageWindow)
-            cv2.waitKey(1)
-        except:
-            pass
+        # try:
+        #     cv2.imshow("aruco_image", arucoImageWindow)
+        #     cv2.waitKey(1)
+        # except:
+        #     pass
         #   ->  NOTE:   The Z axis of TF should be pointing inside the box (Purpose of this will be known in task 1B)
         #               Also, auto eval script will be judging angular difference aswell. So, make sure that Z axis is inside the box (Refer sample images on Portal - MD book)
 
