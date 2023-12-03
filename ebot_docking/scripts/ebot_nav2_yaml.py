@@ -114,7 +114,8 @@ def main():
     global rackPresentSub
     rackPresentSub = []
     def getRackFromCamera(data):
-        global rackPresentSub        
+        global rackPresentSub     
+        rackPresentSub = []   
         rackPresentSub=data.data.split()
         rackPresentSub=set(rackPresentSub)
         # print(rackPresentSub)
