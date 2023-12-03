@@ -177,6 +177,7 @@ def main():
         print(future.result())
         tempStr=""
         box_string = String()
+        print("going to racks",node.nav2RackRequest)
         # while(future.result() is  None):
         #     try:
         #         # node.aruco_name_publisher.publish(box_string)
