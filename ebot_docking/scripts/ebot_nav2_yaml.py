@@ -117,7 +117,7 @@ def main():
         global rackPresentSub        
         rackPresentSub=data.data.split()
         rackPresentSub=set(rackPresentSub)
-        print(rackPresentSub)
+        # print(rackPresentSub)
     node.getpresentRacksSub = node.create_subscription(String, '/ap_list',getRackFromCamera, 10)
     node.getpresentRacksSub
     node.sendBoxIdSub = node.create_publisher(String, '/sendBoxId', 10)
@@ -158,11 +158,13 @@ def main():
         return missingPosition
     #3
     for data in range(len(package_id)):
+        print("Start Loop")
         
         rackPresentSub=[-1]
         while(-1 in rackPresentSub):
-                    time.sleep(0.1)
-                # print(rackPresentSub)
+                time.sleep(0.1)
+                print("waiting for ap list Node")
+                print("rackPresentSub",rackPresentSub)
                 # print("Key found:",rackName, value)
         getApRack = getMissingPosition(rackPresentSub)
         getApRack=getApRack[0]
@@ -178,15 +180,16 @@ def main():
         tempStr=""
         box_string = String()
         print("going to racks",node.nav2RackRequest)
-        # while(future.result() is  None):
-        #     try:
-        #         # node.aruco_name_publisher.publish(box_string)
-        #         print("going to racks",node.nav2RackRequest)
-        #         rclpy.spin_once(node)
-        #     except:
-        #         pass
-        rclpy.spin_until_future_complete(node, future)
+        while(future.result() is  None):
+            try:
+                # node.aruco_name_publisher.publish(box_string)
+                print("going to racks",node.nav2RackRequest)
+                # rclpy.spin_once(node)
+            except KeyboardInterrupt:
+                break
+        # rclpy.spin_until_future_complete(node, future, timeout_sec=90)
         # rclpy.spin_once(node)
+        print("Next Iteration")
         time.sleep(2)
         for i in range(10):
             msg = Bool()

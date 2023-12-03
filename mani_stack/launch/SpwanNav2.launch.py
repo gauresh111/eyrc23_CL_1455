@@ -49,13 +49,7 @@ def generate_launch_description():
     launch_dir = os.path.join(bringup_dir, 'launch')
     ebot_nav2_dir = get_package_share_directory('ebot_nav2')
     # Create our own temporary YAML files that include substitutions
-    lifecycle_nodes = ['filter_mask_server', 'costmap_filter_info_server','controller_server',
-                       'smoother_server',
-                       'planner_server',
-                       'behavior_server',
-                       'bt_navigator',
-                       'waypoint_follower',
-                       'velocity_smoother']
+    lifecycle_nodes = ['filter_mask_server', 'costmap_filter_info_server']
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
     slam = LaunchConfiguration('slam')
@@ -111,7 +105,7 @@ def generate_launch_description():
 
     declare_params_file_cmd = DeclareLaunchArgument(
         'params_file',
-        default_value=os.path.join(ebot_nav2_dir, 'params', 'nav2_params.yaml'),
+        default_value=os.path.join(ebot_nav2_dir, 'params', 'nav2_og.yaml'),
         description='Full path to the ROS2 parameters file to use for all launched nodes')
     declare_mask_yaml_file_cmd = DeclareLaunchArgument(
         'mask_yaml_file',
