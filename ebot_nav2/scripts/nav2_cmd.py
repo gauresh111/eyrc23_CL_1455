@@ -96,11 +96,13 @@ def main():
                 change_footprint(withRackFootprint,"withRackFootprint")
         else:
             change_footprint(withoutRackFootprint,"withoutRackFootprint")
-        navigator.lifecycleStartup()
-        path = navigator.getPath(init_pose, goalPose)
+        
+        for i in range(2):
+            
+            navigator.goToPose(goalPose)
+            print(i)
+            # path = navigator.getPath(init_pose, goalPose)
         # smoothed_path = navigator.smoothPath(path)
-        navigator.goToPose(goalPose)
-
         i = 0
 
         # Keep doing stuff as long as the robot is moving towards the goal
