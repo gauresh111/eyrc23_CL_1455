@@ -177,13 +177,14 @@ def main():
         print(future.result())
         tempStr=""
         box_string = String()
-        while(future.result() is  None):
-            try:
-                # node.aruco_name_publisher.publish(box_string)
-                print("going to racks",node.nav2RackRequest)
-                rclpy.spin_once(node)
-            except:
-                pass
+        # while(future.result() is  None):
+        #     try:
+        #         # node.aruco_name_publisher.publish(box_string)
+        #         print("going to racks",node.nav2RackRequest)
+        #         rclpy.spin_once(node)
+        #     except:
+        #         pass
+        rclpy.spin_until_future_complete(node, future)
         # rclpy.spin_once(node)
         time.sleep(2)
         for i in range(10):
