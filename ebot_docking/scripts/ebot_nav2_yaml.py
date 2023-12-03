@@ -181,6 +181,7 @@ def main():
             try:
                 # node.aruco_name_publisher.publish(box_string)
                 print("going to racks",node.nav2RackRequest)
+                rclpy.spin_once(node)
             except:
                 pass
         # rclpy.spin_once(node)
