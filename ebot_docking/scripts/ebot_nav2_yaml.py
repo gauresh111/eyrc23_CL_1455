@@ -108,9 +108,9 @@ def main():
     executor_thread.start()
     node.racksApsPub=node.create_publisher(Bool, '/StartArnManipulation', 10)
     node.nav2RackClient = node.create_client(RackSw, '/RackNav2Sw')
-    # while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
-    #     print(' Nav2 Client service not available, waiting again...')
-    # node.nav2RackRequest = RackSw.Request()
+    while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
+        print(' Nav2 Client service not available, waiting again...')
+    node.nav2RackRequest = RackSw.Request()
     global dockingPosition
     global rackPresentSub
     rackPresentSub = []
