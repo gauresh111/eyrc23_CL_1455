@@ -1195,7 +1195,7 @@ class MoveIt2:
         # move_action_goal.request.pipeline_id = "Ignored"
         # move_action_goal.request.planner_id = "Ignored"
         move_action_goal.request.group_name = group_name
-        move_action_goal.request.num_planning_attempts = 10 #
+        move_action_goal.request.num_planning_attempts = 5 #
         move_action_goal.request.allowed_planning_time = 10.0 #0.5
         move_action_goal.request.max_velocity_scaling_factor = 0.0
         move_action_goal.request.max_acceleration_scaling_factor = 0.0

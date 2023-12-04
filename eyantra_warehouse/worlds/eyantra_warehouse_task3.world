@@ -33,7 +33,7 @@
 	</physics>
 
     <gui>
-      <camera name="user_default">
+      <camera name="user_default" >
         <!-- <pose>-24.307 -9.572 4.851 0 0.071 0.316</pose> -->
         <pose>2.080 5.1277 2.710 0.0 0.211 -1.664</pose>
         
