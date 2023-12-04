@@ -21,10 +21,9 @@ from std_msgs.msg import Bool
 
 aruco_name_list = []
 global servo_status
-global StartBox
-StartBox=False
 servo_status = 5
 current_joint_states = [0, 0, 0, 0, 0, 0]
+StartBox = False
 
 
 class ArucoNameCoordinate:
@@ -162,7 +161,7 @@ def main():
     # joint_states_subscriber = node.create_subscription(
     #     JointState, "/joint_states", joint_states_updater, 10, callback_group=callback_group
     # )
-    
+
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
     ManipulationStart = node.create_subscription(
             Bool, "/StartArnManipulation", getBox_id, 10
@@ -466,7 +465,7 @@ def main():
                 moveit2.add_collision_mesh(
                     filepath=box_file_path,
                     id="currentBox",
-                    position=[0.0, -0.12, 0.09],
+                    position=[0.0, -0.12, 0.11],
                     quat_xyzw=[-0.5, 0.5, 0.5, 0.5],
                     frame_id="tool0",
                 )
@@ -562,7 +561,7 @@ def main():
         # addCollisionObject("floor", "left_floor", [0.25, 0.71, 0.16], "Left", "base_link")
         addCollisionObject(
             "floor",
-            "left_floor",
+            "left_Rack",
             [0.25, collisionObjectDistances["left"], 0.16],
             "Left",
             "base_link",
@@ -572,7 +571,7 @@ def main():
         # addCollisionObject("floor", "front_floor", [0.54, 0.07, 0.16], "Front", "base_link")
         addCollisionObject(
             "floor",
-            "front_floor",
+            "front_Rack",
             [collisionObjectDistances["front"], 0.07, 0.16],
             "Front",
             "base_link",
@@ -582,7 +581,7 @@ def main():
         # addCollisionObject("floor", "right_floor", [0.25, -0.65, 0.16], "Right", "base_link")
         addCollisionObject(
             "floor",
-            "right_floor",
+            "right_Rack",
             [0.25, -1 * collisionObjectDistances["right"], 0.16],
             "Right",
             "base_link",
