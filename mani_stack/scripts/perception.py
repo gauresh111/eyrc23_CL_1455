@@ -152,6 +152,7 @@ def detect_aruco(image):
     try:
         arucoImageWindow = image.copy()
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        threshold_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 49, 2)
     except:
         return (
             center_aruco_list,
@@ -169,7 +170,7 @@ def detect_aruco(image):
     #   ->  Detect aruco marker in the image and store 'corners' and 'ids'
     #       ->  HINT: Handle cases for empty markers detection.
     (corners, markerIds, rejected) = cv2.aruco.detectMarkers(
-        gray_image, arucoDict, parameters=arucoParams
+        threshold_image, arucoDict, parameters=arucoParams
     )
 
     #   ->  Draw detected marker on the image frame which will be shown later
