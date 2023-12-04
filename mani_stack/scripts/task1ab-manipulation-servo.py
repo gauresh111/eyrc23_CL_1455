@@ -455,7 +455,7 @@ def main():
                 moveit2.add_collision_mesh(
                     filepath=box_file_path,
                     id="currentBox",
-                    position=[0.0, -0.12, 0.09],
+                    position=[0.0, -0.12, 0.11],
                     quat_xyzw=[-0.5, 0.5, 0.5, 0.5],
                     frame_id="tool0",
                 )
@@ -551,7 +551,7 @@ def main():
         # addCollisionObject("floor", "left_floor", [0.25, 0.71, 0.16], "Left", "base_link")
         addCollisionObject(
             "floor",
-            "left_floor",
+            "left_Rack",
             [0.25, collisionObjectDistances["left"], 0.16],
             "Left",
             "base_link",
@@ -561,7 +561,7 @@ def main():
         # addCollisionObject("floor", "front_floor", [0.54, 0.07, 0.16], "Front", "base_link")
         addCollisionObject(
             "floor",
-            "front_floor",
+            "front_Rack",
             [collisionObjectDistances["front"], 0.07, 0.16],
             "Front",
             "base_link",
@@ -571,7 +571,7 @@ def main():
         # addCollisionObject("floor", "right_floor", [0.25, -0.65, 0.16], "Right", "base_link")
         addCollisionObject(
             "floor",
-            "right_floor",
+            "right_Rack",
             [0.25, -1 * collisionObjectDistances["right"], 0.16],
             "Right",
             "base_link",
