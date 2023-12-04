@@ -31,11 +31,7 @@ def generate_launch_description():
     # package='ebot_docking',
     # executable='task2b',
     # )
-    start_Rviz = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('ebot_nav2'), 'launch', 'ebot_bringup_launch.py'),
-        )
-    )
+    
     start_perception = ExecuteProcess(
         cmd=[[
             'ros2 run mani_stack perception.py ',
@@ -49,11 +45,20 @@ def generate_launch_description():
         ]],
         shell=True
     )
-
-    
+    star_ServoManipulation = ExecuteProcess(
+    cmd=[['ros2 run mani_stack servoManipulation_nav2.py']],
+    shell=True
+    )
+    start_yaml_controller = ExecuteProcess(
+        cmd=[[
+            'ros2 run ebot_docking ebot_nav2_yaml.py',
+        ]],
+        shell=True
+    )
  
     return LaunchDescription([
      start_perception,
-     start_docking
+     start_docking,
+     start_yaml_controller
     ])
 

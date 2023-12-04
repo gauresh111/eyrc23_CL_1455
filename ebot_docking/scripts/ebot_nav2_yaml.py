@@ -25,10 +25,10 @@ config_folder_name = 'ebot_docking'
 
 global dockingPosition
 dockingPosition = {
-        'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},
-        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]}, 
-        'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8]}, 
-        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72]}           
+        'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},'Yaw':180,
+        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]},'Yaw':180, 
+        'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8]},'Yaw':-1.57, 
+        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72],'Yaw':1.57}           
 }
 def load_yaml(file_path):
     """Load a yaml file into a dictionary"""
@@ -43,12 +43,13 @@ def get_package_file(package, file_path):
     absolute_file_path = os.path.join(package_path, file_path)
     return absolute_file_path
 config_file = get_package_file(config_folder_name, 'config.yaml')
-def add_docking_position(name, xyz, quaternions, xy_offsets):
+def add_docking_position(name, xyz, quaternions, xy_offsets,yaw):
     global dockingPosition
     dockingPosition[name] = {
         'xyz': xyz,
         'quaternions': quaternions,
-        'XYoffsets': xy_offsets
+        'XYoffsets': xy_offsets,
+        'Yaw':yaw
     }
 def switch_case(value,cordinates):
     x, y = cordinates[0],cordinates[1]
@@ -114,10 +115,11 @@ def main():
     global rackPresentSub
     rackPresentSub = []
     def getRackFromCamera(data):
-        global rackPresentSub        
+        global rackPresentSub     
+      
         rackPresentSub=data.data.split()
         rackPresentSub=set(rackPresentSub)
-        print(rackPresentSub)
+        # print(rackPresentSub)
     node.getpresentRacksSub = node.create_subscription(String, '/ap_list',getRackFromCamera, 10)
     node.getpresentRacksSub
     node.sendBoxIdSub = node.create_publisher(String, '/sendBoxId', 10)
@@ -137,12 +139,13 @@ def main():
         #get xyz of rack
         xyz = [config_yaml["position"][rackIndex][rackName][0],config_yaml["position"][rackIndex][rackName][1],0]
         #get quaternions from eucler of rack
-        euler = [0,config_yaml["position"][rackIndex][rackName][2],0]
+        yaw = config_yaml["position"][rackIndex][rackName][2]
+        euler = [0,0,yaw]
         quaternions = R.from_euler('xyz', euler).as_quat().tolist()
-        degree = math.degrees(config_yaml["position"][rackIndex][rackName][2])
+        degree = math.degrees(yaw)
         x,y,offsetXY=switch_case(math.ceil(degree),xyz)
         xyz=[x,y,0.0]
-        add_docking_position(rackName,xyz,quaternions,offsetXY)
+        add_docking_position(rackName,xyz,quaternions,offsetXY,yaw)
     print(dockingPosition)        
     
     def getMissingPosition(givenList):
@@ -158,43 +161,55 @@ def main():
         return missingPosition
     #3
     for data in range(len(package_id)):
+        print("Start Loop")
         
         rackPresentSub=[-1]
         while(-1 in rackPresentSub):
-                    time.sleep(0.1)
-                # print(rackPresentSub)
+                time.sleep(0.1)
+                print("waiting for ap list Node")
+                print("rackPresentSub",rackPresentSub)
                 # print("Key found:",rackName, value)
         getApRack = getMissingPosition(rackPresentSub)
         getApRack=getApRack[0]
         
         rackName="rack"+str(package_id[data])
+        x=dockingPosition[rackName]['xyz'][0]
+        y=dockingPosition[rackName]['xyz'][1]
+        yaw=dockingPosition[rackName]['Yaw']
+        x_offset=dockingPosition[rackName]['XYoffsets'][0]
+        y_offset=dockingPosition[rackName]['XYoffsets'][1]
         node.nav2RackRequest.rack_name = rackName
         node.nav2RackRequest.box_id = package_id[data]
         node.nav2RackRequest.ap_name = getApRack
+        node.nav2RackRequest.x = x
+        node.nav2RackRequest.y = y
+        node.nav2RackRequest.yaw = yaw
+        node.nav2RackRequest.offset_x = x_offset
+        node.nav2RackRequest.offset_y = y_offset
         future = node.nav2RackClient.call_async(node.nav2RackRequest)
         print(node.nav2RackRequest)
         time.sleep(0.5)
         print(future.result())
         tempStr=""
         box_string = String()
+        print("going to racks",node.nav2RackRequest)
         while(future.result() is  None):
             try:
                 # node.aruco_name_publisher.publish(box_string)
                 print("going to racks",node.nav2RackRequest)
-            except:
-                pass
-        # rclpy.spin_once(node)
-        time.sleep(2)
+         
+            except KeyboardInterrupt:
+                rclpy.spin(node)
+                rclpy.shutdown()
+                navigator.lifecycleShutdown()
+                exit(0)
+
+        print("Next Iteration")
         for i in range(10):
             msg = Bool()
             msg.data = True
             node.racksApsPub.publish(msg)
             time.sleep(0.1)
-        # racksApsList =[racknameData[i],getApRack]
-        # tempStr = ''
-        # rack_string = String()
-        # rack_string.data =  tempStr.join(rack_string)
-        # node.racksApsPub.publish(rack_string)
     
     print("done")
     rclpy.spin(node)

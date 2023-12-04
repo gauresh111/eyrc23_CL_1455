@@ -219,6 +219,7 @@ class MoveIt2:
         # Internal states that monitor the current motion requests and execution
         self.__is_motion_requested = False
         self.__is_executing = False
+        self.motion_suceeded = False
         self.__wait_until_executed_rate = self._node.create_rate(1000.0)
 
         # Event that enables waiting until async future is done
@@ -446,7 +447,7 @@ class MoveIt2:
 
         self._send_goal_async_follow_joint_trajectory(goal=follow_joint_trajectory_goal)
 
-    def wait_until_executed(self):
+    def wait_until_executed(self) -> bool:
         """
         Wait until the previously requested motion is finalised through either a success or failure.
         """
@@ -455,10 +456,11 @@ class MoveIt2:
             self._node.get_logger().warn(
                 "Cannot wait until motion is executed (no motion is in progress)."
             )
-            return
+            return False
 
         while self.__is_motion_requested or self.__is_executing:
             self.__wait_until_executed_rate.sleep()
+        return self.motion_suceeded
 
     def reset_controller(
         self, joint_state: Union[JointState, List[float]], sync: bool = True
@@ -1097,6 +1099,9 @@ class MoveIt2:
             self._node.get_logger().error(
                 f"Action '{self.__move_action_client._action_name}' was unsuccessful: {res.result().status}."
             )
+            self.motion_suceeded = False
+        else:
+            self.motion_suceeded = True
 
         self.__is_executing = False
 
@@ -1163,6 +1168,9 @@ class MoveIt2:
             self._node.get_logger().error(
                 f"Action '{self.__follow_joint_trajectory_action_client._action_name}' was unsuccessful: {res.result().status}."
             )
+            self.motion_suceeded = False
+        else:
+            self.motion_suceeded = True
 
         self.__is_executing = False
 

@@ -10,7 +10,7 @@
 *  Filename:			eyantra_warehouse.world
 *  Created:				12/07/2023
 *  Last Modified:	12/09/2023
-*  Modified by:   Ravi
+*  Modified by:   Ravi, Jaison
 *  Author:				e-Yantra Team
 *  
 *****************************************************************************************
@@ -33,9 +33,13 @@
 	</physics> -->
 
     <gui>
-      <camera name="user_default">
-        <pose>-24.307 -9.572 4.851 0 0.071 0.316</pose>
+      <camera name="user_default" render_rate=1.00 >
+        <!-- <pose>-24.307 -9.572 4.851 0 0.071 0.316</pose> -->
+        <pose>2.080 5.1277 2.710 0.0 0.211 -1.664</pose>
+        
+        
       </camera>
+    
     </gui>
     <!-- <plugin name="ros_link_attacher_plugin" filename="libgazebo_ros_link_attacher.so"/> -->
 
@@ -222,7 +226,7 @@
 
   <include>
       <uri>model://drop_table</uri>
-      <name>table</name>
+      <name>drop_table</name>
       <pose>2.4 -2.45 0 0 -0 0.0</pose>
 	</include>
 

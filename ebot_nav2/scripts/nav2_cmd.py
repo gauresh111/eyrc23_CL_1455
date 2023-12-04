@@ -1,24 +1,17 @@
 #!/usr/bin/env python3
-
-from nav_msgs.msg import Odometry
+# -*- coding: utf-8 -*-
 import rclpy
+from rclpy.node import Node
 from threading import Thread
 import time
 from geometry_msgs.msg import PoseStamped
-import rclpy
 from rclpy.callback_groups import ReentrantCallbackGroup
-from rclpy.node import Node
 from nav2_simple_commander.robot_navigator import BasicNavigator
-import tf2_ros
-from rclpy.duration import Duration # Handles time for ROS 2
 from scipy.spatial.transform import Rotation as R
-from std_msgs.msg import Bool
 from ebot_docking.srv import DockSw  # Import custom service message
 from tf_transformations import euler_from_quaternion
 import math
-from rcl_interfaces.srv import SetParameters
 from geometry_msgs.msg import Polygon,Point32
-from std_msgs.msg import String
 from ebot_docking.srv import RackSw
 
 def main():
@@ -29,7 +22,7 @@ def main():
     # Create callback group that allows execution of callbacks in parallel without restrictions
     callback_group = ReentrantCallbackGroup()
     # Spin the node in background thread(s)
-    executor = rclpy.executors.MultiThreadedExecutor(4)
+    executor = rclpy.executors.MultiThreadedExecutor(1)
     executor.add_node(node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
@@ -42,16 +35,21 @@ def main():
     RackRequest=""
     ApRequest=""
     positionToGO = {
-        'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},
-        'rack1':{'xyz': [0.0, 4.4, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [1.26, 0.0]}, 
-        'rack2':{'xyz': [2.03, 2.06, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 1.24]},
-        'rack3':{'xyz': [2.13, -7.09, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -1.0]}, 
-        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.9, 0.0]}, 
-        'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8]}, 
-        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72]}
-            }
+        'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},'Yaw':180,
+        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]},'Yaw':180, 
+        'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7078252, 0.7073883], 'XYoffsets': [0.0, 0.8]},'Yaw':-1.57, 
+        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7078252, 0.7073883], 'XYoffsets': [0.0, -0.72],'Yaw':1.57}           
+        }
     withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
+    def add_docking_position(name, xyz, quaternions, xy_offsets,yaw):
+        global positionToGO
+        positionToGO[name] = {
+            'xyz': xyz,
+            'quaternions': quaternions,
+            'XYoffsets': xy_offsets,
+            'Yaw':yaw
+        }
     def getGoalPoseStamped(goal):
         global positionToGO
         Goal = positionToGO[goal]
@@ -85,20 +83,16 @@ def main():
             print("publishing:" ,msg)
             
         nodeFootprint.destroy_node()
-    def moveToGoal(goalPose,rack_no,israck,positionName):
+    def moveToGoal(goalPose,rack_no,israck,positionName,init_pose):
         
         global botPosition, botOrientation
         global positionToGO
-        dockingNodecli = Node("NodeDockingClient")
-        executor = rclpy.executors.MultiThreadedExecutor(3)
-        executor.add_node(dockingNodecli)
-        executor_thread = Thread(target=executor.spin, daemon=True, args=())
-        executor_thread.start()
+        dockingNodecli = rclpy.create_node("NodeDockingClient")
         dockingNodecli.dockingClient = dockingNodecli.create_client(DockSw, '/dock_control')
         while not dockingNodecli.dockingClient.wait_for_service(timeout_sec=1.0):
             print('docking Client service not available, waiting again...')
         dockingNodecli.dockingRequest = DockSw.Request()
-        
+        # navigator.waitUntilNav2Active()
         # goalPose.pose.position.z=0.0
         if not israck:
             if rack_no=="initalPose":
@@ -107,8 +101,13 @@ def main():
                 change_footprint(withRackFootprint,"withRackFootprint")
         else:
             change_footprint(withoutRackFootprint,"withoutRackFootprint")
-        navigator.goToPose(goalPose)
-
+        
+        for i in range(2):
+            
+            navigator.goToPose(goalPose)
+            print(i)
+            # path = navigator.getPath(init_pose, goalPose)
+        # smoothed_path = navigator.smoothPath(path)
         i = 0
 
         # Keep doing stuff as long as the robot is moving towards the goal
@@ -132,27 +131,43 @@ def main():
         future = dockingNodecli.dockingClient.call_async(dockingNodecli.dockingRequest)
         time.sleep(0.5)
         print(future.result())
-        while(future.result() is  None):
-            try:
-                print("docking request send")
-            except:
-                pass
+        # while(future.result() is  None):
+        #     try:
+        #         print("docking request send")
+        #     except:
+        #         pass
+        rclpy.spin_until_future_complete(dockingNodecli, future)
         dockingNodecli.destroy_node()
+        # navigator.lifecycleShutdown()
+        navigator.clearAllCostmaps()
         time.sleep(1)
-    navigator.setInitialPose(getGoalPoseStamped("initalPose"))
+    # navigator.setInitialPose(getGoalPoseStamped("initalPose"))
     # Wait for navigation to fully activate
     navigator.waitUntilNav2Active()
     def Rack_control_callback(Request,Response):
+        global positionToGO
         node.get_logger().info("Request Arrived")
         RackRequest=Request.rack_name
         ApRequest=Request.ap_name
-        
+        x=Request.x
+        y=Request.y
+        yaw=Request.yaw
+        x_offset=Request.offset_x
+        y_offset=Request.offset_y
+        xyz=[x,y,0.0]
+        euler = [0,0,yaw]
+        quaternions = R.from_euler('xyz', euler).as_quat().tolist()
+        offsetXY=[x_offset,y_offset]
+        add_docking_position(RackRequest,xyz,quaternions,offsetXY,yaw)
         #goes to rack
-        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
         node.get_logger().info("Going to Rack")
+        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest,getGoalPoseStamped(RackRequest))
+        
         #goes to ap    
-        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest)
+        time.sleep(1)
         node.get_logger().info("Going to Ap")
+        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest,getGoalPoseStamped(ApRequest))
+        
         Response.success = True
         Response.message = "Success"
         node.get_logger().info("Request done with Succes")

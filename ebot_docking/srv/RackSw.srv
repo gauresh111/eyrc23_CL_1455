@@ -1,6 +1,12 @@
 string rack_name
 string ap_name
 int64 box_id
+float64 x
+float64 y
+float64 offset_x
+float64 offset_y
+float64 yaw
+
 ---
 bool success   # indicate successful run of triggered service
 string message # informational, e.g. for error messages

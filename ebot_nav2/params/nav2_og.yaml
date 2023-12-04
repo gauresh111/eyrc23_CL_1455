@@ -21,7 +21,7 @@ amcl:
     max_particles: 5000
     min_particles: 300
     odom_frame_id: "odom"
-    pf_err: 0.00
+    pf_err: 0.01
     pf_z: 0.99
     recovery_alpha_fast: 0.0
     recovery_alpha_slow: 0.0
@@ -30,7 +30,7 @@ amcl:
     save_pose_rate: 0.5
     sigma_hit: 0.2
     tf_broadcast: true
-    transform_tolerance: 1.0
+    transform_tolerance: 0.5
     update_min_a: 0.2
     update_min_d: 0.25
     z_hit: 0.5
@@ -39,8 +39,8 @@ amcl:
     z_short: 0.05
     scan_topic: scan
     map_topic: map
-    set_initial_pose: False
-    always_reset_initial_pose: True
+    set_initial_pose: True
+    always_reset_initial_pose: False
     first_map_only: False
     initial_pose:
       x: 0.0
@@ -55,6 +55,7 @@ amcl_map_client:
 amcl_rclcpp_node:
   ros__parameters:
     use_sim_time: True
+
 
 bt_navigator:
   ros__parameters:
@@ -111,7 +112,7 @@ bt_navigator_rclcpp_node:
 controller_server:
   ros__parameters:
     use_sim_time: True
-    controller_frequency: 5.0
+    controller_frequency: 10.0
     min_x_velocity_threshold: 0.001
     min_y_velocity_threshold: 0.5
     min_theta_velocity_threshold: 0.001
@@ -130,8 +131,8 @@ controller_server:
     general_goal_checker:
       stateful: True
       plugin: "nav2_controller::SimpleGoalChecker"
-      xy_goal_tolerance: 0.15
-      yaw_goal_tolerance: 1.00
+      xy_goal_tolerance: 0.12
+      yaw_goal_tolerance: 1.0
     # DWB parameters
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
@@ -172,14 +173,14 @@ controller_server:
       PathAlign.scale: 32.0
       PathAlign.forward_point_distance: 0.1
 
-      GoalAlign.scale: 32.0
+      GoalAlign.scale: 24.0
       GoalAlign.forward_point_distance: 0.1
 
       PathDist.scale: 32.0
       GoalDist.scale: 24.0
 
       RotateToGoal.scale: 32.0
-      RotateToGoal.slowing_factor: 10.0
+      RotateToGoal.slowing_factor: 5.0
       RotateToGoal.lookahead_time: -1.0
       
 controller_server_rclcpp_node:
@@ -199,11 +200,7 @@ local_costmap:
       height: 5
       resolution: 0.05
       footprint: "[ [0.21, 0.195], [0.21, -0.195], [-0.21, -0.195], [-0.21, 0.195] ]"
-      plugins: ["voxel_layer", "inflation_layer","keepout_filter"]
-      keepout_filter:
-        plugin: "nav2_costmap_2d::KeepoutFilter"
-        enabled: False
-        filter_info_topic: "/costmap_filter_info"
+      plugins: ["voxel_layer", "inflation_layer"]
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         cost_scaling_factor: 3.0
@@ -246,15 +243,10 @@ global_costmap:
       global_frame: map
       robot_base_frame: "base_footprint"
       use_sim_time: True
-      footprint: "[ [0.21, 0.195],      [0.21, -0.195],     [-0.21, -0.195],   [-0.21, 0.195] ]"
-                    #front Whelle left  front Whelle right  back Whelle right   back Whelle left
+      robot_radius: 0.3
       resolution: 0.05
       track_unknown_space: true
-      plugins: ["static_layer", "obstacle_layer", "inflation_layer","keepout_filter"]
-      keepout_filter:
-        plugin: "nav2_costmap_2d::KeepoutFilter"
-        enabled: False
-        filter_info_topic: "/costmap_filter_info"
+      plugins: ["static_layer", "obstacle_layer", "inflation_layer"]
       obstacle_layer:
         plugin: "nav2_costmap_2d::ObstacleLayer"
         enabled: True
@@ -299,7 +291,7 @@ map_saver:
 
 planner_server:
   ros__parameters:
-    expected_planner_frequency: 5.0
+    expected_planner_frequency: 10.0
     use_sim_time: True
     planner_plugins: ["GridBased"]
     GridBased:
@@ -328,10 +320,10 @@ recoveries_server:
     robot_base_frame: "base_footprint"
     transform_timeout: 0.1
     use_sim_time: true
-    simulate_ahead_time: 5.0
-    max_rotational_vel: 3.0
-    min_rotational_vel: 0.0
-    rotational_acc_lim: 1.0
+    simulate_ahead_time: 2.0
+    max_rotational_vel: 1.0
+    min_rotational_vel: 0.4
+    rotational_acc_lim: 3.2
 
 robot_state_publisher:
   ros__parameters:
@@ -349,36 +341,14 @@ waypoint_follower:
 
 velocity_smoother:
   ros__parameters:
-    use_sim_time: True
-    smoothing_frequency: 5.0
+    smoothing_frequency: 10.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
     max_velocity: [3.0, 0.0, 3.0]
     min_velocity: [-3.0, 0.0, -3.0]
-    max_accel: [2.5, 0.0, 0.6]
-    max_decel: [-2.5, 0.0, -0.6]
+    max_accel: [2.5, 0.0, 2.0]
+    max_decel: [-2.5, 0.0, -2.0]
     odom_topic: "/odometry/filtered"
     odom_duration: 0.1
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0
-costmap_filter_info_server:
-  ros__parameters:
-    use_sim_time: true
-    type: 0
-    filter_info_topic: "/costmap_filter_info"
-    mask_topic: "/keepout_filter_mask"
-    base: 0.0
-    multiplier: 1.0
-filter_mask_server:
-  ros__parameters:
-    use_sim_time: true
-    frame_id: "map"
-    topic_name: "/keepout_filter_mask"
-    yaml_filename: "keepout_mask.yaml"
-lifecycle_manager:
-  ros__parameters:
-    autostart: true
-    node_names: ['controller_server', 'planner_server', 'behavior_server', 'bt_navigator', 'waypoint_follower']
-    bond_timeout: 4.0
-    attempt_respawn_reconnection: true
-    bond_respawn_max_duration: 5.0

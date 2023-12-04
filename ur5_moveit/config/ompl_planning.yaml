@@ -50,9 +50,10 @@ planner_configs:
   PRMkConfigDefault:
     type: geometric::PRM
     max_nearest_neighbors: 10  # use k nearest neighbors. default: 10
+    optimization_objective: MaximizeMinClearanceObjective
   PRMstarkConfigDefault:
     type: geometric::PRMstar
-    optimization_objective: MaximizeMinClearanceObjective
+    optimization_objective: MaximizeMinClearanceObjective,  
   PersistentLazyPRMstar: # use this with a representative environment to create a roadmap
     type: geometric::LazyPRMstar
     multi_query_planning_enabled: true
@@ -62,7 +63,7 @@ planner_configs:
     planner_data_path: /tmp/roadmap.graph
 
 ur_manipulator:
-  default_planner_config: PRMstarkConfigDefault
+  default_planner_config: PRMkConfigDefault
   planner_configs:
     - SBLkConfigDefault
     - ESTkConfigDefault
