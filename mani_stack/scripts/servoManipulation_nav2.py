@@ -23,6 +23,7 @@ aruco_name_list = []
 global servo_status
 servo_status = 5
 current_joint_states = [0, 0, 0, 0, 0, 0]
+StartBox = False
 
 
 class ArucoNameCoordinate:
@@ -118,6 +119,7 @@ def main():
     tolerance = 0.02
 
     global aruco_name_list
+    global StartBox
     # global servo_status
 
     # Create node for this example
