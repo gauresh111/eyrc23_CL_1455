@@ -36,7 +36,7 @@ def main():
     ApRequest=""
     positionToGO = {
         'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},'Yaw':180,
-        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]},'Yaw':180, 
+        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.9, 0.0]},'Yaw':180, 
         'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7078252, 0.7073883], 'XYoffsets': [0.0, 0.8]},'Yaw':-1.57, 
         'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7078252, 0.7073883], 'XYoffsets': [0.0, -0.72],'Yaw':1.57}           
         }
