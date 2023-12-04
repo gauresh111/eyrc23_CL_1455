@@ -163,7 +163,7 @@ def main():
 
     while not node.create_client(AttachLink, "/GripperMagnetON").wait_for_service(timeout_sec=1.0):
         node.get_logger().info("EEF service not available, waiting again...")
-
+    
     arucoData = []
     while StartBox == False:
         time.sleep(0.1)

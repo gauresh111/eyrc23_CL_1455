@@ -17,6 +17,7 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Int8
 import transforms3d as tf3d
 import numpy as np
+from std_msgs.msg import Bool
 
 aruco_name_list = []
 global servo_status
@@ -49,6 +50,9 @@ def aruco_name_list_updater(msg):
     global aruco_name_list
     aruco_name_list = msg.data.split()
 
+def getBox_id(msg):
+    global StartBox
+    StartBox = msg.data
 
 def main():
     rclpy.init()
@@ -157,14 +161,18 @@ def main():
     # )
 
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
+    ManipulationStart = node.create_subscription(
+            Bool, "/StartArnManipulation", getBox_id, 10
+        )
     time.sleep(5)
 
     while not node.create_client(AttachLink, "/GripperMagnetON").wait_for_service(
         timeout_sec=1.0
     ):
         node.get_logger().info("EEF service not available, waiting again...")
-
     arucoData = []
+    while StartBox == False:
+        time.sleep(0.1)
     while len(arucoData) < len(aruco_name_list):
         flag = True
         for aruco in aruco_name_list:
