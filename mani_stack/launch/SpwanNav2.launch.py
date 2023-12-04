@@ -38,7 +38,7 @@ def generate_launch_description():
     bringup_dir = get_package_share_directory('nav2_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
     ebot_nav2_dir = get_package_share_directory('ebot_nav2')
-
+    lifecycle_nodes = ['filter_mask_server', 'costmap_filter_info_server']
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
     slam = LaunchConfiguration('slam')
@@ -50,13 +50,13 @@ def generate_launch_description():
     use_respawn = LaunchConfiguration('use_respawn')
     log_level = LaunchConfiguration('log_level')
     rviz_config_file = LaunchConfiguration('rviz_config')
-
+    mask_yaml_file = LaunchConfiguration('mask')
     remappings = [('/tf', 'tf'),
                   ('/tf_static', 'tf_static')]
 
     param_substitutions = {
         'use_sim_time': use_sim_time,
-        'yaml_filename': map_yaml_file}
+        'yaml_filename': mask_yaml_file}
 
     configured_params = RewrittenYaml(
         source_file=params_file,
@@ -129,7 +129,10 @@ def generate_launch_description():
         'rviz_config',
         default_value=os.path.join(ebot_nav2_dir, 'rviz', 'nav2_default_view.rviz'),
         description='Full path to the RVIZ config file to use')
-
+    declare_mask_yaml_file_cmd = DeclareLaunchArgument(
+            'mask',
+            default_value=os.path.join(ebot_nav2_dir, 'maps', 'mapkeepout.yaml'),
+            description='Full path to filter mask yaml file to load')
 
     # Launch rviz
     start_rviz_cmd = Node(
@@ -194,7 +197,33 @@ def generate_launch_description():
                               'use_respawn': use_respawn,
                               'container_name': 'nav2_container'}.items()),
     ])
+    start_lifecycle_manager_cmd = Node(
+            package='nav2_lifecycle_manager',
+            executable='lifecycle_manager',
+            name='lifecycle_manager_costmap_filters',
+            namespace=namespace,
+            output='screen',
+            emulate_tty=True,  # https://github.com/ros2/launch/issues/188
+            parameters=[{'use_sim_time': use_sim_time},
+                        {'autostart': autostart},
+                        {'node_names': lifecycle_nodes}])
+    start_map_server_cmd = Node(
+            package='nav2_map_server',
+            executable='map_server',
+            name='filter_mask_server',
+            namespace=namespace,
+            output='screen',
+            emulate_tty=True,  # https://github.com/ros2/launch/issues/188
+            parameters=[configured_params])
 
+    start_costmap_filter_info_server_cmd = Node(
+            package='nav2_map_server',
+            executable='costmap_filter_info_server',
+            name='costmap_filter_info_server',
+            namespace=namespace,
+            output='screen',
+            emulate_tty=True,  # https://github.com/ros2/launch/issues/188
+            parameters=[configured_params])
     ld = LaunchDescription()
     ld.add_action(stdout_linebuf_envvar)
     ld.add_action(declare_namespace_cmd)
@@ -208,7 +237,11 @@ def generate_launch_description():
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
-    # ld.add_action(start_rviz_cmd)
+    ld.add_action(start_rviz_cmd)
+    ld.add_action(declare_mask_yaml_file_cmd)
+    ld.add_action(start_lifecycle_manager_cmd)
+    ld.add_action(start_map_server_cmd)
+    ld.add_action(start_costmap_filter_info_server_cmd)
     ld.add_action(robot_localization_node)
     ld.add_action(bringup_cmd_group)
 

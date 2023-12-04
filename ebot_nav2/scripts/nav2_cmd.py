@@ -159,6 +159,7 @@ def main():
         quaternions = R.from_euler('xyz', euler).as_quat().tolist()
         offsetXY=[x_offset,y_offset]
         add_docking_position(RackRequest,xyz,quaternions,offsetXY,yaw)
+        print(positionToGO[RackRequest])
         #goes to rack
         node.get_logger().info("Going to Rack")
         moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest,getGoalPoseStamped(RackRequest))
