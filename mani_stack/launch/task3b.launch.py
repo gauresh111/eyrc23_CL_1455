@@ -57,9 +57,7 @@ def generate_launch_description():
     )
  
     return LaunchDescription([
-     start_perception,
     #  start_docking,
-     start_yaml_controller,
-     star_ServoManipulation
+     start_yaml_controller
     ])
 
