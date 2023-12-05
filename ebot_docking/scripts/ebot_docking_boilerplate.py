@@ -119,6 +119,7 @@ class MyRobotDockingController(Node):
         self.targetYaw=0
         self.rackName = ""
         self.isAttach = False
+        self.globalnodeClock = self.get_clock()
         #         
         # 
         # 
@@ -206,6 +207,9 @@ class MyRobotDockingController(Node):
         return x_diff <= tolerance and y_diff <= tolerance
     def calculate_distance(self,x1, y1, x2, y2):
         return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)   
+    def GlobalStopTime(self,StopSeconds):
+        future_time = Time(seconds=self.globalnodeClock.now().nanoseconds / 1e9 + StopSeconds, clock_type=self.globalnodeClock.clock_type)
+        self.globalnodeClock.sleep_until(future_time)
     def is_robot_within_tolerance(self,current_x, current_y, current_orientation, goal_x, goal_y, goal_orientation,
                                 x_tolerance=0.3, y_tolerance=0.3, orientation_tolerance=10):
         """
@@ -262,6 +266,7 @@ class MyRobotDockingController(Node):
             X,reached=self.UltralinearDockingprocess(ultrasonic_value[0],ultrasonic_value[1]) 
             print("usrleft_value:",ultrasonic_value[0]," usrright_value:",ultrasonic_value[1]," Reached:",reached)
             self.moveBot(X,0.0)
+            self.GlobalStopTime(0.1)
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
         reached =False
@@ -287,6 +292,7 @@ class MyRobotDockingController(Node):
             # distance=self.calculate_distance(robot_pose[0],robot_pose[1],self.targetX,self.targetY)
             speed=self.odomLinearDockingprocess(distance)
             self.moveBot(speed,0.0)
+            self.GlobalStopTime(0.1)
             # print("X",distance," Reached:",reached)
     def AngularDocking(self):   
         yaw = False
@@ -295,8 +301,7 @@ class MyRobotDockingController(Node):
             angle=botPid.computeAngle(int(self.normalize_angle(self.targetYaw)),int(self.normalize_angle(robot_pose[2])),robot_pose[0],robot_pose[1])
             self.moveBot(0.0,angle)
             yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
-            time.sleep(0.01)
-
+            self.GlobalStopTime(0.1)
     
     def controller_loop(self):
 
