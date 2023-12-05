@@ -27,7 +27,10 @@ global dockingPosition
 dockingPosition = {
         'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0],'Yaw':180}, 
         'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8],'Yaw':-1.57}, 
-        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72],'Yaw':1.57}           
+        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72],'Yaw':1.57}  
+        # 'ap1':{'xyz': [1.04, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.0, 0.0],'Yaw':180}, 
+        # 'ap2':{'xyz': [1.70, -3.20, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.0],'Yaw':-1.57}, 
+        # 'ap3':{'xyz': [1.70, -1.65, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.0],'Yaw':1.57}           
 }
 def load_yaml(file_path):
     """Load a yaml file into a dictionary"""
