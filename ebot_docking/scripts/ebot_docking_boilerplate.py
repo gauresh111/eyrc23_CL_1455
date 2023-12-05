@@ -251,6 +251,10 @@ class MyRobotDockingController(Node):
         else:
             # print("Y is greater")
             return 1
+
+        
+        
+        
     def distanceSingle(self,x1, x2):
         return math.sqrt((x1 - x2) ** 2)*1.0
     def UltralinearDockingprocess(self,leftUltraSonic,rightUltraSonic):
@@ -302,7 +306,6 @@ class MyRobotDockingController(Node):
             self.moveBot(0.0,angle)
             yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
             self.GlobalStopTime(0.1)
-    
     def controller_loop(self):
 
         # The controller loop manages the robot's linear and angular motion 
@@ -321,7 +324,7 @@ class MyRobotDockingController(Node):
             orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
             _, _, yaw = euler_from_quaternion(orientation_list)
             yaw = math.degrees(yaw)
-            robot_pose[2] = yaw
+            robot_pose[2] = round(yaw,2)
             # print("robot_pose",robot_pose)
         def ultrasonic_rl_callback(msg):
             global ultrasonic_value
@@ -387,9 +390,9 @@ class MyRobotDockingController(Node):
                     self.attachRack(self.rackName)
                 else :
                     self.detachRack(self.rackName)
+                    stopBot(0.2)
+                    stopBot(0.1,2.0,0.0)
                     stopBot(0.5)
-                    stopBot(0.1,1.0,0.0)
-                    stopBot(0.1)
                     stopBot(0.1,0.0,0.0)
             self.is_docking = False
             self.dock_aligned=True
