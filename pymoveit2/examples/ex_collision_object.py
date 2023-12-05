@@ -135,16 +135,18 @@ def main():
                 )
         
     else:
-        # print("remove")
-        # moveit2.remove_collision_mesh(id="Right_rack")
-        # moveit2.remove_collision_mesh(id="Left_rack")
-        # moveit2.remove_collision_mesh(id="Center_rack")
-        moveit2.remove_collision_mesh(id="currentBox")
-        # moveit2.remove_collision_mesh(id="Box_2")
-        # moveit2.remove_collision_mesh(id="Floor")
-        # moveit2.remove_collision_mesh(id="Floor_Left")
-        # moveit2.remove_collision_mesh(id="Floor_Center")
-        # moveit2.remove_collision_mesh(id="Floor_Right")
+        for i in range(3):
+            # print("remove")
+            # moveit2.remove_collision_mesh(id="Right_rack")
+            # moveit2.remove_collision_mesh(id="Left_rack")
+            # moveit2.remove_collision_mesh(id="Center_rack")
+            print("Removing collision object")
+            moveit2.remove_collision_mesh(id="currentBox")
+            # moveit2.remove_collision_mesh(id="Box_2")
+            # moveit2.remove_collision_mesh(id="Floor")
+            # moveit2.remove_collision_mesh(id="Floor_Left")
+            # moveit2.remove_collision_mesh(id="Floor_Center")
+            # moveit2.remove_collision_mesh(id="Floor_Right")
 
     rclpy.shutdown()
     exit(0)
