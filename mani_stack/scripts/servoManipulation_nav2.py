@@ -175,7 +175,7 @@ def main():
         node.get_logger().info("EEF service not available, waiting again...")
     arucoData = []
     while StartBox == False:
-        time.sleep(0.1)
+        time.sleep(5.0)
     while len(arucoData) < len(aruco_name_list):
         flag = True
         for aruco in aruco_name_list:
