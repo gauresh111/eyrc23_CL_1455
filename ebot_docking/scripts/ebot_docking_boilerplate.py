@@ -387,7 +387,7 @@ class MyRobotDockingController(Node):
                     self.attachRack(self.rackName)
                 else :
                     self.detachRack(self.rackName)
-                    stopBot(0.5)
+                    stopBot(0.2)
                     stopBot(0.1,1.0,0.0)
                     stopBot(0.1)
                     stopBot(0.1,0.0,0.0)
