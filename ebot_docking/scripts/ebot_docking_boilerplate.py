@@ -98,10 +98,12 @@ class MyRobotDockingController(Node):
         # Create a ROS2 service for controlling docking behavior, can add another custom service message
         self.dock_control_srv = self.create_service(DockSw, '/dock_control', self.dock_control_callback, callback_group=self.callback_group)
         self.isDocked = self.create_publisher(Bool, '/dockingSuccesfull', 10)
-        self.speedPub = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.speedPub = self.create_publisher(Twist, '/cmd_vel', 30)
+        self.nav2speedPub = self.create_publisher(Twist, '/cmd_vel_nav', 30)
         self.workRack = self.create_publisher(String, '/pickup_Box', 10)
         self.link_attach_cli = self.create_client(AttachLink, '/ATTACH_LINK')
         self.lind_detached_cli = self.create_client(DetachLink, '/DETACH_LINK')
+        
         while not self.link_attach_cli.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('Link attacher service not available, waiting again...')
         
@@ -147,7 +149,8 @@ class MyRobotDockingController(Node):
             req.link1_name  = 'ebot_base_link'       
             req.model2_name =  rackName       
             req.link2_name  = 'link' 
-            self.link_attach_cli.call_async(req)   
+            self.link_attach_cli.call_async(req) 
+            # rclpy.spin_until_future_complete(self, future) 
     def detachRack(self,rackName):
             req = DetachLink.Request()
             req.model1_name =  'ebot'     
@@ -155,6 +158,7 @@ class MyRobotDockingController(Node):
             req.model2_name =  rackName       
             req.link2_name  = 'link' 
             self.lind_detached_cli.call_async(req)
+            # rclpy.spin_until_future_complete(self, self.lind_detached_cli) 
     def is_at_goal(self,current_x, current_y, goal_x, goal_y, tolerance=0.04):
         
         distance = ((current_x - goal_x)**2 + (current_y - goal_y)**2)**0.5
@@ -348,41 +352,40 @@ class MyRobotDockingController(Node):
                 future_time = Time(seconds=dockingNodeClock.now().nanoseconds / 1e9 + StopSeconds, clock_type=dockingNodeClock.clock_type)
                 dockingNodeClock.sleep_until(future_time)
             StopTime(0.5)  
-            self.AngularDocking()
+            def stopBot(time,linearSpeedX=0.0,angularSpeed=0.0):
+                for i in range(5):
+                    self.moveBot(linearSpeedX,angularSpeed)   
+                    StopTime(time)  
             for i in range(5):
                 self.moveBot(0.0,0.0)   
-                StopTime(0.1)  
+                twist = Twist()
+                twist.linear.x = 0.0
+                twist.angular.z = 0.0
+                self.nav2speedPub.publish(twist)
+                StopTime(0.1) 
+            self.AngularDocking()
+            stopBot(0.1)
             #orientation done
             if not self.rackName=="initalPose":
                 if self.isAttach:
                     self.UltraLinearDocking()
-                    for i in range(5):
-                        self.moveBot(0.0,0.0)
-                    StopTime(0.1) 
+                    stopBot(0.1)
                 else:
                     self.odomLinearDocking()
-                    for i in range(5):
-                        self.moveBot(0.0,0.0)
-                    StopTime(0.1) 
+                    stopBot(0.1) 
                 #linear done
                 self.AngularDocking()
-                for i in range(10):
-                    self.moveBot(0.0,0.0)
-                    StopTime(0.1) 
+                stopBot(0.1)
                 #orientation done
                 print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
                 if self.isAttach:
                     self.attachRack(self.rackName)
                 else :
                     self.detachRack(self.rackName)
-                    StopTime(0.5) 
-                    for i in range(5):
-                            self.moveBot(1.0,0.0)
-                            StopTime(0.1) 
-                    StopTime(0.1) 
-                    for i in range(5):
-                        self.moveBot(0.0,0.0)
-                        StopTime(0.1) 
+                    stopBot(0.5)
+                    stopBot(0.1,1.0,0.0)
+                    stopBot(0.1)
+                    stopBot(0.1,0.0,0.0)
             self.is_docking = False
             self.dock_aligned=True
             ## docking and orientation done

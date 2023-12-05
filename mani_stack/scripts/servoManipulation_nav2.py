@@ -23,6 +23,7 @@ aruco_name_list = []
 global servo_status
 servo_status = 5
 current_joint_states = [0, 0, 0, 0, 0, 0]
+global StartBox
 StartBox = False
 
 
