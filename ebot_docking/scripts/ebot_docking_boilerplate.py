@@ -398,7 +398,6 @@ class MyRobotDockingController(Node):
             self.dock_aligned=True
             ## docking and orientation done
             dockingNode.destroy_node()
-            
             pass
     
     # Callback function for the DockControl service
