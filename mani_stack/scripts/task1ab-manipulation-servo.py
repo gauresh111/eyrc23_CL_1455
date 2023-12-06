@@ -80,7 +80,7 @@ def main():
 
     Initial_Joints = PredefinedJointStates()
     Initial_Joints.joint_states = [0.0, -2.39, 2.4, -3.15, -1.58, 3.15]
-    # Initial_Joints.joint_states = [-0.02, -2.28, 1.85, -2.71, -1.56, 3.15]
+    # Initial_Joints.joint_states = [-0.02, -2.28, 1.85, -2.71, -1.56, 3.15] # Higher
     Initial_Joints.name = "Initial_Joints"
 
     Pre_Drop_Joints = PredefinedJointStates()
@@ -318,7 +318,7 @@ def main():
         req.model2_name = "ur5"
         req.link2_name = "wrist_3_link"
         print(gripper_control.call_async(req))
-        time.sleep(1)
+        time.sleep(0.2)
 
         print("Gripper Status: ", status, "has been requested")
 
@@ -415,7 +415,7 @@ def main():
         )
         jointStatesNode.odom_sub
 
-        time.sleep(3)
+        time.sleep(0.2)
 
         while True:
             global servo_status
@@ -480,7 +480,7 @@ def main():
             time.sleep(0.1)
 
             controlGripper("ON", box_name)
-            time.sleep(1)
+            time.sleep(0.2)
             # return
 
             for i in range(5):
@@ -491,9 +491,9 @@ def main():
                     quat_xyzw=[-0.5, 0.5, 0.5, 0.5],
                     frame_id="tool0",
                 )
-                time.sleep(0.5)
+                time.sleep(0.2)
 
-            newMidPose = [position[0] / 2, position[1] / 2, midPosition[2]]
+            # newMidPose = [position[0] / 2, position[1] / 2, midPosition[2]]
             moveToPoseWithServo(TargetPose=midPosition, quaternions=quaternions)
             # if servo_status > 0:
             #         print("Exited next While Loop due to Servo Error", servo_status)
@@ -523,8 +523,8 @@ def main():
 
             for i in range(5):
                 moveit2.remove_collision_mesh(id="currentBox")
-                time.sleep(0.5)
-            time.sleep(1)
+                time.sleep(0.2)
+            time.sleep(0.2)
 
             # Move to Pre Drop Pose
             # moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
