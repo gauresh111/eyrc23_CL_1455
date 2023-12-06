@@ -483,7 +483,7 @@ def main():
             time.sleep(0.2)
             # return
 
-            for i in range(5):
+            for i in range(3):
                 moveit2.add_collision_mesh(
                     filepath=box_file_path,
                     id="currentBox",
@@ -521,7 +521,7 @@ def main():
 
             controlGripper("OFF", box_name)
 
-            for i in range(5):
+            for i in range(3):
                 moveit2.remove_collision_mesh(id="currentBox")
                 time.sleep(0.2)
             time.sleep(0.2)
