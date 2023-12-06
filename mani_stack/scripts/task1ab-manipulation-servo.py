@@ -222,9 +222,9 @@ def main():
                     arucoData[i].quaternions
                 )
                 if arucoData[i].eulerAngles[0] > 3.0:
-                    arucoData[i].rotationName = "Left"
-                elif arucoData[i].eulerAngles[0] < 0.5:
                     arucoData[i].rotationName = "Right"
+                elif arucoData[i].eulerAngles[0] < 0.5:
+                    arucoData[i].rotationName = "Left"
                 else:
                     arucoData[i].rotationName = "Front"
 

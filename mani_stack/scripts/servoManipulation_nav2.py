@@ -221,9 +221,9 @@ def main():
                     arucoData[i].quaternions
                 )
                 if arucoData[i].eulerAngles[0] > 3.0:
-                    arucoData[i].rotationName = "Left"
-                elif arucoData[i].eulerAngles[0] < 0.5:
                     arucoData[i].rotationName = "Right"
+                elif arucoData[i].eulerAngles[0] < 0.5:
+                    arucoData[i].rotationName = "Left"
                 else:
                     arucoData[i].rotationName = "Front"
 
@@ -460,12 +460,12 @@ def main():
             #         break
 
             # if position_name != "Drop":
-            if rotation_name == "Left":
-                moveToJointStates(Pickup_Joints_Left.joint_states, Pickup_Joints_Left.name)
-            elif rotation_name == "Right":
-                moveToJointStates(Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name)
-            else:
-                moveToJointStates(Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name)
+            # if rotation_name == "Left":
+            #     moveToJointStates(Pickup_Joints_Left.joint_states, Pickup_Joints_Left.name)
+            # elif rotation_name == "Right":
+            #     moveToJointStates(Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name)
+            # else:
+            #     moveToJointStates(Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name)
 
             moveToPoseWithServo(TargetPose=position, quaternions=quaternions)
             if servo_status > 0:
