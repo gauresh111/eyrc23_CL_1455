@@ -59,7 +59,7 @@ def main():
     rclpy.init()
 
     print("Starting Task 1AB Manipulation Servo")
-
+    
     Initial_Pose = ArucoBoxPose()
     Initial_Pose.position = [0.18, 0.10, 0.46]
     Initial_Pose.quaternions = [0.50479, 0.495985, 0.499407, 0.499795]

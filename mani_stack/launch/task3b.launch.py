@@ -32,12 +32,12 @@ def generate_launch_description():
     # executable='task2b',
     # )
     
-    start_perception = ExecuteProcess(
-        cmd=[[
-            'ros2 run mani_stack perception.py ',
-        ]],
-        shell=True
-    )
+    # start_perception = ExecuteProcess(
+    #     cmd=[[
+    #         'ros2 run mani_stack perception.py ',
+    #     ]],
+    #     shell=True
+    # )
 
     start_docking = ExecuteProcess(
         cmd=[[
@@ -45,19 +45,25 @@ def generate_launch_description():
         ]],
         shell=True
     )
-    star_ServoManipulation = ExecuteProcess(
-    cmd=[['ros2 run mani_stack servoManipulation_nav2.py']],
-    shell=True
-    )
+    # star_ServoManipulation = ExecuteProcess(
+    # cmd=[['ros2 run mani_stack servoManipulation_nav2.py']],
+    # shell=True
+    # )
     start_yaml_controller = ExecuteProcess(
         cmd=[[
             'ros2 run ebot_docking ebot_nav2_yaml.py',
         ]],
         shell=True
     )
- 
+    start_nav2 = ExecuteProcess(
+        cmd=[[
+            'ros2 run ebot_nav2 nav2_cmd.py',
+        ]],
+        shell=True
+    )
     return LaunchDescription([
-    #  start_docking,
-     start_yaml_controller
+     start_docking,
+     start_yaml_controller,
+     start_nav2
     ])
 
