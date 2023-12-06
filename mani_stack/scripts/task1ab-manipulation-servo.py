@@ -166,7 +166,7 @@ def main():
     # ManipulationStart = node.create_subscription(
     #         Bool, "/StartArnManipulation", getBox_id, 10
     #     )
-    # time.sleep(5)
+    time.sleep(5)
 
     while not node.create_client(AttachLink, "/GripperMagnetON").wait_for_service(
         timeout_sec=1.0
