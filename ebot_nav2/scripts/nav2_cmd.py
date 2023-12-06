@@ -36,7 +36,7 @@ def main():
     ApRequest=""
     positionToGO = {
         'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},'Yaw':180,
-        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]},'Yaw':180, 
+        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.9, 0.0]},'Yaw':180, 
         'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7078252, 0.7073883], 'XYoffsets': [0.0, 0.8]},'Yaw':-1.57, 
         'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7078252, 0.7073883], 'XYoffsets': [0.0, -0.72],'Yaw':1.57}           
         }
@@ -92,8 +92,7 @@ def main():
         while not dockingNodecli.dockingClient.wait_for_service(timeout_sec=1.0):
             print('docking Client service not available, waiting again...')
         dockingNodecli.dockingRequest = DockSw.Request()
-        # navigator.waitUntilNav2Active()
-        # goalPose.pose.position.z=0.0
+        
         if not israck:
             if rack_no=="initalPose":
                 change_footprint(withoutRackFootprint,"withoutRackFootprint")
@@ -102,12 +101,8 @@ def main():
         else:
             change_footprint(withoutRackFootprint,"withoutRackFootprint")
         
-        for i in range(2):
             
-            navigator.goToPose(goalPose)
-            print(i)
-            # path = navigator.getPath(init_pose, goalPose)
-        # smoothed_path = navigator.smoothPath(path)
+        navigator.goToPose(goalPose)
         i = 0
 
         # Keep doing stuff as long as the robot is moving towards the goal

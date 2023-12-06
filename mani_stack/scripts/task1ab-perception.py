@@ -152,6 +152,7 @@ def detect_aruco(image):
     try:
         arucoImageWindow = image.copy()
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # threshold_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 49, 2)
     except:
         return (
             center_aruco_list,
@@ -519,11 +520,11 @@ class aruco_tf(Node):
         aruco_string.data =  tempStr.join(aruco_name_list)
         print("Aruco_List:", aruco_string)
         self.aruco_name_publisher.publish(aruco_string)
-        # try:
-        #     cv2.imshow("aruco_image", arucoImageWindow)
-        #     cv2.waitKey(1)
-        # except:
-        #     pass
+        try:
+            cv2.imshow("aruco_image", arucoImageWindow)
+            cv2.waitKey(1)
+        except:
+            pass
         #   ->  NOTE:   The Z axis of TF should be pointing inside the box (Purpose of this will be known in task 1B)
         #               Also, auto eval script will be judging angular difference aswell. So, make sure that Z axis is inside the box (Refer sample images on Portal - MD book)
 

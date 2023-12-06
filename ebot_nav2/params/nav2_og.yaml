@@ -144,14 +144,14 @@ controller_server:
       max_vel_theta: 3.0
       min_speed_xy: 0.0
       max_speed_xy: 0.30
-      min_speed_theta: 0.0
+      min_speed_theta: 3.0
 
       acc_lim_x: 3.5
       acc_lim_y: 0.0
-      acc_lim_theta: 2.0
+      acc_lim_theta: 2.6
       decel_lim_x: -3.5
       decel_lim_y: 0.0
-      decel_lim_theta: -2.0
+      decel_lim_theta: -2.6
 
       vx_samples: 40
       vy_samples: 5

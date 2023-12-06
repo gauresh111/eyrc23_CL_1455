@@ -152,6 +152,7 @@ def detect_aruco(image):
     try:
         arucoImageWindow = image.copy()
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        # threshold_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 49, 2)
     except:
         return (
             center_aruco_list,
@@ -284,7 +285,7 @@ class aruco_tf(Node):
         self.aruco_name_publisher = self.create_publisher(
             String, "/aruco_list", 10
         )
-        self.Ap_name_publisher = self.create_publisher(String, "/ap_list", 10)
+        
         ############ Constructor VARIABLES/OBJECTS ############
 
         image_processing_rate = 0.2  # rate of time to process image (seconds)
@@ -355,28 +356,6 @@ class aruco_tf(Node):
             self.cv_image = image.copy()
         except:
             pass
-    def nearest_angle(self,angle):
-        if angle < -180:
-            angle += 360
-        elif angle > 180:
-            angle -= 360
-
-        if abs(angle) < 45:
-            nearest = 0
-        elif abs(angle) < 135:
-            nearest = 90 if angle > 0 else -90
-        else:
-            nearest = 180 if angle > 0 else -180
-
-        return nearest
-    def get_rack_name(self,angle):
-        if angle == 0:
-            rack_name = "ap1"
-        elif angle == 90:
-            rack_name = "ap2"
-        elif angle == -90:
-            rack_name = "ap3"
-        return rack_name
     def process_image(self):
         """
         Description:    Timer function used to detect aruco markers and publish tf on estimated poses.
@@ -399,8 +378,6 @@ class aruco_tf(Node):
         focalY = 931.1829833984375
 
         aruco_name_list = []
-        rackAngle=[]
-        rackName=[]
 
         ############ ADD YOUR CODE HERE ############
 
@@ -527,8 +504,6 @@ class aruco_tf(Node):
                 transformStamped.transform.rotation.w = tranform.transform.rotation.w
                 self.br.sendTransform(transformStamped)
                 aruco_name_list.append("obj_" + str(id))
-                angleDegree=math.degrees(-angle[1])
-                rackName.append(self.get_rack_name(self.nearest_angle(angleDegree)))
             except:
                 pass
         #   ->  At last show cv2 image window having detected markers drawn and center points located using 'cv2.imshow' function.
@@ -537,12 +512,6 @@ class aruco_tf(Node):
         tempName = " "
         aruco_string = String()
         aruco_string.data =  tempStr.join(aruco_name_list)
-        rack_string = String()
-        rack_string.data =  tempName.join(rackName)
-        if len(rack_string.data) == 0:
-            rack_string.data = "-2"
-        self.Ap_name_publisher.publish(rack_string)
-        print("Rack_string:",rack_string)
         print("Aruco_List:", aruco_string)
         self.aruco_name_publisher.publish(aruco_string)
         # try:

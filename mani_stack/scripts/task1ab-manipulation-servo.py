@@ -17,10 +17,12 @@ from sensor_msgs.msg import JointState
 from std_msgs.msg import Int8
 import transforms3d as tf3d
 import numpy as np
+from std_msgs.msg import Bool
 
 aruco_name_list = []
 global servo_status
 servo_status = 5
+# StartBox = False
 current_joint_states = [0, 0, 0, 0, 0, 0]
 
 
@@ -49,6 +51,9 @@ def aruco_name_list_updater(msg):
     global aruco_name_list
     aruco_name_list = msg.data.split()
 
+# def getBox_id(msg):
+#     global StartBox
+#     StartBox = msg.data
 
 def main():
     rclpy.init()
@@ -114,6 +119,7 @@ def main():
     tolerance = 0.02
 
     global aruco_name_list
+    # global StartBox
     # global servo_status
 
     # Create node for this example
@@ -157,14 +163,18 @@ def main():
     # )
 
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
-    time.sleep(5)
+    # ManipulationStart = node.create_subscription(
+    #         Bool, "/StartArnManipulation", getBox_id, 10
+    #     )
+    # time.sleep(5)
 
     while not node.create_client(AttachLink, "/GripperMagnetON").wait_for_service(
         timeout_sec=1.0
     ):
         node.get_logger().info("EEF service not available, waiting again...")
-
     arucoData = []
+    # while StartBox == False:
+    #     time.sleep(0.1)
     while len(arucoData) < len(aruco_name_list):
         flag = True
         for aruco in aruco_name_list:
@@ -455,7 +465,7 @@ def main():
                 moveit2.add_collision_mesh(
                     filepath=box_file_path,
                     id="currentBox",
-                    position=[0.0, -0.12, 0.09],
+                    position=[0.0, -0.12, 0.11],
                     quat_xyzw=[-0.5, 0.5, 0.5, 0.5],
                     frame_id="tool0",
                 )
@@ -551,7 +561,7 @@ def main():
         # addCollisionObject("floor", "left_floor", [0.25, 0.71, 0.16], "Left", "base_link")
         addCollisionObject(
             "floor",
-            "left_floor",
+            "left_Rack",
             [0.25, collisionObjectDistances["left"], 0.16],
             "Left",
             "base_link",
@@ -561,7 +571,7 @@ def main():
         # addCollisionObject("floor", "front_floor", [0.54, 0.07, 0.16], "Front", "base_link")
         addCollisionObject(
             "floor",
-            "front_floor",
+            "front_Rack",
             [collisionObjectDistances["front"], 0.07, 0.16],
             "Front",
             "base_link",
@@ -571,7 +581,7 @@ def main():
         # addCollisionObject("floor", "right_floor", [0.25, -0.65, 0.16], "Right", "base_link")
         addCollisionObject(
             "floor",
-            "right_floor",
+            "right_Rack",
             [0.25, -1 * collisionObjectDistances["right"], 0.16],
             "Right",
             "base_link",

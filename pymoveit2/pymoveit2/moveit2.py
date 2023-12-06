@@ -190,8 +190,11 @@ class MoveIt2:
             callback_group=self._callback_group,
         )
 
-        self.__collision_object_publisher = self._node.create_publisher(
+        self.__attached_collision_object_publisher = self._node.create_publisher(
             AttachedCollisionObject, "/attached_collision_object", 10
+        )
+        self.__collision_object_publisher = self._node.create_publisher(
+            CollisionObject, "/collision_object", 10
         )
 
         self.__joint_state_mutex = threading.Lock()
@@ -888,17 +891,28 @@ class MoveIt2:
         # )
         msg.object.header.stamp = self._node.get_clock().now().to_msg()
 
-        self.__collision_object_publisher.publish(msg)
+        self.__attached_collision_object_publisher.publish(msg)
+
+    def dettach_collision_mesh(self, id: str):
+        """
+        Dettach collision object specified by its `id`.
+        """
+        msg = AttachedCollisionObject()
+        msg.object.id = id
+        msg.object.operation = CollisionObject.REMOVE
+        msg.object.header.stamp = self._node.get_clock().now().to_msg()
+        # print(msg)
+        self.__attached_collision_object_publisher.publish(msg)
 
     def remove_collision_mesh(self, id: str):
         """
         Remove collision object specified by its `id`.
         """
-
-        msg = AttachedCollisionObject()
-        msg.object.id = id
-        msg.object.operation = CollisionObject.REMOVE
-        msg.object.header.stamp = self._node.get_clock().now().to_msg()
+        self.dettach_collision_mesh(id)
+        msg = CollisionObject()
+        msg.id = id
+        msg.operation = CollisionObject.REMOVE
+        msg.header.stamp = self._node.get_clock().now().to_msg()
         print(msg)
         self.__collision_object_publisher.publish(msg)
 
@@ -1195,7 +1209,7 @@ class MoveIt2:
         # move_action_goal.request.pipeline_id = "Ignored"
         # move_action_goal.request.planner_id = "Ignored"
         move_action_goal.request.group_name = group_name
-        move_action_goal.request.num_planning_attempts = 10 #
+        move_action_goal.request.num_planning_attempts = 5 #
         move_action_goal.request.allowed_planning_time = 10.0 #0.5
         move_action_goal.request.max_velocity_scaling_factor = 0.0
         move_action_goal.request.max_acceleration_scaling_factor = 0.0
