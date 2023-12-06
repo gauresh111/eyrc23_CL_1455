@@ -35,11 +35,10 @@ def main():
     RackRequest=""
     ApRequest=""
     positionToGO = {
-        'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},'Yaw':180,
-        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.9, 0.0]},'Yaw':180, 
-        'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7078252, 0.7073883], 'XYoffsets': [0.0, 0.8]},'Yaw':-1.57, 
-        'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7078252, 0.7073883], 'XYoffsets': [0.0, -0.72],'Yaw':1.57}           
-        }
+      'ap1': {'xyz': [-0.09, -2.45, 0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [1.0, 0.0], 'Yaw': 3.14},
+      'ap2': {'xyz': [1.35,-4.38, 0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, 1.0], 'Yaw': -1.57}, 
+      'ap3': {'xyz': [1.35,-0.55, 0.0], 'quaternions': [0.0, 0.0, 0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, -1.0], 'Yaw': 1.57}
+       }
     withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
     def add_docking_position(name, xyz, quaternions, xy_offsets,yaw):

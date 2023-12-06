@@ -25,13 +25,10 @@ config_folder_name = 'ebot_docking'
 
 global dockingPosition
 dockingPosition = {
-        # 'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0],'Yaw':180}, 
-        # 'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8],'Yaw':-1.57}, 
-        # 'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72],'Yaw':1.57}  
-        'ap1':{'xyz': [1.04, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.0, 0.0],'Yaw':180}, 
-        'ap2':{'xyz': [1.70, -3.20, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.0],'Yaw':-1.57}, 
-        'ap3':{'xyz': [1.70, -1.65, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.0],'Yaw':1.57}           
-}
+        'ap1': {'xyz': [-0.09, -2.45, 0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [1.0, 0.0], 'Yaw': 3.14},
+      'ap2': {'xyz': [1.35,-4.38, 0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, 1.0], 'Yaw': -1.57}, 
+      'ap3': {'xyz': [1.35,-0.55, 0.0], 'quaternions': [0.0, 0.0, 0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, -1.0], 'Yaw': 1.57}
+      }   
 def load_yaml(file_path):
     """Load a yaml file into a dictionary"""
     try:
@@ -135,7 +132,7 @@ def main():
         x,y,offsetXY=switch_case(math.ceil(degree),xyz)
         xyz=[x,y,0.0]
         add_docking_position(rackName,xyz,quaternions,offsetXY,yaw)
-     
+    print(dockingPosition) 
     def distance(p1, p2):
         return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
     def findNearestAp(X,Y):
