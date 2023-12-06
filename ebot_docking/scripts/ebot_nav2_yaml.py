@@ -175,13 +175,13 @@ def main():
         while(future.result() is  None):
             try:
                 # node.aruco_name_publisher.publish(box_string)
-                print("going to racks",node.nav2RackRequest)
+               time.sleep(1)
             except KeyboardInterrupt:
                 rclpy.spin(node)
                 rclpy.shutdown()
                 exit(0)
         print("Start Arn Manipulation")
-        for i in range(10):
+        for i in range(2):
             msg = Bool()
             msg.data = True
             node.racksApsPub.publish(msg)

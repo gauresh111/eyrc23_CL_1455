@@ -30,10 +30,7 @@ def main():
     global botPosition, botOrientation
     botPosition = []
     botOrientation =[] 
-    global positionToGO,DockingRacks,RackRequest,ApRequest
-    DockingRacks=True
-    RackRequest=""
-    ApRequest=""
+    global positionToGO
     positionToGO = {
           'ap1': {'xyz': [-0.2, -2.45, 0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [1.0, 0.0], 'Yaw': 3.14},
       'ap2': {'xyz': [1.45,-4.38, 0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, 1.0], 'Yaw': -1.57}, 
@@ -108,7 +105,6 @@ def main():
         while not navigator.isTaskComplete():
             i = i + 1
         result = navigator.getResult()
-        print(result)
         quaternion_array = goalPose.pose.orientation
         orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
         _, _, yaw = euler_from_quaternion(orientation_list)
@@ -123,20 +119,11 @@ def main():
         dockingNodecli.dockingRequest.rack_no = rack_no
         dockingNodecli.dockingRequest.rack_attach=israck
         future = dockingNodecli.dockingClient.call_async(dockingNodecli.dockingRequest)
-        time.sleep(0.5)
-        print(future.result())
-        # while(future.result() is  None):
-        #     try:
-        #         print("docking request send")
-        #     except:
-        #         pass
         rclpy.spin_until_future_complete(dockingNodecli, future)
         dockingNodecli.destroy_node()
-        # navigator.lifecycleShutdown()
+       
         navigator.clearAllCostmaps()
-        time.sleep(1)
-    # navigator.setInitialPose(getGoalPoseStamped("initalPose"))
-    # Wait for navigation to fully activate
+        time.sleep(0.2)
     navigator.waitUntilNav2Active()
     def Rack_control_callback(Request,Response):
         global positionToGO
@@ -157,8 +144,7 @@ def main():
         node.get_logger().info("Going to Rack")
         moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest,getGoalPoseStamped(RackRequest))
         
-        #goes to ap    
-        time.sleep(1)
+        #goes to ap   
         node.get_logger().info("Going to Ap")
         moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest,getGoalPoseStamped(ApRequest))
         
@@ -171,7 +157,5 @@ def main():
     rclpy.shutdown()
     navigator.lifecycleShutdown()
     exit(0)
-
-
 if __name__ == '__main__':
     main()
