@@ -27,7 +27,9 @@ def main():
         for i in range(len(programName)):
             program_name = programName[i]
             pid = get_pid(program_name)
-            if pid:
+            if program_name == "exitNav2.py":
+               raise SystemExit
+            elif pid:
                 print("pid",pid)
                 for j in range(len(pid)):
                     try:
@@ -43,10 +45,12 @@ def main():
             print("Exitcallback",msg.data)
             kill_process()
     node.Exit = node.create_subscription(Bool, '/ExitNav',Exitcallback, 30)
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
-    exit(0)
+    try:
+        rclpy.spin(node)
+    except SystemExit:
+        node.destroy_node()
+        rclpy.shutdown()
+        exit(0)
 
 if __name__ == '__main__':
     main()
