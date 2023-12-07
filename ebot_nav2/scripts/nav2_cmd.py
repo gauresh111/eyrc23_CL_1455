@@ -156,7 +156,15 @@ def main():
         node.get_logger().info("Request done with Succes")
         return Response
     dock_control_srv = node.create_service(RackSw, '/RackNav2Sw', Rack_control_callback, callback_group=callback_group)
-    rclpy.spin(node)
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        print("SystemExit")
+        node.destroy_node()
+        navigator.lifecycleShutdown()
+        rclpy.shutdown()
+        exit(0)
+    
     rclpy.shutdown()
     navigator.lifecycleShutdown()
     exit(0)

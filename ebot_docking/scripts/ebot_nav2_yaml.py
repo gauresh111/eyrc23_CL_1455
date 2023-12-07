@@ -44,38 +44,22 @@ def switch_case(value,cordinates):
     x, y = cordinates[0],cordinates[1]
     offsetXY=[]
     if value > 160:
+        #180
+        x -= 1.0
+        offsetXY=[1.0,0.0]
       
-        if x > 0:
-            x -= 1.0
-            offsetXY=[1.0,0.0]
-        else:
-            x += 1.0
-            offsetXY=[-1.0,0.0]
     elif value >0:
-       
-        if  y > 0:
-            y -= 1.0
-            offsetXY=[0.0,1.0]
-        else:
-            y += 1.0
-            offsetXY=[0.0,-1.0]
+       #90
+        y+=1.0
+        offsetXY=[0.0,1.0]
     elif value > -160:
-        
-        if y > 0:
-            y -= 1.0
-            offsetXY=[0.0,1.0]
-        else:
-            y += 1.0
-            offsetXY=[0.0,-1.0]
+        #-180
+        x+=1.0
+        offsetXY=[-1.0,0.0]
     else:
-        if x > 0:
-            x -= 1.0
-            offsetXY=[1.0,0.0]
-        else:
-            x += 1.0
-            offsetXY=[-1.0,0.0]
-        
-
+        #-90
+        y-=1.0
+        offsetXY=[0.0,-1.0]
     return x,y,offsetXY
 def find_string_in_list(string, list):
     for index, item in enumerate(list):

@@ -407,7 +407,13 @@ def main(args=None):
     executor.add_node(my_robot_docking_controller)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
-    rclpy.spin(my_robot_docking_controller)
+    try:
+        rclpy.spin(my_robot_docking_controller)
+    except KeyboardInterrupt:
+        print("SystemExit")
+        my_robot_docking_controller.destroy_node()
+        rclpy.shutdown()
+        exit(0)
     my_robot_docking_controller.destroy_node()
     rclpy.shutdown()
     exit(0)
