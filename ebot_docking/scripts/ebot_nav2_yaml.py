@@ -96,6 +96,7 @@ def main():
     executor_thread.start()
     node.racksApsPub=node.create_publisher(Bool, '/StartArnManipulation', 10)
     node.nav2RackClient = node.create_client(RackSw, '/RackNav2Sw')
+    node.ExitNavPub=node.create_publisher(Bool, '/ExitNav', 30)
     while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
         print(' Nav2 Client service not available, waiting again...')
     node.nav2RackRequest = RackSw.Request()
@@ -178,7 +179,12 @@ def main():
             time.sleep(0.1)
     
     print("done")
-    rclpy.spin(node)
+    for i in range(20):
+        msg = Bool()
+        msg.data = True
+        node.ExitNavPub.publish(msg)
+        time.sleep(0.1)
+    node.destroy_node()
     rclpy.shutdown()
     exit(0)
 if __name__ == '__main__':
