@@ -1,26 +1,16 @@
 #!/usr/bin/env python3
 import os
-from nav_msgs.msg import Odometry
 import rclpy
 from threading import Thread
 import time
-from geometry_msgs.msg import PoseStamped
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
-from nav2_simple_commander.robot_navigator import BasicNavigator
-import tf2_ros
-from rclpy.duration import Duration # Handles time for ROS 2
 from scipy.spatial.transform import Rotation as R
 from std_msgs.msg import Bool
 from ebot_docking.srv import RackSw  # Import custom service message
-from tf_transformations import euler_from_quaternion
 import math
-from rcl_interfaces.srv import SetParameters
-from geometry_msgs.msg import Polygon,Point32
 import yaml
 from ament_index_python.packages import get_package_share_directory
-from std_msgs.msg import String
-from std_msgs.msg import Bool
 config_folder_name = 'ebot_docking'
 
 global dockingPosition
@@ -54,38 +44,22 @@ def switch_case(value,cordinates):
     x, y = cordinates[0],cordinates[1]
     offsetXY=[]
     if value > 160:
+        #180
+        x -= 1.0
+        offsetXY=[1.0,0.0]
       
-        if x > 0:
-            x -= 1.0
-            offsetXY=[1.0,0.0]
-        else:
-            x += 1.0
-            offsetXY=[-1.0,0.0]
     elif value >0:
-       
-        if  y > 0:
-            y -= 1.0
-            offsetXY=[0.0,1.0]
-        else:
-            y += 1.0
-            offsetXY=[0.0,-1.0]
+       #90
+        y+=1.0
+        offsetXY=[0.0,1.0]
     elif value > -160:
-        
-        if y > 0:
-            y -= 1.0
-            offsetXY=[0.0,1.0]
-        else:
-            y += 1.0
-            offsetXY=[0.0,-1.0]
+        #-180
+        x+=1.0
+        offsetXY=[-1.0,0.0]
     else:
-        if x > 0:
-            x -= 1.0
-            offsetXY=[1.0,0.0]
-        else:
-            x += 1.0
-            offsetXY=[-1.0,0.0]
-        
-
+        #-90
+        y-=1.0
+        offsetXY=[0.0,-1.0]
     return x,y,offsetXY
 def find_string_in_list(string, list):
     for index, item in enumerate(list):
@@ -106,6 +80,7 @@ def main():
     executor_thread.start()
     node.racksApsPub=node.create_publisher(Bool, '/StartArnManipulation', 10)
     node.nav2RackClient = node.create_client(RackSw, '/RackNav2Sw')
+    node.ExitNavPub=node.create_publisher(Bool, '/ExitNav', 30)
     while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
         print(' Nav2 Client service not available, waiting again...')
     node.nav2RackRequest = RackSw.Request()
@@ -188,7 +163,12 @@ def main():
             time.sleep(0.1)
     
     print("done")
-    rclpy.spin(node)
+    for i in range(20):
+        msg = Bool()
+        msg.data = True
+        node.ExitNavPub.publish(msg)
+        time.sleep(0.1)
+    node.destroy_node()
     rclpy.shutdown()
     exit(0)
 if __name__ == '__main__':

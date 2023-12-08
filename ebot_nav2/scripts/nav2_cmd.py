@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+import os
 import rclpy
 from rclpy.node import Node
 from threading import Thread
@@ -13,7 +14,7 @@ from tf_transformations import euler_from_quaternion
 import math
 from geometry_msgs.msg import Polygon,Point32
 from ebot_docking.srv import RackSw
-
+from std_msgs.msg import Bool
 def main():
     rclpy.init()
     navigator = BasicNavigator()
@@ -32,7 +33,8 @@ def main():
     botOrientation =[] 
     global positionToGO
     positionToGO = {
-          'ap1': {'xyz': [-0.2, -2.45, 0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [1.0, 0.0], 'Yaw': 3.14},
+      'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0],'Yaw':180},
+      'ap1': {'xyz': [-0.2, -2.45, 0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [1.0, 0.0], 'Yaw': 3.14},
       'ap2': {'xyz': [1.45,-4.38, 0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, 1.0], 'Yaw': -1.57}, 
       'ap3': {'xyz': [1.45,-0.55, 0.0], 'quaternions': [0.0, 0.0, 0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, -1.0], 'Yaw': 1.57}
      }
@@ -124,6 +126,7 @@ def main():
        
         navigator.clearAllCostmaps()
         time.sleep(0.2)
+    navigator.setInitialPose(getGoalPoseStamped("initalPose"))
     navigator.waitUntilNav2Active()
     def Rack_control_callback(Request,Response):
         global positionToGO
@@ -153,7 +156,15 @@ def main():
         node.get_logger().info("Request done with Succes")
         return Response
     dock_control_srv = node.create_service(RackSw, '/RackNav2Sw', Rack_control_callback, callback_group=callback_group)
-    rclpy.spin(node)
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        print("SystemExit")
+        node.destroy_node()
+        navigator.lifecycleShutdown()
+        rclpy.shutdown()
+        exit(0)
+    
     rclpy.shutdown()
     navigator.lifecycleShutdown()
     exit(0)

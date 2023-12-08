@@ -9,6 +9,7 @@
 # ###
 
 # Import necessary ROS2 packages and message types
+import os
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
@@ -23,6 +24,7 @@ from threading import Thread
 from linkattacher_msgs.srv import AttachLink , DetachLink
 from sensor_msgs.msg import Imu
 from rclpy.time import Time
+from std_msgs.msg import Bool
 rclpy.init()
 global robot_pose
 global ultrasonic_value
@@ -400,16 +402,20 @@ class MyRobotDockingController(Node):
 # Main function to initialize the ROS2 node and spin the executor
 def main(args=None):
     
-
     my_robot_docking_controller = MyRobotDockingController()
-
-    executor = MultiThreadedExecutor(2)
+    executor = MultiThreadedExecutor(3)
     executor.add_node(my_robot_docking_controller)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
-    rclpy.spin(my_robot_docking_controller)
+    try:
+        rclpy.spin(my_robot_docking_controller)
+    except KeyboardInterrupt:
+        print("SystemExit")
+        my_robot_docking_controller.destroy_node()
+        rclpy.shutdown()
+        exit(0)
     my_robot_docking_controller.destroy_node()
     rclpy.shutdown()
-
+    exit(0)
 if __name__ == '__main__':
     main()
