@@ -60,7 +60,7 @@ def aruco_name_list_updater(msg):
 def main():
     rclpy.init()
 
-    print("Starting Task 1AB Manipulation Servo")
+    print("Starting Manipulation Servo")
     
     Initial_Pose = ArucoBoxPose()
     Initial_Pose.position = [0.18, 0.10, 0.46]
@@ -619,7 +619,7 @@ def main():
         frame_id="base_link",
     )
 
-    # moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
+    moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
 
     for aruco, drop in zip(arucoData, Drop_Joints_List):
         moveToPose(
