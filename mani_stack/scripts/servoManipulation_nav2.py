@@ -401,18 +401,18 @@ def main():
         )
         servoNode.odom_sub
 
-        jointStatesNode = Node("JointStatesNode")
-        callback_group = ReentrantCallbackGroup()
-        jointStates_executor = rclpy.executors.MultiThreadedExecutor(2)
-        jointStates_executor.add_node(jointStatesNode)
-        jointStates_executor_thread = Thread(
-            target=jointStates_executor.spin, daemon=True, args=()
-        )
-        jointStates_executor_thread.start()
-        jointStatesNode.odom_sub = jointStatesNode.create_subscription(
-            JointState, "/joint_states", joint_states_updater, 10
-        )
-        jointStatesNode.odom_sub
+        # jointStatesNode = Node("JointStatesNode")
+        # callback_group = ReentrantCallbackGroup()
+        # jointStates_executor = rclpy.executors.MultiThreadedExecutor(2)
+        # jointStates_executor.add_node(jointStatesNode)
+        # jointStates_executor_thread = Thread(
+        #     target=jointStates_executor.spin, daemon=True, args=()
+        # )
+        # jointStates_executor_thread.start()
+        # jointStatesNode.odom_sub = jointStatesNode.create_subscription(
+        #     JointState, "/joint_states", joint_states_updater, 10
+        # )
+        # jointStatesNode.odom_sub
 
         time.sleep(0.2)
 
@@ -511,8 +511,8 @@ def main():
             #     time.sleep(0.5)
 
             # Move to Pre Drop Pose
-            moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
-            print("Reached Pre-Drop")
+            # moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
+            # print("Reached Pre-Drop")
 
             # Move to Drop Pose
             moveToJointStates(dropData.joint_states, dropData.name)
@@ -520,19 +520,19 @@ def main():
 
             controlGripper("OFF", box_name)
 
-            for i in range(5):
+            for i in range(2):
                 moveit2.remove_collision_mesh(id="currentBox")
-                time.sleep(0.2)
+                time.sleep(0.1)
             time.sleep(0.2)
 
             # Move to Pre Drop Pose
             # moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
 
-            moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
-            print("Reached Initial Pose")
+            # moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
+            # print("Reached Initial Pose")
 
             servoNode.destroy_node()
-            jointStatesNode.destroy_node()
+            # jointStatesNode.destroy_node()
             break
 
     arucoPossibleAngles = {
