@@ -30,6 +30,5 @@ def generate_launch_description():
     return LaunchDescription([
     start_docking,
     start_yaml_controller,
-    start_nav2,
-    Start_exitNav
+    start_nav2
     ])

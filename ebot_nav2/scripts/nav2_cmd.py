@@ -164,9 +164,5 @@ def main():
         navigator.lifecycleShutdown()
         rclpy.shutdown()
         exit(0)
-    
-    rclpy.shutdown()
-    navigator.lifecycleShutdown()
-    exit(0)
 if __name__ == '__main__':
     main()
