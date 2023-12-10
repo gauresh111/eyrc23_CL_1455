@@ -98,7 +98,7 @@ def main():
     for data in config_yaml["position"]:
         racknameData.append(list(data.keys())[0])
     package_id = config_yaml["package_id"]
-    
+    totalRacks = len(package_id)
     for data in range(len(package_id)):
         rackIndex = find_string_in_list("rack" + str(package_id[data]),racknameData)
         rackName = racknameData[rackIndex]
@@ -152,6 +152,7 @@ def main():
         node.nav2RackRequest.offset_y = y_offset
         node.ArmManipulationRequest.ap_name = ap
         node.ArmManipulationRequest.box_id = package_id[data]
+        node.ArmManipulationRequest.total_racks = totalRacks
         print("going to racks",node.nav2RackRequest)
         futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
         while(futureArm.result() is  None):

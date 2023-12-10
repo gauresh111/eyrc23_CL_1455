@@ -25,6 +25,7 @@ current_joint_states = [0, 0, 0, 0, 0, 0]
 StartBox = False
 ApQueue = []
 BoxId=[]
+totalRacks = 0
 class ArucoNameCoordinate:
     def __init__(self):
         self.name = None
@@ -55,9 +56,10 @@ def getBox_id(msg):
     StartBox = msg.data
 
 def Arm_manipulation_callback(request,response):
-    global ApQueue,BoxId
+    global ApQueue,BoxId,totalRacks
     BoxId.append(request.box_id)
     ApQueue.append(request.ap_name)
+    totalRacks = request.total_racks
     response.success = True 
     response.message = "Success"
     return response
@@ -213,7 +215,9 @@ def main():
         timeout_sec=1.0
     ):
         node.get_logger().info("EEF service not available, waiting again...")
-    while True:
+    rackCounter = 0
+    while rackCounter < totalRacks:
+        rackCounter += 1
         arucoData = []
         while len(ApQueue) == 0:
             time.sleep(0.5)
