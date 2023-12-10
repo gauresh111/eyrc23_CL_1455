@@ -155,14 +155,18 @@ def main():
         node.ArmManipulationRequest.total_racks = totalRacks
         print("going to racks",node.nav2RackRequest)
         futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
-        while(futureArm.result() is  None):
+        counter=0
+        while(futureArm.result() is  None and counter<10):
             try:
                 # node.aruco_name_publisher.publish(box_string)
-               time.sleep(1)
+                print(futureArm.result())
+                time.sleep(1)
             except KeyboardInterrupt:
                 rclpy.spin(node)
                 rclpy.shutdown()
                 exit(0)
+            counter+=1
+        print("Arm Manipulation Response: ",futureArm.result())
         futureNav2 = node.nav2RackClient.call_async(node.nav2RackRequest)
         while(futureNav2.result() is  None):
             try:
@@ -173,6 +177,7 @@ def main():
                 rclpy.shutdown()
                 exit(0)
         # print("Start Arn Manipulation")
+        print("Rack Client Response: ",futureNav2.result())
         for i in range(2):
             msg = Bool()
             msg.data = True

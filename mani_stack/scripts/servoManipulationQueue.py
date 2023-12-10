@@ -220,9 +220,11 @@ def main():
             time.sleep(0.5)
     while rackCounter < totalRacks:
         rackCounter += 1
+        print("Rack Counter: ", rackCounter)
         arucoData = []
         while len(ApQueue) == 0:
             time.sleep(0.5)
+        print("ApQueue: ", ApQueue)
             
         if ApQueue[0]=="ap1":
             moveToJointStates(Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name)
@@ -232,9 +234,11 @@ def main():
         else :
             moveToJointStates(Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name)
         ApQueue.pop(0)
-        
+        print("###### Waiting for StartBox")
         while StartBox == False:
             time.sleep(5.0)
+        StartBox = False
+        print("StartBox: ", StartBox)
         # time.sleep(30)
         while len(arucoData) < len(aruco_name_list):
             flag = True
@@ -273,7 +277,8 @@ def main():
                         arucoData[i].rotationName = "Left"
                     else:
                         arucoData[i].rotationName = "Front"
-    
+
+        print(" No. of Arucos Detected: ", len(arucoData))
         for aruco in arucoData:
             print(
                 "Aruco Name: ",
@@ -661,7 +666,6 @@ def main():
             # print("Reached ", aruco.name)
             # moveToPose(Drop.position, Drop.quaternions, "Drop")
             # print("Reached Drop")
-        StartBox == False
         
     
     print("Done")
