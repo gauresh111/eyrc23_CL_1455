@@ -216,6 +216,8 @@ def main():
     ):
         node.get_logger().info("EEF service not available, waiting again...")
     rackCounter = 0
+    while len(ApQueue) == 0:
+            time.sleep(0.5)
     while rackCounter < totalRacks:
         rackCounter += 1
         arucoData = []
