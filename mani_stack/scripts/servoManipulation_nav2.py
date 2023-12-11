@@ -79,6 +79,7 @@ def main():
 
     Initial_Joints = PredefinedJointStates()
     Initial_Joints.joint_states = [0.0, -2.39, 2.4, -3.15, -1.58, 3.15]
+    # Initial_Joints.joint_states = [-0.02, -2.28, 1.85, -2.71, -1.56, 3.15] # Higher
     Initial_Joints.name = "Initial_Joints"
 
     Pre_Drop_Joints = PredefinedJointStates()
@@ -101,6 +102,18 @@ def main():
     Drop_Joints_Back = PredefinedJointStates()
     Drop_Joints_Back.joint_states = [-0.013, -2.428, -0.375, -3.500, -1.587, 3.148]
     Drop_Joints_Back.name = "Drop_Joints_Back"
+
+    Pickup_Joints_Front = PredefinedJointStates()
+    Pickup_Joints_Front.joint_states = [-0.00, -2.43, 2.10, -2.81, -1.56, 3.15]
+    Pickup_Joints_Front.name = "Pickup_Joints_Front"
+
+    Pickup_Joints_Left = PredefinedJointStates()
+    Pickup_Joints_Left.joint_states = [1.57, -2.43, 2.10, -2.81, -1.56, 3.15]
+    Pickup_Joints_Left.name = "Pickup_Joints_Left"
+
+    Pickup_Joints_Right = PredefinedJointStates()
+    Pickup_Joints_Right.joint_states = [-1.57, -2.43, 2.10, -2.81, -1.56, 3.15]
+    Pickup_Joints_Right.name = "Pickup_Joints_Right"
 
     Drop_Joints_List = [Drop_Joints_Left, Drop_Joints_Right, Drop_Joints_Back]
 
@@ -162,7 +175,11 @@ def main():
     # joint_states_subscriber = node.create_subscription(
     #     JointState, "/joint_states", joint_states_updater, 10, callback_group=callback_group
     # )
-
+    arucoPossibleAngles = {
+        "left": [0.0, 0.7, 0.7, 0.0],
+        "front": [0.5, 0.5, 0.5, 0.5],
+        "right": [0.7, 0.0, 0.0, 0.7],
+    }
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
     ManipulationStart = node.create_subscription(
             Bool, "/StartArnManipulation", getBox_id, 10
@@ -207,12 +224,28 @@ def main():
                 arucoData[i].eulerAngles = tf3d.euler.quat2euler(
                     arucoData[i].quaternions
                 )
-                if arucoData[i].eulerAngles[0] > 3.0:
+                if (
+                round(arucoData[i].quaternions[0], 1) == arucoPossibleAngles["left"][0]
+                and round(arucoData[i].quaternions[1], 1) == arucoPossibleAngles["left"][1]
+                and round(arucoData[i].quaternions[2], 1) == arucoPossibleAngles["left"][2]
+                and round(arucoData[i].quaternions[3], 1) == arucoPossibleAngles["left"][3]
+                ):
                     arucoData[i].rotationName = "Left"
-                elif arucoData[i].eulerAngles[0] < 0.5:
+                elif (
+                round(arucoData[i].quaternions[0], 1) == arucoPossibleAngles["right"][0]
+                and round(arucoData[i].quaternions[1], 1) == arucoPossibleAngles["right"][1]
+                and round(arucoData[i].quaternions[2], 1) == arucoPossibleAngles["right"][2]
+                and round(arucoData[i].quaternions[3], 1) == arucoPossibleAngles["right"][3]
+                ):
                     arucoData[i].rotationName = "Right"
                 else:
                     arucoData[i].rotationName = "Front"
+                # if arucoData[i].eulerAngles[0] > 3.0:
+                #     arucoData[i].rotationName = "Right"
+                # elif arucoData[i].eulerAngles[0] < 0.5:
+                #     arucoData[i].rotationName = "Left"
+                # else:
+                #     arucoData[i].rotationName = "Front"
 
     for aruco in arucoData:
         print(
@@ -304,7 +337,7 @@ def main():
         req.model2_name = "ur5"
         req.link2_name = "wrist_3_link"
         print(gripper_control.call_async(req))
-        time.sleep(1)
+        time.sleep(0.2)
 
         print("Gripper Status: ", status, "has been requested")
 
@@ -334,7 +367,7 @@ def main():
                 round(round(joint_states[4], 1) - round(current_joint_states[4], 1), 1),
                 round(round(joint_states[5], 1) - round(current_joint_states[5], 1), 1),
             )
-            if (status == True):
+            if status == True:
                 break
             else:
                 continue
@@ -388,20 +421,20 @@ def main():
         )
         servoNode.odom_sub
 
-        jointStatesNode = Node("JointStatesNode")
-        callback_group = ReentrantCallbackGroup()
-        jointStates_executor = rclpy.executors.MultiThreadedExecutor(2)
-        jointStates_executor.add_node(jointStatesNode)
-        jointStates_executor_thread = Thread(
-            target=jointStates_executor.spin, daemon=True, args=()
-        )
-        jointStates_executor_thread.start()
-        jointStatesNode.odom_sub = jointStatesNode.create_subscription(
-            JointState, "/joint_states", joint_states_updater, 10
-        )
-        jointStatesNode.odom_sub
+        # jointStatesNode = Node("JointStatesNode")
+        # callback_group = ReentrantCallbackGroup()
+        # jointStates_executor = rclpy.executors.MultiThreadedExecutor(2)
+        # jointStates_executor.add_node(jointStatesNode)
+        # jointStates_executor_thread = Thread(
+        #     target=jointStates_executor.spin, daemon=True, args=()
+        # )
+        # jointStates_executor_thread.start()
+        # jointStatesNode.odom_sub = jointStatesNode.create_subscription(
+        #     JointState, "/joint_states", joint_states_updater, 10
+        # )
+        # jointStatesNode.odom_sub
 
-        time.sleep(3)
+        time.sleep(0.2)
 
         while True:
             global servo_status
@@ -418,7 +451,7 @@ def main():
             elif rotation_name == "Right":
                 midPosition = [position[0], position[1] + 0.23, position[2]]
             else:
-                midPosition = [position[0]- 0.23, position[1], position[2]]
+                midPosition = [position[0] - 0.23, position[1], position[2]]
             quaternions = [
                 round(quaternions[0], 4),
                 round(quaternions[1], 4),
@@ -428,25 +461,32 @@ def main():
             box_name = "box" + str(int(re.search(r"\d+", position_name).group()))
             # quaternions = P2.quaternions
 
-            x, y, z = False, False, False
-            currentPose = [0, 0, 0, 0]
-            while (True):
-                print("Moving to ", position_name, "    [Attempt: ", counter, "]")
-                # if position_name != "Drop":
-                moveit2.move_to_pose(
-                    position=midPosition,
-                    quat_xyzw=quaternions,
-                    tolerance_position=0.01,
-                    tolerance_orientation=0.01,
-                )
-                status = moveit2.wait_until_executed()
-                counter += 1
-                if status == False:
-                    continue
-                else:
-                    break
+            # x, y, z = False, False, False
+            # currentPose = [0, 0, 0, 0]
+            # while True:
+            #     print("Moving to ", position_name, "    [Attempt: ", counter, "]")
+            #     # if position_name != "Drop":
+            #     moveit2.move_to_pose(
+            #         position=midPosition,
+            #         quat_xyzw=quaternions,
+            #         tolerance_position=0.01,
+            #         tolerance_orientation=0.01,
+            #     )
+            #     status = moveit2.wait_until_executed()
+            #     counter += 1
+            #     if status == False:
+            #         continue
+            #     else:
+            #         break
 
             # if position_name != "Drop":
+            # if rotation_name == "Left":
+            #     moveToJointStates(Pickup_Joints_Left.joint_states, Pickup_Joints_Left.name)
+            # elif rotation_name == "Right":
+            #     moveToJointStates(Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name)
+            # else:
+            #     moveToJointStates(Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name)
+
             moveToPoseWithServo(TargetPose=position, quaternions=quaternions)
             if servo_status > 0:
                 print(
@@ -459,7 +499,7 @@ def main():
             time.sleep(0.1)
 
             controlGripper("ON", box_name)
-            time.sleep(1)
+            time.sleep(0.2)
             # return
 
             for i in range(5):
@@ -470,9 +510,9 @@ def main():
                     quat_xyzw=[-0.5, 0.5, 0.5, 0.5],
                     frame_id="tool0",
                 )
-                time.sleep(0.5)
-            
-            newMidPose = [position[0] / 2, position[1] / 2, midPosition[2]]
+                time.sleep(0.2)
+
+            # newMidPose = [position[0] / 2, position[1] / 2, midPosition[2]]
             moveToPoseWithServo(TargetPose=midPosition, quaternions=quaternions)
             # if servo_status > 0:
             #         print("Exited next While Loop due to Servo Error", servo_status)
@@ -491,8 +531,8 @@ def main():
             #     time.sleep(0.5)
 
             # Move to Pre Drop Pose
-            moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
-            print("Reached Pre-Drop")
+            # moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
+            # print("Reached Pre-Drop")
 
             # Move to Drop Pose
             moveToJointStates(dropData.joint_states, dropData.name)
@@ -500,24 +540,21 @@ def main():
 
             controlGripper("OFF", box_name)
 
-            for i in range(5):
+            for i in range(2):
                 moveit2.remove_collision_mesh(id="currentBox")
-                time.sleep(0.5)
-            time.sleep(1)
+                time.sleep(0.1)
+            time.sleep(0.2)
 
             # Move to Pre Drop Pose
-            moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
-            print("Reached Initial Pose")
+            # moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
+
+            # moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
+            # print("Reached Initial Pose")
 
             servoNode.destroy_node()
-            jointStatesNode.destroy_node()
+            # jointStatesNode.destroy_node()
             break
 
-    arucoPossibleAngles = {
-        "left": [0.0, 0.7, 0.7, 0.0],
-        "front": [0.5, 0.5, 0.5, 0.5],
-        "right": [0.7, 0.0, 0.0, 0.7],
-    }
     collisionObjectDistances = {"left": 0.0, "front": 0.0, "right": 0.0}
     # def decideRequiredCollisionRacks():
     left_flag, front_flag, right_flag = False, False, False
@@ -530,7 +567,7 @@ def main():
                 and round(aruco.quaternions[3], 1) == arucoPossibleAngles["left"][3]
             ):
                 left_flag = True
-                collisionObjectDistances["left"] = round(aruco.position[1], 2) +0.16
+                collisionObjectDistances["left"] = round(aruco.position[1], 2) + 0.16
             # print("Left Flag: ", left_flag)
         if front_flag == False:
             print(aruco.name)
@@ -552,7 +589,7 @@ def main():
                 and round(aruco.quaternions[3], 1) == arucoPossibleAngles["right"][3]
             ):
                 right_flag = True
-                collisionObjectDistances["right"] = round(aruco.position[2], 2) +0.0
+                collisionObjectDistances["right"] = round(aruco.position[2], 2) + 0.0
             # print("Right Flag: ", right_flag)
     print(
         "Left Flag: ", left_flag, "Front Flag: ", front_flag, "Right Flag: ", right_flag
@@ -595,6 +632,8 @@ def main():
         quat_xyzw=[0.0, 0.0, 0.0, 1.0],
         frame_id="base_link",
     )
+
+    # moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
 
     for aruco, drop in zip(arucoData, Drop_Joints_List):
         moveToPose(

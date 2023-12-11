@@ -32,13 +32,15 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.actions import PushRosNamespace
 from nav2_common.launch import RewrittenYaml
+from launch.actions import ExecuteProcess
 
 
 def generate_launch_description():
     bringup_dir = get_package_share_directory('nav2_bringup')
     launch_dir = os.path.join(bringup_dir, 'launch')
     ebot_nav2_dir = get_package_share_directory('ebot_nav2')
-
+    manistack_dir = os.path.join(bringup_dir, 'mani_stack')
+    
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
     slam = LaunchConfiguration('slam')
@@ -146,7 +148,12 @@ def generate_launch_description():
        output='screen',
        parameters=[os.path.join(ebot_nav2_dir, 'config/ekf.yaml'), {'use_sim_time': use_sim_time}] ##Loads the ekf.yaml file
         )
-
+    start_3bLaunch = ExecuteProcess(
+        cmd=[[
+            'ros2 launch mani_stack task3b.launch.py',
+        ]],
+        shell=True
+            )
     bringup_cmd_group = GroupAction([
         PushRosNamespace(
             condition=IfCondition(use_namespace),
@@ -193,6 +200,7 @@ def generate_launch_description():
                               'use_composition': use_composition,
                               'use_respawn': use_respawn,
                               'container_name': 'nav2_container'}.items()),
+        
     ])
 
     ld = LaunchDescription()
@@ -211,6 +219,5 @@ def generate_launch_description():
     # ld.add_action(start_rviz_cmd)
     ld.add_action(robot_localization_node)
     ld.add_action(bringup_cmd_group)
-
-
+    # ld.add_action(start_3bLaunch)
     return ld
