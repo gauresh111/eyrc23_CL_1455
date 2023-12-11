@@ -19,6 +19,7 @@ import transforms3d as tf3d
 import numpy as np
 from std_msgs.msg import Bool
 from ebot_docking.srv import ManipulationSw
+import signal
 aruco_name_list = []
 servo_status = 5
 current_joint_states = [0, 0, 0, 0, 0, 0]
@@ -184,7 +185,12 @@ def main():
     # joint_states_subscriber = node.create_subscription(
     #     JointState, "/joint_states", joint_states_updater, 10, callback_group=callback_group
     # )
-
+    arucoPossibleAngles = {
+            "left": [0.0, 0.7, 0.7, 0.0],
+            "front": [0.5, 0.5, 0.5, 0.5],
+            "right": [0.7, 0.0, 0.0, 0.7],
+        }
+    
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
     ManipulationStart = node.create_subscription(
             Bool, "/StartArnManipulation", getBox_id, 10
@@ -271,12 +277,30 @@ def main():
                     arucoData[i].eulerAngles = tf3d.euler.quat2euler(
                         arucoData[i].quaternions
                     )
-                    if arucoData[i].eulerAngles[0] > 3.0:
-                        arucoData[i].rotationName = "Right"
-                    elif arucoData[i].eulerAngles[0] < 0.5:
+
+                    if (
+                    round(arucoData[i].quaternions[0], 1) == arucoPossibleAngles["left"][0]
+                    and round(arucoData[i].quaternions[1], 1) == arucoPossibleAngles["left"][1]
+                    and round(arucoData[i].quaternions[2], 1) == arucoPossibleAngles["left"][2]
+                    and round(arucoData[i].quaternions[3], 1) == arucoPossibleAngles["left"][3]
+                    ):
                         arucoData[i].rotationName = "Left"
+                    elif (
+                    round(arucoData[i].quaternions[0], 1) == arucoPossibleAngles["right"][0]
+                    and round(arucoData[i].quaternions[1], 1) == arucoPossibleAngles["right"][1]
+                    and round(arucoData[i].quaternions[2], 1) == arucoPossibleAngles["right"][2]
+                    and round(arucoData[i].quaternions[3], 1) == arucoPossibleAngles["right"][3]
+                    ):
+                        arucoData[i].rotationName = "Right"
                     else:
                         arucoData[i].rotationName = "Front"
+                        
+                    # if arucoData[i].eulerAngles[0] > 3.0:
+                    #     arucoData[i].rotationName = "Right"
+                    # elif arucoData[i].eulerAngles[0] < 0.5:
+                    #     arucoData[i].rotationName = "Left"
+                    # else:
+                    #     arucoData[i].rotationName = "Front"
 
         print(" No. of Arucos Detected: ", len(arucoData))
         for aruco in arucoData:
@@ -285,6 +309,8 @@ def main():
                 aruco.name,
                 "\nPosition: ",
                 aruco.position,
+                "\nRotation: ",
+                aruco.rotationName,
                 "\nQuaternions: ",
                 list(np.around(np.array(aruco.quaternions), 2)),
                 "\nEuler Angles: ",
@@ -567,11 +593,7 @@ def main():
                 # jointStatesNode.destroy_node()
                 break
             
-        arucoPossibleAngles = {
-            "left": [0.0, 0.7, 0.7, 0.0],
-            "front": [0.5, 0.5, 0.5, 0.5],
-            "right": [0.7, 0.0, 0.0, 0.7],
-        }
+        
         collisionObjectDistances = {"left": 0.0, "front": 0.0, "right": 0.0}
         # def decideRequiredCollisionRacks():
         left_flag, front_flag, right_flag = False, False, False
