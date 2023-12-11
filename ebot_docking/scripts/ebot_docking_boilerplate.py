@@ -407,9 +407,13 @@ def main(args=None):
     executor.add_node(my_robot_docking_controller)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
+    def ExitCallBack(msg):
+        if msg.data == True:
+            raise SystemExit
+    exitDocking=my_robot_docking_controller.create_subscription(Bool, '/ExitNav',ExitCallBack, 10)
     try:
         rclpy.spin(my_robot_docking_controller)
-    except KeyboardInterrupt:
+    except SystemExit:
         print("SystemExit")
         my_robot_docking_controller.destroy_node()
         rclpy.shutdown()
