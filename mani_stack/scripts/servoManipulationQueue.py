@@ -688,11 +688,10 @@ def main():
             # print("Reached ", aruco.name)
             # moveToPose(Drop.position, Drop.quaternions, "Drop")
             # print("Reached Drop")
-        
-    
-    print("Done")
-    rclpy.spin(node)
+    print("done")    
+    node.destroy_node()
     rclpy.shutdown()
+    exit(0)
 
 
 if __name__ == "__main__":
