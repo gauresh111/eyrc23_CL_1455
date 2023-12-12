@@ -8,6 +8,7 @@ from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
 from std_msgs.msg import Bool
 from ebot_docking.srv import RackSw  # Import custom service message
+from ebot_docking.srv import ManipulationSw
 import math
 import yaml
 from ament_index_python.packages import get_package_share_directory
@@ -80,10 +81,14 @@ def main():
     executor_thread.start()
     node.racksApsPub=node.create_publisher(Bool, '/StartArnManipulation', 10)
     node.nav2RackClient = node.create_client(RackSw, '/RackNav2Sw')
+    node.ArmManipulationClient = node.create_client(ManipulationSw, '/ArmManipulationSw')
     node.ExitNavPub=node.create_publisher(Bool, '/ExitNav', 30)
     while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
         print(' Nav2 Client service not available, waiting again...')
+    while not node.ArmManipulationClient.wait_for_service(timeout_sec=1.0):
+        print(' ArmManipulation Client service not available, waiting again...')
     node.nav2RackRequest = RackSw.Request()
+    node.ArmManipulationRequest = ManipulationSw.Request()
     global dockingPosition
     config_yaml = load_yaml(config_file)
     global rackPresent,package_id
@@ -93,7 +98,7 @@ def main():
     for data in config_yaml["position"]:
         racknameData.append(list(data.keys())[0])
     package_id = config_yaml["package_id"]
-    
+    totalRacks = len(package_id)
     for data in range(len(package_id)):
         rackIndex = find_string_in_list("rack" + str(package_id[data]),racknameData)
         rackName = racknameData[rackIndex]
@@ -145,9 +150,25 @@ def main():
         node.nav2RackRequest.yaw = yaw
         node.nav2RackRequest.offset_x = x_offset
         node.nav2RackRequest.offset_y = y_offset
+        node.ArmManipulationRequest.ap_name = ap
+        node.ArmManipulationRequest.box_id = package_id[data]
+        node.ArmManipulationRequest.total_racks = totalRacks
         print("going to racks",node.nav2RackRequest)
-        future = node.nav2RackClient.call_async(node.nav2RackRequest)
-        while(future.result() is  None):
+        futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
+        counter=0
+        while(futureArm.result() is  None and counter<10):
+            try:
+                # node.aruco_name_publisher.publish(box_string)
+                print(futureArm.result())
+                time.sleep(1)
+            except KeyboardInterrupt:
+                rclpy.spin(node)
+                rclpy.shutdown()
+                exit(0)
+            counter+=1
+        print("Arm Manipulation Response: ",futureArm.result())
+        futureNav2 = node.nav2RackClient.call_async(node.nav2RackRequest)
+        while(futureNav2.result() is  None):
             try:
                 # node.aruco_name_publisher.publish(box_string)
                time.sleep(1)
@@ -155,13 +176,13 @@ def main():
                 rclpy.spin(node)
                 rclpy.shutdown()
                 exit(0)
-        print("Start Arn Manipulation")
+        # print("Start Arn Manipulation")
+        print("Rack Client Response: ",futureNav2.result())
         for i in range(2):
             msg = Bool()
             msg.data = True
             node.racksApsPub.publish(msg)
             time.sleep(0.1)
-    
     print("done")
     for i in range(20):
         msg = Bool()

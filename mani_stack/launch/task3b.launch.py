@@ -27,9 +27,15 @@ def generate_launch_description():
         ]],
         shell=True
     )
+    Start_perceiption = ExecuteProcess( 
+                                       cmd=[[
+            'ros2 run mani_stack perception.py',
+        ]],
+        shell=True
+    )
     return LaunchDescription([
     start_docking,
-    start_yaml_controller,
+    # start_yaml_controller,
     start_nav2,
-    Start_exitNav
+    Start_perceiption
     ])
