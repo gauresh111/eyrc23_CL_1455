@@ -2,4 +2,4 @@ position:
     - rack1: [1.26, 4.34, 3.14]
     - rack3: [2.02, -8.09, 1.57]
     - rack2: [2.03, 3.3, -1.57]
-package_id: [3, 1]
+package_id: [3]
