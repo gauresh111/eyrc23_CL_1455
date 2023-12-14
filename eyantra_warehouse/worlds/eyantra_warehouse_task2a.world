@@ -171,7 +171,7 @@
 	</include>
   <!-- RACK 3 -->
 
-  <include>
+  <!-- <include>
       <uri>model://rack</uri>
       <name>rack4</name>
       <pose>0.99 -8.86 0.1 0 -0 3.14</pose>
@@ -217,7 +217,7 @@
       <uri>model://aws_robomaker_warehouse_PalletJackB_01</uri>
       <name>palletjab</name>
       <pose>-2.97 -0.21 0 0 -0 -1.29</pose>
-	</include> 
+	</include>  -->
 
   <include>
       <uri>model://arm_base</uri>
