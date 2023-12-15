@@ -44,7 +44,7 @@ def generate_launch_description():
 
     start_world = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
-            os.path.join(get_package_share_directory('ebot_description'), 'launch', 'start_world_launch_3.py'),
+            os.path.join(get_package_share_directory('ebot_description'), 'launch', 'start_world_launch_4.py'),
         )
     )
 
