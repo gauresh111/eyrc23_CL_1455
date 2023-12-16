@@ -138,11 +138,6 @@ class MyRobotDockingController(Node):
             A float representing the normalized angle in radians.
         """
         global robot_pose
-        if self.targetYaw == 0.0:
-            return angle
-
-        if angle<0:
-            angle = angle + 360
         return angle
     
     # Main control loop for managing docking behavior
