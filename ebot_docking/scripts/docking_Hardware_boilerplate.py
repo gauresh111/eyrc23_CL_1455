@@ -18,13 +18,15 @@ from sensor_msgs.msg import Range
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from tf_transformations import euler_from_quaternion
-from usb_relay.srv import RelaySw  # Import custom service message
+from ebot_docking.srv import DockSw  # Import custom service message
+from usb_relay.srv import RelaySw
 import math
 from threading import Thread
 from linkattacher_msgs.srv import AttachLink , DetachLink
 from sensor_msgs.msg import Imu
 from rclpy.time import Time
 from std_msgs.msg import Bool
+from std_msgs.msg import Float32MultiArray
 rclpy.init()
 global robot_pose
 global ultrasonic_value
@@ -92,12 +94,10 @@ class MyRobotDockingController(Node):
         # Add another one here
         self.ultrasonic_rr_sub = self.create_subscription(Range, '/ultrasonic_rr/scan', self.ultrasonic_rr_callback, 10)
         # Create a ROS2 service for controlling docking behavior, can add another custom service message
-        self.dock_control_srv = self.create_service(RelaySw, '/dock_control', self.dock_control_callback, callback_group=self.callback_group)
+        self.dock_control_srv = self.create_service(DockSw, '/dock_control', self.dock_control_callback, callback_group=self.callback_group)
         self.speedPub = self.create_publisher(Twist, '/cmd_vel', 30)
         self.nav2speedPub = self.create_publisher(Twist, '/cmd_vel_nav', 30)
-        self.link_attach_cli = self.create_client(AttachLink, '/ATTACH_LINK')
-        self.lind_detached_cli = self.create_client(DetachLink, '/DETACH_LINK')
-        
+        self.MagentCli = self.create_client(RelaySw, '/usb_relay_sw')
         while not self.link_attach_cli.wait_for_service(timeout_sec=1.0):
             self.get_logger().info('Link attacher service not available, waiting again...')
         
@@ -136,21 +136,26 @@ class MyRobotDockingController(Node):
     # Callback function for the right ultrasonic sensor
     #
     #
-    def attachRack(self,rackName):
-            req = AttachLink.Request()
-            req.model1_name =  'ebot'     
-            req.link1_name  = 'ebot_base_link'       
-            req.model2_name =  rackName       
-            req.link2_name  = 'link' 
-            self.link_attach_cli.call_async(req) 
-            # rclpy.spin_until_future_complete(self, future) 
-    def detachRack(self,rackName):
-            req = DetachLink.Request()
-            req.model1_name =  'ebot'     
-            req.link1_name  = 'ebot_base_link'       
-            req.model2_name =  rackName       
-            req.link2_name  = 'link' 
-            self.lind_detached_cli.call_async(req)
+    # def attachRack(self,rackName):
+    #         req = AttachLink.Request()
+    #         req.model1_name =  'ebot'     
+    #         req.link1_name  = 'ebot_base_link'       
+    #         req.model2_name =  rackName       
+    #         req.link2_name  = 'link' 
+    #         self.link_attach_cli.call_async(req) 
+    #         # rclpy.spin_until_future_complete(self, future) 
+    # def detachRack(self,rackName):
+    #         req = DetachLink.Request()
+    #         req.model1_name =  'ebot'     
+    #         req.link1_name  = 'ebot_base_link'       
+    #         req.model2_name =  rackName       
+    #         req.link2_name  = 'link' 
+    #         self.lind_detached_cli.call_async(req)
+    def magentSwitch(self,relayNo,relayStatus):
+        req = RelaySw.Request()
+        req.relaychannel = relayNo
+        req.relaystate = relayStatus
+        self.MagentCli.call_async(req)
             # rclpy.spin_until_future_complete(self, self.lind_detached_cli) 
     # Utility function to normalize angles within the range of -π to π (OPTIONAL)
     def normalize_angle(self,angle):
@@ -289,14 +294,10 @@ class MyRobotDockingController(Node):
             _, _, yaw = euler_from_quaternion(orientation_list)
             yaw = math.degrees(yaw)
             robot_pose[2] = round(yaw,2)
-            # print("robot_pose",robot_pose)
-        def ultrasonic_rl_callback(msg):
+        def ultrasonic_callback(msg):
             global ultrasonic_value
-            ultrasonic_value[0] = round(msg.range,2)
-
-        def ultrasonic_rr_callback(msg):
-            global ultrasonic_value
-            ultrasonic_value[1] = round(msg.range,2)
+            ultrasonic_value[0] = round(msg.data[4],2)
+            ultrasonic_value[1] = round(msg.data[5],2)  
             # print("ultrasonic_value",ultrasonic_value)
         if self.is_docking:
             # ...
@@ -315,10 +316,7 @@ class MyRobotDockingController(Node):
             dockingNode.odom_sub
             dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10)
             dockingNode.imu_sub
-            dockingNode.ultrasonic_rl_sub = dockingNode.create_subscription(Range, '/ultrasonic_rl/scan', ultrasonic_rl_callback, 10)
-            dockingNode.ultrasonic_rl_sub
-            dockingNode.ultrasonic_rr_sub = dockingNode.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10)
-            dockingNode.ultrasonic_rr_sub
+            ultra_sub = self.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
             dockingNodeClock = dockingNode.get_clock()
             def StopTime(StopSeconds):
                 future_time = Time(seconds=dockingNodeClock.now().nanoseconds / 1e9 + StopSeconds, clock_type=dockingNodeClock.clock_type)
@@ -350,9 +348,9 @@ class MyRobotDockingController(Node):
                 #orientation done
                 print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
                 if self.isAttach:
-                    self.attachRack(self.rackName)
+                    self.magentSwitch(0,True)
                 else :
-                    self.detachRack(self.rackName)
+                    self.magentSwitch(0,False)
                     stopBot(0.1,2.0,0.0)
                     stopBot(0.1,0.0,0.0)
             self.is_docking = False
