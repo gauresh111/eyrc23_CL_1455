@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(ebot_docking)
+project(usb_relay)
 
 # Default to C99
 if(NOT CMAKE_C_STANDARD)
@@ -24,9 +24,7 @@ find_package(rclpy REQUIRED)
 # find_package(<dependency> REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
-  "srv/DockSw.srv"
-  "srv/RackSw.srv"
-  "srv/ManipulationSw.srv"
+  "srv/RelaySw.srv"
   #DEPENDENCIES geometry_msgs # Add packages that above messages depend on, in this case geometry_msgs for Sphere.msg
 )
 
@@ -45,32 +43,11 @@ endif()
 install(
   DIRECTORY
     srv
-    scripts
   DESTINATION
     share/${PROJECT_NAME}/
 )
 
-install(
-  PROGRAMS
-  DESTINATION lib/${PROJECT_NAME}
-)
-install(PROGRAMS
-	scripts/docking_Simulation_boilerplate.py
-  scripts/docking_Hardware_boilerplate.py
-  scripts/task2b.py
-  scripts/ebot_nav2_yaml.py
-  config.yaml
-  DESTINATION lib/${PROJECT_NAME}
-)
 
-install(
-  PROGRAMS
-  DESTINATION share/${PROJECT_NAME}
-)
-install(
-  PROGRAMS
-  config.yaml
-  DESTINATION share/${PROJECT_NAME}
-)
+
 
 ament_package()

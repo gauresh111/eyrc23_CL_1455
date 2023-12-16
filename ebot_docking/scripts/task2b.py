@@ -18,7 +18,7 @@ from tf_transformations import euler_from_quaternion
 import math
 from rcl_interfaces.srv import SetParameters
 from geometry_msgs.msg import Polygon,Point32
-
+from ebot_docking.srv import RackSw
 def main():
     rclpy.init()
     navigator = BasicNavigator()
@@ -39,10 +39,10 @@ def main():
     global positionToGO
     positionToGO = {
         'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0]},
-        'rack1':{'xyz': [0.0, 4.4, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [1.0, 0.0]}, 
-        'rack2':{'xyz': [2.03, 2.06, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 1.08]},
-        'rack3':{'xyz': [2.13, -7.09, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.81]}, 
-        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.8, 0.0]}, 
+        'rack1':{'xyz': [0.0, 4.4, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [1.26, 0.0]}, 
+        'rack2':{'xyz': [2.03, 2.06, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 1.24]},
+        'rack3':{'xyz': [2.13, -7.09, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -1.0]}, 
+        'ap1':{'xyz': [0.0, -2.45, 0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.7, 0.0]}, 
         'ap2':{'xyz': [1.37, -4.15, 0.0], 'quaternions': [0.0, 0.0, -0.7068252, 0.7073883], 'XYoffsets': [0.0, 0.8]}, 
         'ap3':{'xyz': [1.37, -1.04, 0.0], 'quaternions': [0.0, 0.0, 0.7068252, 0.7073883], 'XYoffsets': [0.0, -0.72]}
             }
@@ -123,7 +123,7 @@ def main():
     navigator.waitUntilNav2Active()
     # Go to the goal pose
     
-    def moveToGoal(goalPose,rack_no,israck):
+    def moveToGoal(goalPose,rack_no,israck,positionName):
         global botPosition, botOrientation
         global positionToGO
         
@@ -149,30 +149,45 @@ def main():
         orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
         _, _, yaw = euler_from_quaternion(orientation_list)
         yaw = math.degrees(yaw)
-        Xoff = positionToGO[rack_no]['XYoffsets'][0]
-        Yoff = positionToGO[rack_no]['XYoffsets'][1]
+        Xoff = positionToGO[positionName]['XYoffsets'][0]
+        Yoff = positionToGO[positionName]['XYoffsets'][1]
         node.dockingRequest.linear_dock = True
         node.dockingRequest.orientation_dock = True
-        node.dockingRequest.goal_x = goalPose.pose.position.x+Xoff
-        node.dockingRequest.goal_y = goalPose.pose.position.y+Yoff
-        node.dockingRequest.orientation = yaw
+        node.dockingRequest.goal_x = round(goalPose.pose.position.x+Xoff,2)
+        node.dockingRequest.goal_y = round(goalPose.pose.position.y+Yoff,2)
+        node.dockingRequest.orientation = round(yaw,2)
         node.dockingRequest.rack_no = rack_no
         node.dockingRequest.rack_attach=israck
         future = node.dockingClient.call_async(node.dockingRequest)
+        print(node.dockingRequest)
         time.sleep(0.5)
-        while isDock!=True:
-            print("waiting")
+        print(future.result())
+        while(future.result() is  None):
+            try:
+                print(future)
+            except:
+                pass
+        # while isDock!=True:
+        #     print("waiting")
                     # node.publisher.publish(goalPose)
-    # moveToGoal(getGoalPoseStamped("rack1"),"rack1",True)
-    # moveToGoal(getGoalPoseStamped("ap1"),"rack1",False)
-    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    # moveToGoal(getGoalPoseStamped("rack2"),"rack2",True)
-    # moveToGoal(getGoalPoseStamped("ap2"),"rack2",False)
-    # # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    moveToGoal(getGoalPoseStamped("rack3"),"rack3",True)
-    moveToGoal(getGoalPoseStamped("ap3"),"rack3",False)
-    # moveToGoal(getGoalPoseStamped("initalPose"),"initalPose",False)
-    
+
+    def Rack_control_callback(Request,Response):
+        node.get_logger().info("Request Arrived")
+        RackRequest=Request.rack_name
+        ApRequest=Request.ap_name
+        
+        #goes to rack
+        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
+        node.get_logger().info("Going to Rack")
+        #goes to ap    
+        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest)
+        node.get_logger().info("Going to Ap")
+        Response.success = True
+        Response.message = "Success"
+        node.get_logger().info("Request done with Succes")
+        return Response
+    dock_control_srv = node.create_service(RackSw, '/RackNav2Sw', Rack_control_callback, callback_group=callback_group)
+  
     rclpy.spin(node)
     rclpy.shutdown()
     navigator.lifecycleShutdown()

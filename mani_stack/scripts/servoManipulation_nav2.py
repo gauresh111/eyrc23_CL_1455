@@ -175,7 +175,11 @@ def main():
     # joint_states_subscriber = node.create_subscription(
     #     JointState, "/joint_states", joint_states_updater, 10, callback_group=callback_group
     # )
-
+    arucoPossibleAngles = {
+        "left": [0.0, 0.7, 0.7, 0.0],
+        "front": [0.5, 0.5, 0.5, 0.5],
+        "right": [0.7, 0.0, 0.0, 0.7],
+    }
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
     ManipulationStart = node.create_subscription(
             Bool, "/StartArnManipulation", getBox_id, 10
@@ -220,12 +224,28 @@ def main():
                 arucoData[i].eulerAngles = tf3d.euler.quat2euler(
                     arucoData[i].quaternions
                 )
-                if arucoData[i].eulerAngles[0] > 3.0:
-                    arucoData[i].rotationName = "Right"
-                elif arucoData[i].eulerAngles[0] < 0.5:
+                if (
+                round(arucoData[i].quaternions[0], 1) == arucoPossibleAngles["left"][0]
+                and round(arucoData[i].quaternions[1], 1) == arucoPossibleAngles["left"][1]
+                and round(arucoData[i].quaternions[2], 1) == arucoPossibleAngles["left"][2]
+                and round(arucoData[i].quaternions[3], 1) == arucoPossibleAngles["left"][3]
+                ):
                     arucoData[i].rotationName = "Left"
+                elif (
+                round(arucoData[i].quaternions[0], 1) == arucoPossibleAngles["right"][0]
+                and round(arucoData[i].quaternions[1], 1) == arucoPossibleAngles["right"][1]
+                and round(arucoData[i].quaternions[2], 1) == arucoPossibleAngles["right"][2]
+                and round(arucoData[i].quaternions[3], 1) == arucoPossibleAngles["right"][3]
+                ):
+                    arucoData[i].rotationName = "Right"
                 else:
                     arucoData[i].rotationName = "Front"
+                # if arucoData[i].eulerAngles[0] > 3.0:
+                #     arucoData[i].rotationName = "Right"
+                # elif arucoData[i].eulerAngles[0] < 0.5:
+                #     arucoData[i].rotationName = "Left"
+                # else:
+                #     arucoData[i].rotationName = "Front"
 
     for aruco in arucoData:
         print(
@@ -401,18 +421,18 @@ def main():
         )
         servoNode.odom_sub
 
-        jointStatesNode = Node("JointStatesNode")
-        callback_group = ReentrantCallbackGroup()
-        jointStates_executor = rclpy.executors.MultiThreadedExecutor(2)
-        jointStates_executor.add_node(jointStatesNode)
-        jointStates_executor_thread = Thread(
-            target=jointStates_executor.spin, daemon=True, args=()
-        )
-        jointStates_executor_thread.start()
-        jointStatesNode.odom_sub = jointStatesNode.create_subscription(
-            JointState, "/joint_states", joint_states_updater, 10
-        )
-        jointStatesNode.odom_sub
+        # jointStatesNode = Node("JointStatesNode")
+        # callback_group = ReentrantCallbackGroup()
+        # jointStates_executor = rclpy.executors.MultiThreadedExecutor(2)
+        # jointStates_executor.add_node(jointStatesNode)
+        # jointStates_executor_thread = Thread(
+        #     target=jointStates_executor.spin, daemon=True, args=()
+        # )
+        # jointStates_executor_thread.start()
+        # jointStatesNode.odom_sub = jointStatesNode.create_subscription(
+        #     JointState, "/joint_states", joint_states_updater, 10
+        # )
+        # jointStatesNode.odom_sub
 
         time.sleep(0.2)
 
@@ -511,8 +531,8 @@ def main():
             #     time.sleep(0.5)
 
             # Move to Pre Drop Pose
-            moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
-            print("Reached Pre-Drop")
+            # moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
+            # print("Reached Pre-Drop")
 
             # Move to Drop Pose
             moveToJointStates(dropData.joint_states, dropData.name)
@@ -520,26 +540,21 @@ def main():
 
             controlGripper("OFF", box_name)
 
-            for i in range(5):
+            for i in range(2):
                 moveit2.remove_collision_mesh(id="currentBox")
-                time.sleep(0.2)
+                time.sleep(0.1)
             time.sleep(0.2)
 
             # Move to Pre Drop Pose
             # moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
 
-            moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
-            print("Reached Initial Pose")
+            # moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
+            # print("Reached Initial Pose")
 
             servoNode.destroy_node()
-            jointStatesNode.destroy_node()
+            # jointStatesNode.destroy_node()
             break
 
-    arucoPossibleAngles = {
-        "left": [0.0, 0.7, 0.7, 0.0],
-        "front": [0.5, 0.5, 0.5, 0.5],
-        "right": [0.7, 0.0, 0.0, 0.7],
-    }
     collisionObjectDistances = {"left": 0.0, "front": 0.0, "right": 0.0}
     # def decideRequiredCollisionRacks():
     left_flag, front_flag, right_flag = False, False, False

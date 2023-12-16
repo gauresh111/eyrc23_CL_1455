@@ -297,8 +297,7 @@ def generate_launch_description():
                 'robot_description_semantic': robot_description_semantic,
                 'robot_description_kinematics': kinematics_config,
             }
-        ],
-        output='screen')
+        ])
     start_lifecycle_manager_cmd = Node(
             package='nav2_lifecycle_manager',
             executable='lifecycle_manager',
@@ -334,7 +333,11 @@ def generate_launch_description():
        output='screen',
        parameters=[os.path.join(ebot_nav2_dir, 'config/ekf.yaml'), {'use_sim_time': use_sim_time}] ##Loads the ekf.yaml file
         )
-
+    start_Gazeebo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('eyantra_warehouse'), 'launch', 'task3a.launch.py'),
+        )
+    )
     bringup_cmd_group = GroupAction([
         PushRosNamespace(
             condition=IfCondition(use_namespace),
@@ -398,18 +401,21 @@ def generate_launch_description():
     ld.add_action(declare_use_respawn_cmd)
     ld.add_action(declare_log_level_cmd)
     ld.add_action(declare_rviz_config_file_cmd)
+    # ld.add_action(start_Gazeebo)
     ld.add_action(robot_state_publisher_arm)
     ld.add_action(spawn_controllers_manipulator)
     ld.add_action(spawn_controllers_state)
-    ld.add_action(start_rviz_cmd)
-    ld.add_action(robot_localization_node)
+    # ld.add_action(start_rviz_cmd)
     ld.add_action(ros2_control_node)
     ld.add_action(move_group_node)
     ld.add_action(servo_node)
-    ld.add_action(bringup_cmd_group)
-    ld.add_action(start_lifecycle_manager_cmd)
+    ld.add_action(robot_localization_node)
+    
     ld.add_action(start_map_server_cmd)
     ld.add_action(start_costmap_filter_info_server_cmd)
+    ld.add_action(bringup_cmd_group)
+    ld.add_action(start_lifecycle_manager_cmd)
+   
     # ld.add_action(declare_mapper_online_async_param_cmd)
     # ld.add_action(mapper_online_async_param_launch)
     return ld

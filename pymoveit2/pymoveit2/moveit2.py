@@ -190,8 +190,11 @@ class MoveIt2:
             callback_group=self._callback_group,
         )
 
-        self.__collision_object_publisher = self._node.create_publisher(
+        self.__attached_collision_object_publisher = self._node.create_publisher(
             AttachedCollisionObject, "/attached_collision_object", 10
+        )
+        self.__collision_object_publisher = self._node.create_publisher(
+            CollisionObject, "/collision_object", 10
         )
 
         self.__joint_state_mutex = threading.Lock()
@@ -219,6 +222,7 @@ class MoveIt2:
         # Internal states that monitor the current motion requests and execution
         self.__is_motion_requested = False
         self.__is_executing = False
+        self.motion_suceeded = False
         self.__wait_until_executed_rate = self._node.create_rate(1000.0)
 
         # Event that enables waiting until async future is done
@@ -446,7 +450,7 @@ class MoveIt2:
 
         self._send_goal_async_follow_joint_trajectory(goal=follow_joint_trajectory_goal)
 
-    def wait_until_executed(self):
+    def wait_until_executed(self) -> bool:
         """
         Wait until the previously requested motion is finalised through either a success or failure.
         """
@@ -455,10 +459,11 @@ class MoveIt2:
             self._node.get_logger().warn(
                 "Cannot wait until motion is executed (no motion is in progress)."
             )
-            return
+            return False
 
         while self.__is_motion_requested or self.__is_executing:
             self.__wait_until_executed_rate.sleep()
+        return self.motion_suceeded
 
     def reset_controller(
         self, joint_state: Union[JointState, List[float]], sync: bool = True
@@ -886,17 +891,28 @@ class MoveIt2:
         # )
         msg.object.header.stamp = self._node.get_clock().now().to_msg()
 
-        self.__collision_object_publisher.publish(msg)
+        self.__attached_collision_object_publisher.publish(msg)
+
+    def dettach_collision_mesh(self, id: str):
+        """
+        Dettach collision object specified by its `id`.
+        """
+        msg = AttachedCollisionObject()
+        msg.object.id = id
+        msg.object.operation = CollisionObject.REMOVE
+        msg.object.header.stamp = self._node.get_clock().now().to_msg()
+        # print(msg)
+        self.__attached_collision_object_publisher.publish(msg)
 
     def remove_collision_mesh(self, id: str):
         """
         Remove collision object specified by its `id`.
         """
-
-        msg = AttachedCollisionObject()
-        msg.object.id = id
-        msg.object.operation = CollisionObject.REMOVE
-        msg.object.header.stamp = self._node.get_clock().now().to_msg()
+        self.dettach_collision_mesh(id)
+        msg = CollisionObject()
+        msg.id = id
+        msg.operation = CollisionObject.REMOVE
+        msg.header.stamp = self._node.get_clock().now().to_msg()
         print(msg)
         self.__collision_object_publisher.publish(msg)
 
@@ -1097,6 +1113,9 @@ class MoveIt2:
             self._node.get_logger().error(
                 f"Action '{self.__move_action_client._action_name}' was unsuccessful: {res.result().status}."
             )
+            self.motion_suceeded = False
+        else:
+            self.motion_suceeded = True
 
         self.__is_executing = False
 
@@ -1163,6 +1182,9 @@ class MoveIt2:
             self._node.get_logger().error(
                 f"Action '{self.__follow_joint_trajectory_action_client._action_name}' was unsuccessful: {res.result().status}."
             )
+            self.motion_suceeded = False
+        else:
+            self.motion_suceeded = True
 
         self.__is_executing = False
 
@@ -1188,7 +1210,7 @@ class MoveIt2:
         # move_action_goal.request.planner_id = "Ignored"
         move_action_goal.request.group_name = group_name
         move_action_goal.request.num_planning_attempts = 10 #
-        move_action_goal.request.allowed_planning_time = 10.0 #0.5
+        move_action_goal.request.allowed_planning_time = 1.0 #0.5
         move_action_goal.request.max_velocity_scaling_factor = 0.0
         move_action_goal.request.max_acceleration_scaling_factor = 0.0
         move_action_goal.request.cartesian_speed_end_effector_link = end_effector
