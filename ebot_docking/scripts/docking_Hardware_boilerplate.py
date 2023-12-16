@@ -89,11 +89,6 @@ class MyRobotDockingController(Node):
         # Subscribe to odometry data for robot pose information
         
 
-        # Subscribe to ultrasonic sensor data for distance measurements
-        self.ultrasonic_rl_sub = self.create_subscription(Range, '/ultrasonic_rl/scan', self.ultrasonic_rl_callback, 10)
-        # Add another one here
-        self.ultrasonic_rr_sub = self.create_subscription(Range, '/ultrasonic_rr/scan', self.ultrasonic_rr_callback, 10)
-        # Create a ROS2 service for controlling docking behavior, can add another custom service message
         self.dock_control_srv = self.create_service(DockSw, '/dock_control', self.dock_control_callback, callback_group=self.callback_group)
         self.speedPub = self.create_publisher(Twist, '/cmd_vel', 30)
         self.nav2speedPub = self.create_publisher(Twist, '/cmd_vel_nav', 30)
@@ -104,8 +99,6 @@ class MyRobotDockingController(Node):
         # Initialize all  flags and parameters here
         self.is_docking = False
         self.dock_aligned=False
-        self.usrleft_value=0
-        self.usrright_value=0
         self.targetX=0
         self.targetY=0
         self.targetYaw=0
@@ -127,30 +120,7 @@ class MyRobotDockingController(Node):
         twist.linear.x = linearSpeedX
         twist.angular.z = angularSpeed
         self.speedPub.publish(twist)
-    # Callback function for the left ultrasonic sensor
-    def ultrasonic_rl_callback(self, msg):
-        self.usrleft_value = msg.range
-
-    def ultrasonic_rr_callback(self, msg):
-        self.usrright_value = msg.range
-    # Callback function for the right ultrasonic sensor
-    #
-    #
-    # def attachRack(self,rackName):
-    #         req = AttachLink.Request()
-    #         req.model1_name =  'ebot'     
-    #         req.link1_name  = 'ebot_base_link'       
-    #         req.model2_name =  rackName       
-    #         req.link2_name  = 'link' 
-    #         self.link_attach_cli.call_async(req) 
-    #         # rclpy.spin_until_future_complete(self, future) 
-    # def detachRack(self,rackName):
-    #         req = DetachLink.Request()
-    #         req.model1_name =  'ebot'     
-    #         req.link1_name  = 'ebot_base_link'       
-    #         req.model2_name =  rackName       
-    #         req.link2_name  = 'link' 
-    #         self.lind_detached_cli.call_async(req)
+        
     def magentSwitch(self,relayNo,relayStatus):
         req = RelaySw.Request()
         req.relaychannel = relayNo
@@ -313,10 +283,8 @@ class MyRobotDockingController(Node):
             executor_thread = Thread(target=executor.spin, daemon=True, args=())
             executor_thread.start()
             dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
-            dockingNode.odom_sub
             dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10)
-            dockingNode.imu_sub
-            ultra_sub = self.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
+            dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
             dockingNodeClock = dockingNode.get_clock()
             def StopTime(StopSeconds):
                 future_time = Time(seconds=dockingNodeClock.now().nanoseconds / 1e9 + StopSeconds, clock_type=dockingNodeClock.clock_type)
