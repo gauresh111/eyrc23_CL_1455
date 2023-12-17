@@ -152,7 +152,7 @@ def detect_aruco(image):
     try:
         arucoImageWindow = image.copy()
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        # threshold_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 49, 2)
+        threshold_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 49, 2)
     except:
         return (
             center_aruco_list,
@@ -165,15 +165,12 @@ def detect_aruco(image):
     #   ->  Use these aruco parameters-
     #       ->  Dictionary: 4x4_50 (4x4 only until 50 aruco IDs)
     arucoDict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
-    try:
-        arucoParams = cv2.aruco.DetectorParameters_create()
-    except:
-        arucoParams = cv2.aruco.DetectorParameters()
+    arucoParams = cv2.aruco.DetectorParameters()
 
     #   ->  Detect aruco marker in the image and store 'corners' and 'ids'
     #       ->  HINT: Handle cases for empty markers detection.
     (corners, markerIds, rejected) = cv2.aruco.detectMarkers(
-        gray_image, arucoDict, parameters=arucoParams
+        threshold_image, arucoDict, parameters=arucoParams
     )
 
     #   ->  Draw detected marker on the image frame which will be shown later
@@ -477,6 +474,27 @@ class aruco_tf(Node):
             transformStamped.transform.rotation.w = finalQuat[0]
             self.br.sendTransform(transformStamped)
 
+            try:
+                tranform = self.tf_buffer.lookup_transform(
+                    "camera_link", "cam_" + str(id), rclpy.time.Time()
+                )
+
+                transformStamped_camLink = TransformStamped()
+                transformStamped_camLink.header.stamp = self.get_clock().now().to_msg()
+                transformStamped_camLink.header.frame_id = "camera_link"
+                transformStamped_camLink.child_frame_id = "1455_cam_" + str(id)
+                transformStamped_camLink.transform.translation.x = tranform.transform.translation.x
+                transformStamped_camLink.transform.translation.y = tranform.transform.translation.y
+                transformStamped_camLink.transform.translation.z = tranform.transform.translation.z
+                transformStamped_camLink.transform.rotation.x = tranform.transform.rotation.x
+                transformStamped_camLink.transform.rotation.y = tranform.transform.rotation.y
+                transformStamped_camLink.transform.rotation.z = tranform.transform.rotation.z
+                transformStamped_camLink.transform.rotation.w = tranform.transform.rotation.w
+                self.br.sendTransform(transformStamped_camLink)
+
+            except:
+                pass
+
             # Get TF orientation of camera_link wrt base_link using listener
 
             #   ->  Then finally lookup transform between base_link and obj frame to publish the TF
@@ -492,7 +510,7 @@ class aruco_tf(Node):
                 transformStamped = TransformStamped()
                 transformStamped.header.stamp = self.get_clock().now().to_msg()
                 transformStamped.header.frame_id = "base_link"
-                transformStamped.child_frame_id = "obj_" + str(id)
+                transformStamped.child_frame_id = "1455_base_" + str(id)
                 transformStamped.transform.translation.x = (
                     tranform.transform.translation.x
                 )
@@ -507,7 +525,7 @@ class aruco_tf(Node):
                 transformStamped.transform.rotation.z = tranform.transform.rotation.z
                 transformStamped.transform.rotation.w = tranform.transform.rotation.w
                 self.br.sendTransform(transformStamped)
-                aruco_name_list.append("obj_" + str(id))
+                aruco_name_list.append("1455_base_" + str(id))
             except:
                 pass
 
@@ -518,13 +536,14 @@ class aruco_tf(Node):
         tempStr = " "
         aruco_string = String()
         aruco_string.data =  tempStr.join(aruco_name_list)
-        print("Aruco_List:", aruco_string)
+        print("Aruco_List:", aruco_string.data)
         self.aruco_name_publisher.publish(aruco_string)
         try:
             cv2.imshow("aruco_image", arucoImageWindow)
             cv2.waitKey(1)
         except:
             pass
+
         #   ->  NOTE:   The Z axis of TF should be pointing inside the box (Purpose of this will be known in task 1B)
         #               Also, auto eval script will be judging angular difference aswell. So, make sure that Z axis is inside the box (Refer sample images on Portal - MD book)
 
