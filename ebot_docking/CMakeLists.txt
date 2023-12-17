@@ -52,15 +52,13 @@ install(
 
 install(
   PROGRAMS
-  DESTINATION lib/${PROJECT_NAME}
-)
-install(PROGRAMS
-	scripts/docking_Simulation_boilerplate.py
-  scripts/docking_Hardware_boilerplate.py
-  scripts/task2b.py
-  scripts/ebot_nav2_yaml.py
   config.yaml
   DESTINATION lib/${PROJECT_NAME}
+)
+file(GLOB MY_PROGRAMS "scripts/*")
+install(
+  PROGRAMS ${MY_PROGRAMS}
+  DESTINATION lib/${PROJECT_NAME}/scripts
 )
 
 install(
