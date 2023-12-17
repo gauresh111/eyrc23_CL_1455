@@ -344,8 +344,8 @@ velocity_smoother:
     smoothing_frequency: 10.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [4.5, 0.0, 3.0]
-    min_velocity: [-4.5, 0.0, -3.0]
+    max_velocity: [4.5, 0.0, 3.5]
+    min_velocity: [-4.5, 0.0, -3.5]
     max_accel: [2.5, 0.0, 2.0]
     max_decel: [-2.5, 0.0, -2.0]
     odom_topic: "/odometry/filtered"
