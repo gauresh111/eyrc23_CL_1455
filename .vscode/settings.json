@@ -1,5 +1,13 @@
 {
     "python.analysis.extraPaths": [
         "./pymoveit2"
+    ],
+    "python.autoComplete.extraPaths": [
+        "/home/gauresh/ros2_ws/install/usb_relay/local/lib/python3.10/dist-packages",
+        "/home/gauresh/ros2_ws/install/pymoveit2/local/lib/python3.10/dist-packages",
+        "/home/gauresh/ros2_ws/install/linkattacher_msgs/local/lib/python3.10/dist-packages",
+        "/home/gauresh/ros2_ws/install/ebot_docking/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
     ]
 }
