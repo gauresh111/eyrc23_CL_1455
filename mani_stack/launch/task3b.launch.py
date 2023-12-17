@@ -5,7 +5,7 @@ def generate_launch_description():
 
     start_docking = ExecuteProcess(
         cmd=[[
-            'ros2 run ebot_docking ebot_docking_boilerplate.py',
+            'ros2 run ebot_docking docking_Simulation_boilerplate.py',
         ]],
         shell=True
     )
@@ -33,9 +33,16 @@ def generate_launch_description():
         ]],
         shell=True
     )
+    Start_arm_manipulation = ExecuteProcess(
+        cmd=[[
+            'ros2 run mani_stack servoManipulationQueue.py',
+        ]],
+        shell=True
+    )
     return LaunchDescription([
     start_docking,
-    # start_yaml_controller,
+    start_yaml_controller,
     start_nav2,
-    Start_perceiption
+    # Start_perceiption
+    Start_arm_manipulation
     ])

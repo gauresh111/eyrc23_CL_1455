@@ -34,7 +34,7 @@ robot_pose = [0.0, 0.0, 0.0,0.0]
 
 class pid():
     def __init__(self):
-        self.angleKp = 0.012
+        self.angleKp = 0.04
         self.linearKp = 0.5
         self.error = 0
         self.lastError = 0
@@ -43,12 +43,12 @@ class pid():
         error = Input - setPoint                                         
         output = self.angleKp * error
         
-        if(output > 0.6):
-            output = 0.6
+        if(output > 1.5):
+            output = 1.5
         elif(output < 0.2 and output > 0.0):
             output = 0.2
-        elif(output < -0.6):
-            output = -0.6
+        elif(output < -1.5):
+            output = -1.5
         elif(output > -0.2 and output < 0.0):
             output = -0.2         
         print("Input",Input,"setPoint",setPoint,"error",error,"output",output)
@@ -64,8 +64,8 @@ class pid():
     def odomComputeLinear(self,Input,Setpoint):
         error = Input - Setpoint                                         
         output = self.odomLinear * error  
-        if output < 0.2:
-            output = 0.2
+        if output < 0.3:
+            output = 0.3
         return output*-1.0
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          

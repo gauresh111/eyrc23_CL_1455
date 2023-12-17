@@ -16,9 +16,9 @@ config_folder_name = 'ebot_docking'
 
 global dockingPosition
 dockingPosition = {
-         'ap1': {'xyz': [-0.2, -2.45, 0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [1.0, 0.0], 'Yaw': 3.14},
-      'ap2': {'xyz': [1.45,-4.38, 0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, 1.0], 'Yaw': -1.57}, 
-      'ap3': {'xyz': [1.45,-0.55, 0.0], 'quaternions': [0.0, 0.0, 0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, -1.0], 'Yaw': 1.57}
+      'ap1': {'xyz': [-0.2, -2.45, 0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [1.0, 0.0], 'Yaw': 3.14},
+      'ap2': {'xyz': [1.45,-4.50, 0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, 1.0], 'Yaw': -1.57}
+    #   'ap3': {'xyz': [1.45,-0.42, 0.0], 'quaternions': [0.0, 0.0, 0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, -1.0], 'Yaw': 1.57}
       }   
 def load_yaml(file_path):
     """Load a yaml file into a dictionary"""
@@ -41,26 +41,27 @@ def add_docking_position(name, xyz, quaternions, xy_offsets,yaw):
         'XYoffsets': xy_offsets,
         'Yaw':yaw
     }
-def switch_case(value,cordinates):
+def switch_case(yaw,cordinates):
     x, y = cordinates[0],cordinates[1]
     offsetXY=[]
-    if value > 160:
+    
+    if yaw == 3.14:
         #180
         x -= 1.0
         offsetXY=[1.0,0.0]
       
-    elif value >0:
+    elif yaw == 1.57:
        #90
         y+=1.0
         offsetXY=[0.0,1.0]
-    elif value > -160:
-        #-180
-        x+=1.0
-        offsetXY=[-1.0,0.0]
-    else:
+    elif yaw == -1.57:
         #-90
         y-=1.0
         offsetXY=[0.0,-1.0]
+    else:
+        #-180
+        x+=1.0
+        offsetXY=[-1.0,0.0]    
     return x,y,offsetXY
 def find_string_in_list(string, list):
     for index, item in enumerate(list):
@@ -108,11 +109,11 @@ def main():
         yaw = config_yaml["position"][rackIndex][rackName][2]
         euler = [0,0,yaw]
         quaternions = R.from_euler('xyz', euler).as_quat().tolist()
-        degree = math.degrees(yaw)
-        x,y,offsetXY=switch_case(math.ceil(degree),xyz)
+        x,y,offsetXY=switch_case(yaw,xyz)
         xyz=[x,y,0.0]
         add_docking_position(rackName,xyz,quaternions,offsetXY,yaw)
-    print(dockingPosition) 
+    print(dockingPosition)
+     
     def distance(p1, p2):
         return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
     def findNearestAp(X,Y):
