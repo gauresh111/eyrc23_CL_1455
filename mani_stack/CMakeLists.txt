@@ -45,13 +45,37 @@ install(
   DESTINATION
     share/${PROJECT_NAME}/
 )
+
 install(
   DIRECTORY
-    scripts
     assets
-    launch
   DESTINATION
-    lib/${PROJECT_NAME}/
+    lib/${PROJECT_NAME}
 )
+install(
+  PROGRAMS
+  DESTINATION lib/${PROJECT_NAME}
+)
+file(GLOB MY_PROGRAMS "scripts/*")
+install(
+  PROGRAMS ${MY_PROGRAMS}
+  DESTINATION lib/${PROJECT_NAME}/scripts
+)
+install(
+  PROGRAMS
+  DESTINATION lib/${PROJECT_NAME}
+)
+file(GLOB MY_PROGRAMS "launch/*")
+
+install(
+  PROGRAMS ${MY_PROGRAMS}
+  DESTINATION lib/${PROJECT_NAME}/launch
+)
+
+#script installed
+
+
+
+
 
 ament_package()
