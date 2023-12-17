@@ -11,7 +11,9 @@ from pymoveit2 import MoveIt2, MoveIt2Servo
 from pymoveit2.robots import ur5
 import tf2_ros
 import math
-from linkattacher_msgs.srv import AttachLink, DetachLink
+from ur_msgs.srv import SetIO
+from controller_manager_msgs.srv import SwitchController 
+# from linkattacher_msgs.srv import AttachLink, DetachLink
 import re
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Int8
@@ -25,7 +27,6 @@ servo_status = 5
 # StartBox = False
 current_joint_states = [0, 0, 0, 0, 0, 0]
 
-
 class ArucoNameCoordinate:
     def __init__(self):
         self.name = None
@@ -33,13 +34,6 @@ class ArucoNameCoordinate:
         self.quaternions = None
         self.eulerAngles = None
         self.rotationName = None
-
-
-class ArucoBoxPose:
-    def __init__(self):
-        self.position = None
-        self.quaternions = None
-
 
 class PredefinedJointStates:
     def __init__(self):
@@ -61,22 +55,6 @@ def main():
     rclpy.init()
 
     print("Starting Task 1AB Manipulation Servo")
-    
-    Initial_Pose = ArucoBoxPose()
-    Initial_Pose.position = [0.18, 0.10, 0.46]
-    Initial_Pose.quaternions = [0.50479, 0.495985, 0.499407, 0.499795]
-
-    P1 = ArucoBoxPose()
-    P1.position = [0.35, 0.1, 0.68]
-    P1.quaternions = [0.50479, 0.495985, 0.499407, 0.499795]
-
-    P2 = ArucoBoxPose()
-    P2.position = [0.194, -0.43, 0.701]
-    P2.quaternions = [0.7657689, 0.0, 0.0, 0.6431158]
-
-    Drop = ArucoBoxPose()
-    Drop.position = [-0.37, 0.12, 0.397]
-    Drop.quaternions = [0.5414804, -0.4547516, -0.5414804, 0.4547516]
 
     Initial_Joints = PredefinedJointStates()
     Initial_Joints.joint_states = [0.0, -2.39, 2.4, -3.15, -1.58, 3.15]
@@ -186,12 +164,15 @@ def main():
     # ManipulationStart = node.create_subscription(
     #         Bool, "/StartArnManipulation", getBox_id, 10
     #     )
-    time.sleep(5)
 
-    while not node.create_client(AttachLink, "/GripperMagnetON").wait_for_service(
-        timeout_sec=1.0
-    ):
-        node.get_logger().info("EEF service not available, waiting again...")
+    contolMSwitch = node.create_client(SwitchController, "/controller_manager/switch_controller")
+
+    while not contolMSwitch.wait_for_service(timeout_sec=5.0):
+        node.get_logger().warn(f"Service control Manager is not yet available...")
+
+    while not node.create_client(SetIO, '/io_and_status_controller/set_io'):
+        node.get_logger().info('EEF Tool service not available, waiting again...')
+    time.sleep(5)
     arucoData = []
     # while StartBox == False:
     #     time.sleep(0.1)
@@ -261,6 +242,23 @@ def main():
             list(np.around(np.array(aruco.eulerAngles), 2)),
             "\n",
         )
+    def switch_controller(useMoveit: bool):
+        contolMSwitch = node.create_client(SwitchController, "/controller_manager/switch_controller")
+        # Parameters to switch controller
+        switchParam = SwitchController.Request()
+        if useMoveit == True :
+            switchParam.activate_controllers = ["scaled_joint_trajectory_controller"] # for normal use of moveit
+        else:
+            switchParam.deactivate_controllers = ["forward_position_controller"] # for servoing
+        switchParam.strictness = 2
+        switchParam.start_asap = False
+
+        # calling control manager service after checking its availability
+        while not contolMSwitch.wait_for_service(timeout_sec=5.0):
+            node.get_logger().warn(f"Service control Manager is not yet available...")
+        contolMSwitch.call_async(switchParam)
+        time.sleep(1.0)
+        print("[CM]: Switching to","Moveit" if useMoveit else "Servo","Complete")
 
     def moveWithServo(linear_speed, angular_speed):
         twist_msg = TwistStamped()
@@ -324,24 +322,27 @@ def main():
         return tempPose, tempQuats
 
     def controlGripper(status, box_name):
+        '''
+        based on the state given as i/p the service is called to activate/deactivate
+        pin 16 of TCP in UR5
+        i/p: node, state of pin:Bool
+        o/p or return: response from service call
+        '''
         if status == "ON":
-            gripper_control = node.create_client(AttachLink, "/GripperMagnetON")
-            req = AttachLink.Request()
+            state = 1
         else:
-            gripper_control = node.create_client(DetachLink, "/GripperMagnetOFF")
-            req = DetachLink.Request()
-
+            state = 0
+        gripper_control = node.create_client(SetIO, '/io_and_status_controller/set_io')
         while not gripper_control.wait_for_service(timeout_sec=1.0):
-            node.get_logger().info("EEF service not available, waiting again...")
-
-        req.model1_name = box_name
-        req.link1_name = "link"
-        req.model2_name = "ur5"
-        req.link2_name = "wrist_3_link"
-        print(gripper_control.call_async(req))
-        time.sleep(0.2)
-
+            node.get_logger().info('EEF Tool service not available, waiting again...')
+        req         = SetIO.Request()
+        req.fun     = 1
+        req.pin     = 16
+        req.state   = float(state)
+        gripper_control.call_async(req)
         print("Gripper Status: ", status, "has been requested")
+        time.sleep(1.0)
+        return state
 
     def checkSphericalTolerance(currentPose, targetPose, tolerance):
         currentTolerance = math.sqrt(
@@ -375,7 +376,9 @@ def main():
                 continue
 
     def moveToPoseWithServo(TargetPose, quaternions):
+        switch_controller(useMoveit=False)
         global servo_status
+        mission_status = True
         moveit2Servo.enable()
         sphericalToleranceAchieved = False
         currentPose = getCurrentPose(TargetPose=TargetPose, TargetQuats=quaternions)[0]
@@ -398,8 +401,11 @@ def main():
             time.sleep(0.01)
             # print("Servo Status in While Loop: ", servo_status)
             if servo_status > 0:
+                mission_status = False
                 print("Exited While Loop due to Servo Error", servo_status)
                 break
+        switch_controller(useMoveit=True)
+        return mission_status
 
     def moveToPose(position, quaternions, position_name, rotation_name, dropData):
         def servo_status_updater(msg):
@@ -438,57 +444,75 @@ def main():
 
         time.sleep(0.2)
 
-        while True:
-            global servo_status
+        global servo_status
 
-            counter = 1
-            position = [
-                round(position[0], 2),
-                round(position[1], 2),
-                round(position[2], 2),
-            ]
-            # midPosition = [1 * position[0] / 2, 1 * position[1] / 2, position[2]]
-            if rotation_name == "Left":
-                midPosition = [position[0], position[1] - 0.23, position[2]]
-            elif rotation_name == "Right":
-                midPosition = [position[0], position[1] + 0.23, position[2]]
-            else:
-                midPosition = [position[0] - 0.23, position[1], position[2]]
-            quaternions = [
-                round(quaternions[0], 4),
-                round(quaternions[1], 4),
-                round(quaternions[2], 4),
-                round(quaternions[3], 4),
-            ]
-            box_name = "box" + str(int(re.search(r"\d+", position_name).group()))
-            # quaternions = P2.quaternions
+        counter = 1
+        position = [
+            round(position[0], 2),
+            round(position[1], 2),
+            round(position[2], 2),
+        ]
+        # midPosition = [1 * position[0] / 2, 1 * position[1] / 2, position[2]]
+        if rotation_name == "Left":
+            midPosition = [position[0], position[1] - 0.23, position[2]]
+        elif rotation_name == "Right":
+            midPosition = [position[0], position[1] + 0.23, position[2]]
+        else:
+            midPosition = [position[0] - 0.23, position[1], position[2]]
+        quaternions = [
+            round(quaternions[0], 4),
+            round(quaternions[1], 4),
+            round(quaternions[2], 4),
+            round(quaternions[3], 4),
+        ]
+        box_name = "box" + str(int(re.search(r"\d+", position_name).group()))
+        # quaternions = P2.quaternions
 
-            # x, y, z = False, False, False
-            # currentPose = [0, 0, 0, 0]
-            # while True:
-            #     print("Moving to ", position_name, "    [Attempt: ", counter, "]")
-            #     # if position_name != "Drop":
-            #     moveit2.move_to_pose(
-            #         position=midPosition,
-            #         quat_xyzw=quaternions,
-            #         tolerance_position=0.01,
-            #         tolerance_orientation=0.01,
-            #     )
-            #     status = moveit2.wait_until_executed()
-            #     counter += 1
-            #     if status == False:
-            #         continue
-            #     else:
-            #         break
+        # x, y, z = False, False, False
+        # currentPose = [0, 0, 0, 0]
+        # while True:
+        #     print("Moving to ", position_name, "    [Attempt: ", counter, "]")
+        #     # if position_name != "Drop":
+        #     moveit2.move_to_pose(
+        #         position=midPosition,
+        #         quat_xyzw=quaternions,
+        #         tolerance_position=0.01,
+        #         tolerance_orientation=0.01,
+        #     )
+        #     status = moveit2.wait_until_executed()
+        #     counter += 1
+        #     if status == False:
+        #         continue
+        #     else:
+        #         break
 
-            # if position_name != "Drop":
-            if rotation_name == "Left":
-                moveToJointStates(Pickup_Joints_Left.joint_states, Pickup_Joints_Left.name)
-            elif rotation_name == "Right":
-                moveToJointStates(Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name)
-            else:
-                moveToJointStates(Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name)
+        # if position_name != "Drop":
+        if rotation_name == "Left":
+            moveToJointStates(Pickup_Joints_Left.joint_states, Pickup_Joints_Left.name)
+        elif rotation_name == "Right":
+            moveToJointStates(Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name)
+        else:
+            moveToJointStates(Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name)
 
+        temp_result = moveToPoseWithServo(TargetPose=position, quaternions=quaternions)
+        global_counter = 0
+        while global_counter < 5:
+            if temp_result == False:
+                while True:
+                    print("Moving to ", position_name, "    [Attempt: ", counter, "Global Attempt: ", global_counter, "]")
+                    # if position_name != "Drop":
+                    moveit2.move_to_pose(
+                        position=midPosition,
+                        quat_xyzw=quaternions,
+                        tolerance_position=0.01,
+                        tolerance_orientation=0.01,
+                    )
+                    status = moveit2.wait_until_executed()
+                    counter += 1
+                    if status == False:
+                        continue
+                    else:
+                        break
             moveToPoseWithServo(TargetPose=position, quaternions=quaternions)
             if servo_status > 0:
                 print(
@@ -499,63 +523,57 @@ def main():
                 continue
             print("Tolerance Achieved: Reached Box")
             time.sleep(0.1)
+            global_counter += 1
+        if global_counter > 4:
+            print("[ERROR !!!] Failed to reach",position_name,"after 5 attempts, skipping to next box")
+            return
 
-            controlGripper("ON", box_name)
-            time.sleep(0.2)
-            # return
+        controlGripper("ON", box_name)
+        time.sleep(0.2)
+        # return
 
-            for i in range(3):
-                moveit2.add_collision_mesh(
-                    filepath=box_file_path,
-                    id="currentBox",
-                    position=[0.0, -0.12, 0.11],
-                    quat_xyzw=[-0.5, 0.5, 0.5, 0.5],
-                    frame_id="tool0",
-                )
-                time.sleep(0.2)
-
-            # newMidPose = [position[0] / 2, position[1] / 2, midPosition[2]]
-            moveToPoseWithServo(TargetPose=midPosition, quaternions=quaternions)
-            # if servo_status > 0:
-            #         print("Exited next While Loop due to Servo Error", servo_status)
-            #         continue
-            print("Tolerance Achieved: Came out")
-            time.sleep(0.1)
-
-            # for i in range(5):
-            #     moveit2.add_collision_mesh(
-            #         filepath=box_file_path,
-            #         id="currentBox",
-            #         position=[0.0, -0.12, 0.09],
-            #         quat_xyzw=[-0.5, 0.5, 0.5, 0.5],
-            #         frame_id="tool0",
-            #     )
-            #     time.sleep(0.5)
-
-            # Move to Pre Drop Pose
-            moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
-            print("Reached Pre-Drop")
-
-            # Move to Drop Pose
-            moveToJointStates(dropData.joint_states, dropData.name)
-            print("Reached Drop")
-
-            controlGripper("OFF", box_name)
-
-            for i in range(3):
-                moveit2.remove_collision_mesh(id="currentBox")
-                time.sleep(0.2)
+        for i in range(3):
+            moveit2.add_collision_mesh(
+                filepath=box_file_path,
+                id="currentBox",
+                position=[0.0, -0.12, 0.11],
+                quat_xyzw=[-0.5, 0.5, 0.5, 0.5],
+                frame_id="tool0",
+            )
             time.sleep(0.2)
 
-            # Move to Pre Drop Pose
-            # moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
+        # newMidPose = [position[0] / 2, position[1] / 2, midPosition[2]]
+        moveToPoseWithServo(TargetPose=midPosition, quaternions=quaternions)
+        # if servo_status > 0:
+        #         print("Exited next While Loop due to Servo Error", servo_status)
+        #         continue
+        print("Tolerance Achieved: Came out")
+        time.sleep(0.1)
 
-            moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
-            print("Reached Initial Pose")
+        # Move to Pre Drop Pose
+        moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
+        print("Reached Pre-Drop")
 
-            servoNode.destroy_node()
-            jointStatesNode.destroy_node()
-            break
+        # Move to Drop Pose
+        moveToJointStates(dropData.joint_states, dropData.name)
+        print("Reached Drop")
+
+        controlGripper("OFF", box_name)
+
+        for i in range(3):
+            moveit2.remove_collision_mesh(id="currentBox")
+            time.sleep(0.2)
+        time.sleep(0.2)
+
+        # Move to Pre Drop Pose
+        # moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
+
+        moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
+        print("Reached Initial Pose")
+
+        servoNode.destroy_node()
+        jointStatesNode.destroy_node()
+
 
     
     collisionObjectDistances = {"left": 0.0, "front": 0.0, "right": 0.0}
