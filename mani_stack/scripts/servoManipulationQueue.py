@@ -26,6 +26,7 @@ current_joint_states = [0, 0, 0, 0, 0, 0]
 StartBox = False
 ApQueue = []
 BoxId=[]
+isStarting = []
 totalRacks = 0
 class ArucoNameCoordinate:
     def __init__(self):
@@ -57,10 +58,11 @@ def getBox_id(msg):
     StartBox = msg.data
 
 def Arm_manipulation_callback(request,response):
-    global ApQueue,BoxId,totalRacks
+    global ApQueue,BoxId,totalRacks,isStarting
     BoxId.append(request.box_id)
     ApQueue.append(request.ap_name)
     totalRacks = request.total_racks
+    isStarting.append(request.starting)
     response.success = True 
     response.message = "Success"
     return response
@@ -223,7 +225,7 @@ def main():
         node.get_logger().info("EEF service not available, waiting again...")
     rackCounter = 0
     while len(ApQueue) == 0:
-            time.sleep(0.5)
+            time.sleep(0.1)
     while rackCounter < totalRacks:
         rackCounter += 1
         print("Rack Counter: ", rackCounter)
@@ -241,10 +243,11 @@ def main():
             moveToJointStates(Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name)
         ApQueue.pop(0)
         print("###### Waiting for StartBox")
-        while StartBox == False:
-            time.sleep(5.0)
+        while StartBox == False and isStarting[0] == False:
+            time.sleep(0.1)
         StartBox = False
         print("StartBox: ", StartBox)
+        isStarting.pop(0)
         # time.sleep(30)
         while len(arucoData) < len(aruco_name_list):
             flag = True
