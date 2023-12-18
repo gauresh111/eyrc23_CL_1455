@@ -224,6 +224,7 @@ def main():
     ):
         node.get_logger().info("EEF service not available, waiting again...")
     rackCounter = 0
+    global ApQueue,BoxId,totalRacks,isStarting
     while len(ApQueue) == 0:
             time.sleep(0.1)
     while rackCounter < totalRacks:
@@ -233,7 +234,7 @@ def main():
         while len(ApQueue) == 0:
             time.sleep(0.5)
         print("ApQueue: ", ApQueue)
-            
+        print("isStarting: ", isStarting)    
         if ApQueue[0]=="ap1":
             moveToJointStates(Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name)
             print("Reached Initial Pose")
