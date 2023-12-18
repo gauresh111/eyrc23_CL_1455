@@ -126,11 +126,13 @@ def main():
             # print("Key found:",rackName, value)
     if "-2" not in rackPresentSub:
         for boxPresent in rackPresentSub:
+            global dockingPosition
             node.ArmManipulationRequest.ap_name = boxPresent
             node.ArmManipulationRequest.box_id = int(boxPresent[-1])
             node.ArmManipulationRequest.total_racks = totalRacks
             node.ArmManipulationRequest.starting = True
             print("going to racks",node.ArmManipulationRequest)
+            del dockingPosition[boxPresent] 
             futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
     def distance(p1, p2):
         return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
