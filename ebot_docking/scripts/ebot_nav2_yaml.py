@@ -6,14 +6,11 @@ import time
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
-from std_msgs.msg import Bool
-from ebot_docking.srv import RackSw  # Import custom service message
-from ebot_docking.srv import ManipulationSw
-import math
+from ebot_docking.srv import RackSw ,ManipulationSw # Import custom service message
 import yaml
 from ament_index_python.packages import get_package_share_directory
 config_folder_name = 'ebot_docking'
-
+from std_msgs.msg import String,Bool
 global dockingPosition
 dockingPosition = {
       'ap1': {'xyz': [-0.2, -2.45, 0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [1.0, 0.0], 'Yaw': 3.14},
@@ -80,10 +77,16 @@ def main():
     executor.add_node(node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
+    global box_string
+    box_string=[]
+    def getBoxCallback(msg):
+        global box_string
+        box_string = msg.data.split()
     node.racksApsPub=node.create_publisher(Bool, '/StartArnManipulation', 10)
     node.nav2RackClient = node.create_client(RackSw, '/RackNav2Sw')
     node.ArmManipulationClient = node.create_client(ManipulationSw, '/ArmManipulationSw')
     node.ExitNavPub=node.create_publisher(Bool, '/ExitNav', 30)
+    node.GetBoxSub = node.create_subscription(String,'/GetBox', getBoxCallback, 10)
     while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
         print(' Nav2 Client service not available, waiting again...')
     while not node.ArmManipulationClient.wait_for_service(timeout_sec=1.0):
