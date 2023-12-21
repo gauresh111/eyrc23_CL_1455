@@ -62,32 +62,23 @@ install(
 
 #### basicScript
 install(
-  PROGRAMS
   config.yaml
   DESTINATION lib/${PROJECT_NAME}
 )
 file(GLOB ArmSCripts "scripts/armManipulation/*")
-install(
-  PROGRAMS ${ArmSCripts}
-  DESTINATION lib/${PROJECT_NAME}/scripts
-)
-
 file(GLOB EbotScripts "scripts/EbotManipulation/*")
 install(
+  PROGRAMS ${ArmSCripts}
   PROGRAMS ${EbotScripts}
   DESTINATION lib/${PROJECT_NAME}/scripts
 )
 
 
 ###laucnh 
-install(
-  PROGRAMS
-  DESTINATION lib/${PROJECT_NAME}
-)
-file(GLOB MY_PROGRAMS "launch/*")
+file(GLOB LaunchFiles "launch/*")
 
 install(
-  PROGRAMS ${MY_PROGRAMS}
+  PROGRAMS ${LaunchFiles}
   DESTINATION lib/${PROJECT_NAME}/launch
 )
 
