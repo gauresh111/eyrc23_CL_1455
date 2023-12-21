@@ -24,7 +24,6 @@ from std_msgs.msg import Bool
 aruco_name_list = []
 global servo_status
 servo_status = 5
-# StartBox = False
 current_joint_states = [0, 0, 0, 0, 0, 0]
 
 class ArucoNameCoordinate:
@@ -46,11 +45,6 @@ def aruco_name_list_updater(msg):
     aruco_name_list = msg.data.split()
 
 
-# def getBox_id(msg):
-#     global StartBox
-#     StartBox = msg.data
-
-
 def main():
     rclpy.init()
 
@@ -58,11 +52,9 @@ def main():
 
     Initial_Joints = PredefinedJointStates()
     Initial_Joints.joint_states = [0.0, -2.39, 2.4, -3.15, -1.58, 3.15]
-    # Initial_Joints.joint_states = [-0.02, -2.28, 1.85, -2.71, -1.56, 3.15] # Higher
     Initial_Joints.name = "Initial_Joints"
 
     Pre_Drop_Joints = PredefinedJointStates()
-    # Pre_Drop_Joints.joint_states = [0.0, -2.79, 1.95, -2.30, -1.57, 3.14159]
     Pre_Drop_Joints.joint_states = [0.00, -2.94, 1.291, -1.491, -1.570, -3.14]
     Pre_Drop_Joints.name = "Pre_Drop_Joints"
 
@@ -99,21 +91,16 @@ def main():
     box_file_path = path.join(
         path.dirname(path.realpath(__file__)), "..", "assets", "box.stl"
     )
-    # floor_file_path = path.join(
-    #     path.dirname(path.realpath(__file__)),"..", "assets", "floor.stl"
-    # )
-    floor_file_path = path.join(
+    rack_file_path = path.join(
         path.dirname(path.realpath(__file__)), "..", "assets", "simpleRack.stl"
     )
-    floor = path.join(
+    floor_file_path = path.join(
         path.dirname(path.realpath(__file__)), "..", "assets", "floor.stl"
     )
 
     tolerance = 0.02
 
     global aruco_name_list
-    # global StartBox
-    # global servo_status
 
     # Create node for this example
     node = Node("pick_aruco")
@@ -148,12 +135,6 @@ def main():
         10,
         callback_group=callback_group,
     )
-    # servo_status_subscriber = node.create_subscription(
-    #     String, "/servo_node/status", servo_status_updater, 10, callback_group=callback_group
-    # )
-    # joint_states_subscriber = node.create_subscription(
-    #     JointState, "/joint_states", joint_states_updater, 10, callback_group=callback_group
-    # )
     arucoPossibleAngles = {
         "left": [0.0, 0.7, 0.7, 0.0],
         "front": [0.5, 0.5, 0.5, 0.5],
@@ -161,9 +142,6 @@ def main():
     }
 
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
-    # ManipulationStart = node.create_subscription(
-    #         Bool, "/StartArnManipulation", getBox_id, 10
-    #     )
 
     contolMSwitch = node.create_client(SwitchController, "/controller_manager/switch_controller")
 
@@ -173,9 +151,9 @@ def main():
     while not node.create_client(SetIO, '/io_and_status_controller/set_io'):
         node.get_logger().info('EEF Tool service not available, waiting again...')
     time.sleep(5)
+
     arucoData = []
-    # while StartBox == False:
-    #     time.sleep(0.1)
+
     while len(arucoData) < len(aruco_name_list):
         flag = True
         for aruco in aruco_name_list:
@@ -223,12 +201,6 @@ def main():
                     arucoData[i].rotationName = "Right"
                 else:
                     arucoData[i].rotationName = "Front"
-                # if arucoData[i].eulerAngles[0] > 3.0:
-                #     arucoData[i].rotationName = "Right"
-                # elif arucoData[i].eulerAngles[0] < 0.5:
-                #     arucoData[i].rotationName = "Left"
-                # else:
-                #     arucoData[i].rotationName = "Front"
 
     for aruco in arucoData:
         print(
@@ -276,7 +248,7 @@ def main():
         if objectType == "box":
             path = box_file_path
         else:
-            path = floor_file_path
+            path = rack_file_path
         if orientation == "Front":
             quat_xyzw = [0.0, 0.0, 0.0, 1.0]
         elif orientation == "Left":
@@ -307,18 +279,6 @@ def main():
         tempQuats[1] = round(transform.transform.rotation.y, 2)
         tempQuats[2] = round(transform.transform.rotation.z, 2)
         tempQuats[3] = round(transform.transform.rotation.w, 2)
-        # print(
-        #     "Current Pose:",
-        #     tempPose,
-        #     "Current Quats:",
-        #     tempQuats,
-        #     "Time:",
-        #     time,
-        #     "\nTarget Pose:",
-        #     TargetPose,
-        #     "Target Quats:",
-        #     TargetQuats,
-        # )
         return tempPose, tempQuats
 
     def controlGripper(status, box_name):
@@ -375,7 +335,7 @@ def main():
             else:
                 continue
 
-    def moveToPoseWithServo(TargetPose, quaternions):
+    def moveToPoseWithServo(TargetPose, quaternions, tolerance=0.2):
         switch_controller(useMoveit=False)
         global servo_status
         mission_status = True
@@ -399,7 +359,6 @@ def main():
                 currentPose, TargetPose, tolerance
             )
             time.sleep(0.01)
-            # print("Servo Status in While Loop: ", servo_status)
             if servo_status > 0:
                 mission_status = False
                 print("Exited While Loop due to Servo Error", servo_status)
@@ -524,9 +483,9 @@ def main():
             print("Tolerance Achieved: Reached Box")
             time.sleep(0.1)
             global_counter += 1
-        if global_counter > 4:
-            print("[ERROR !!!] Failed to reach",position_name,"after 5 attempts, skipping to next box")
-            return
+            if global_counter > 4:
+                print("[ERROR !!!] Failed to reach",position_name,"after 5 attempts, skipping to next box")
+                return
 
         controlGripper("ON", box_name)
         time.sleep(0.2)
@@ -577,7 +536,6 @@ def main():
 
     
     collisionObjectDistances = {"left": 0.0, "front": 0.0, "right": 0.0}
-    # def decideRequiredCollisionRacks():
     left_flag, front_flag, right_flag = False, False, False
     for aruco in arucoData:
         if left_flag == False:
@@ -589,7 +547,6 @@ def main():
             ):
                 left_flag = True
                 collisionObjectDistances["left"] = round(aruco.position[1], 2) + 0.16
-            # print("Left Flag: ", left_flag)
         if front_flag == False:
             print(aruco.name)
             if (
@@ -600,7 +557,6 @@ def main():
             ):
                 front_flag = True
                 collisionObjectDistances["front"] = round(aruco.position[0], 2) + 0.16
-            # print("Front Flag: ", front_flag)
         if right_flag == False:
             print(aruco.name)
             if (
@@ -611,7 +567,6 @@ def main():
             ):
                 right_flag = True
                 collisionObjectDistances["right"] = round(aruco.position[2], 2) + 0.0
-            # print("Right Flag: ", right_flag)
     print(
         "Left Flag: ", left_flag, "Front Flag: ", front_flag, "Right Flag: ", right_flag
     )
@@ -647,7 +602,7 @@ def main():
         )
 
     moveit2.add_collision_mesh(
-        filepath=floor,
+        filepath=floor_file_path,
         id="Floor",
         position=[-0.04, 0.03, -0.04],
         quat_xyzw=[0.0, 0.0, 0.0, 1.0],
