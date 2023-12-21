@@ -454,6 +454,7 @@ def main():
             moveToJointStates(Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name)
 
         temp_result = moveToPoseWithServo(TargetPose=position, quaternions=quaternions)
+        print("Servo Result: ", temp_result)
         global_counter = 0
         while global_counter < 5:
             if temp_result == False:
@@ -472,21 +473,23 @@ def main():
                         continue
                     else:
                         break
-            moveToPoseWithServo(TargetPose=position, quaternions=quaternions)
-            if servo_status > 0:
-                print(
-                    "Servo Status ERROR:",
-                    servo_status,
-                    "     Continuing next iteration",
-                )
-                continue
-            print("Tolerance Achieved: Reached Box")
-            time.sleep(0.1)
+                temp_result = moveToPoseWithServo(TargetPose=position, quaternions=quaternions)
+                if global_counter > 4:
+                    print("[ERROR !!!] Failed to reach",position_name,"after 5 attempts, skipping to next box")
+                    return
+                if servo_status > 0:
+                    print(
+                        "Servo Status ERROR:",
+                        servo_status,
+                        "     Continuing next iteration",
+                    )
+                    continue
+            else:
+                break
             global_counter += 1
-            if global_counter > 4:
-                print("[ERROR !!!] Failed to reach",position_name,"after 5 attempts, skipping to next box")
-                return
-
+            
+        print("Tolerance Achieved: Reached Box")
+        time.sleep(0.1)
         controlGripper("ON", box_name)
         time.sleep(0.2)
         # return
