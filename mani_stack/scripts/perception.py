@@ -152,7 +152,9 @@ def detect_aruco(image):
     try:
         arucoImageWindow = image.copy()
         gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        threshold_image = cv2.adaptiveThreshold(gray_image, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 49, 2)
+        blur = cv2.GaussianBlur(gray_image, (5, 5), 0)
+        bilateral = cv2.bilateralFilter(blur, 9, 75, 75)
+        threshold_image = cv2.adaptiveThreshold(bilateral, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 49, 2)
     except:
         return (
             center_aruco_list,
