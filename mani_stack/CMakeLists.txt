@@ -66,11 +66,18 @@ install(
   config.yaml
   DESTINATION lib/${PROJECT_NAME}
 )
-file(GLOB MY_PROGRAMS "scripts/*")
+file(GLOB ArmSCripts "scripts/armManipulation/*")
 install(
-  PROGRAMS ${MY_PROGRAMS}
+  PROGRAMS ${ArmSCripts}
   DESTINATION lib/${PROJECT_NAME}/scripts
 )
+
+file(GLOB EbotScripts "scripts/EbotManipulation/*")
+install(
+  PROGRAMS ${EbotScripts}
+  DESTINATION lib/${PROJECT_NAME}/scripts
+)
+
 
 ###laucnh 
 install(
