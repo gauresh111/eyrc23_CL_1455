@@ -102,9 +102,4 @@ install(
   DESTINATION share/${PROJECT_NAME}
 )
 #script installed
-
-
-
-
-
 ament_package()
