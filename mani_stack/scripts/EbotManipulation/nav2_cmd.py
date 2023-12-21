@@ -125,7 +125,7 @@ def main():
         dockingNodecli.destroy_node()
        
         navigator.clearAllCostmaps()
-        time.sleep(0.2)
+        
     navigator.setInitialPose(getGoalPoseStamped("initalPose"))
     navigator.waitUntilNav2Active()
     def Rack_control_callback(Request,Response):
