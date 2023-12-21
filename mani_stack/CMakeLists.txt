@@ -23,6 +23,13 @@ find_package(rclpy REQUIRED)
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
 
+rosidl_generate_interfaces(${PROJECT_NAME}
+  "srv/DockSw.srv"
+  "srv/RackSw.srv"
+  "srv/ManipulationSw.srv"
+  #DEPENDENCIES geometry_msgs # Add packages that above messages depend on, in this case geometry_msgs for Sphere.msg
+)
+
 
 
 if(BUILD_TESTING)
@@ -52,8 +59,11 @@ install(
   DESTINATION
     lib/${PROJECT_NAME}
 )
+
+#### basicScript
 install(
   PROGRAMS
+  config.yaml
   DESTINATION lib/${PROJECT_NAME}
 )
 file(GLOB MY_PROGRAMS "scripts/*")
@@ -61,6 +71,8 @@ install(
   PROGRAMS ${MY_PROGRAMS}
   DESTINATION lib/${PROJECT_NAME}/scripts
 )
+
+###laucnh 
 install(
   PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
@@ -72,6 +84,16 @@ install(
   DESTINATION lib/${PROJECT_NAME}/launch
 )
 
+##config
+install(
+  PROGRAMS
+  DESTINATION share/${PROJECT_NAME}
+)
+install(
+  PROGRAMS
+  config.yaml
+  DESTINATION share/${PROJECT_NAME}
+)
 #script installed
 
 

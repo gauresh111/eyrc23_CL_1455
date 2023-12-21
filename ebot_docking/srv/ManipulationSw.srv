@@ -1,6 +1,0 @@
-string ap_name
-int64 box_id
-int64 total_racks
----
-bool success   # indicate successful run of triggered service
-string message # informational, e.g. for error messages
