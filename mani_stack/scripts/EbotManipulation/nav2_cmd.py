@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-import os
 import rclpy
 from rclpy.node import Node
 from threading import Thread
@@ -28,9 +27,6 @@ def main():
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
     
-    global botPosition, botOrientation
-    botPosition = []
-    botOrientation =[] 
     global positionToGO
     positionToGO = {
       'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0],'Yaw':180},
@@ -81,9 +77,7 @@ def main():
             print("publishing:" ,msg)
             
         nodeFootprint.destroy_node()
-    def moveToGoal(goalPose,rack_no,israck,positionName,init_pose):
-        
-        global botPosition, botOrientation
+    def moveToGoal(goalPose,rack_no,israck,positionName):
         global positionToGO
         dockingNodecli = rclpy.create_node("NodeDockingClient")
         dockingNodecli.dockingClient = dockingNodecli.create_client(DockSw, '/dock_control')
@@ -123,7 +117,7 @@ def main():
         future = dockingNodecli.dockingClient.call_async(dockingNodecli.dockingRequest)
         rclpy.spin_until_future_complete(dockingNodecli, future)
         dockingNodecli.destroy_node()
-       
+        
         navigator.clearAllCostmaps()
         
     navigator.setInitialPose(getGoalPoseStamped("initalPose"))
@@ -145,11 +139,11 @@ def main():
         add_docking_position(RackRequest,xyz,quaternions,offsetXY,yaw)
         #goes to rack
         node.get_logger().info("Going to Rack")
-        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest,getGoalPoseStamped(RackRequest))
+        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
         
         #goes to ap   
         node.get_logger().info("Going to Ap")
-        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest,getGoalPoseStamped(ApRequest))
+        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest)
         
         Response.success = True
         Response.message = "Success"
