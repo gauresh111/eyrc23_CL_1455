@@ -292,25 +292,25 @@ class MyRobotDockingController(Node):
                 StopTime(0.1) 
             self.AngularDocking()
             stopBot(0.1)
-            #orientation done
-            if not self.rackName=="initalPose":
-                if self.isAttach:
-                    self.UltraLinearDocking()
-                    stopBot(0.1)
-                else:
-                    self.odomLinearDocking()
-                    stopBot(0.1) 
-                #linear done
-                self.AngularDocking()
-                stopBot(0.1)
-                #orientation done
-                print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
-                if self.isAttach:
-                    self.magentSwitch(0,True)
-                else :
-                    self.magentSwitch(0,False)
-                    stopBot(0.1,2.0,0.0)
-                    stopBot(0.1,0.0,0.0)
+            # #orientation done
+            # if not self.rackName=="initalPose":
+            #     if self.isAttach:
+            #         self.UltraLinearDocking()
+            #         stopBot(0.1)
+            #     else:
+            #         self.odomLinearDocking()
+            #         stopBot(0.1) 
+            #     #linear done
+            #     self.AngularDocking()
+            #     stopBot(0.1)
+            #     #orientation done
+            #     print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
+            #     if self.isAttach:
+            #         self.magentSwitch(0,True)
+            #     else :
+            #         self.magentSwitch(0,False)
+            #         stopBot(0.1,2.0,0.0)
+            #         stopBot(0.1,0.0,0.0)
             self.is_docking = False
             self.dock_aligned=True
             ## docking and orientation done
