@@ -62,6 +62,7 @@ install(
 
 #### basicScript
 install(
+  PROGRAMS
   config.yaml
   DESTINATION lib/${PROJECT_NAME}
 )
