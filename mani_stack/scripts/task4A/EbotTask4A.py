@@ -81,17 +81,7 @@ def main():
         dockingNodecli.dockingClient = dockingNodecli.create_client(DockSw, '/dock_control')
         while not dockingNodecli.dockingClient.wait_for_service(timeout_sec=1.0):
             print('docking Client service not available, waiting again...')
-        dockingNodecli.dockingRequest = DockSw.Request()
-        
-        if not israck:
-            if rack_no=="initalPose":
-                change_footprint(withoutRackFootprint,"withoutRackFootprint")
-            else:
-                change_footprint(withRackFootprint,"withRackFootprint")
-        else:
-            change_footprint(withoutRackFootprint,"withoutRackFootprint")
-        
-            
+        dockingNodecli.dockingRequest = DockSw.Request()    
         navigator.goToPose(goalPose)
         i = 0
 
@@ -119,37 +109,17 @@ def main():
         navigator.clearAllCostmaps()
          
     navigator.waitUntilNav2Active()
-    def Rack_control_callback(Request,Response):
-        global positionToGO
-        node.get_logger().info("Request Arrived")
-        RackRequest=Request.rack_name
-        ApRequest=Request.ap_name
-        x=Request.x
-        y=Request.y
-        yaw=Request.yaw
-        x_offset=Request.offset_x
-        y_offset=Request.offset_y
-        xyz=[x,y,0.0]
-        euler = [0,0,yaw]
-        quaternions = R.from_euler('xyz', euler).as_quat().tolist()
-        offsetXY=[x_offset,y_offset]
-        add_docking_position(RackRequest,xyz,quaternions,offsetXY,yaw)
-        #goes to rack
-        node.get_logger().info("Going to Rack")
-        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
+    
+    moveToGoal(getGoalPoseStamped("Pre_docking_pose"),"Pre_docking_pose",True,"Pre_docking_pose")
         
         #goes to ap   
-        node.get_logger().info("Going to Ap")
-        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest)
+    node.get_logger().info("Going to Ap")
+    moveToGoal(getGoalPoseStamped("Arm_pose"),"Arm_pose",False,"Arm_pose")
         
-        Response.success = True
-        Response.message = "Success"
-        node.get_logger().info("Request done with Succes")
-        return Response
+   
     def ExitCallBack(msg):
         if msg.data:
             raise SystemExit
-    dock_control_srv = node.create_service(RackSw, '/RackNav2Sw', Rack_control_callback, callback_group=callback_group)
     exitNav2 = node.create_subscription(Bool, '/ExitNav',ExitCallBack, 10)
     try:
         rclpy.spin(node)
