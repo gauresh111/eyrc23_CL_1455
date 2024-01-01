@@ -220,8 +220,10 @@ def main():
         switchParam = SwitchController.Request()
         if useMoveit == True :
             switchParam.activate_controllers = ["scaled_joint_trajectory_controller"] # for normal use of moveit
+            switchParam.deactivate_controllers = ["forward_position_controller"]
         else:
-            switchParam.deactivate_controllers = ["forward_position_controller"] # for servoing
+            switchParam.activate_controllers = ["forward_position_controller"] # for servoing
+            switchParam.deactivate_controllers= ["scaled_joint_trajectory_controller"]
         switchParam.strictness = 2
         switchParam.start_asap = False
 
