@@ -87,11 +87,7 @@ class MyRobotDockingController(Node):
         # Subscribe to odometry data for robot pose information
         
 
-        # Subscribe to ultrasonic sensor data for distance measurements
-        self.ultrasonic_rl_sub = self.create_subscription(Range, '/ultrasonic_rl/scan', self.ultrasonic_rl_callback, 10)
-        # Add another one here
-        self.ultrasonic_rr_sub = self.create_subscription(Range, '/ultrasonic_rr/scan', self.ultrasonic_rr_callback, 10)
-        # Create a ROS2 service for controlling docking behavior, can add another custom service message
+      # Create a ROS2 service for controlling docking behavior, can add another custom service message
         self.dock_control_srv = self.create_service(DockSw, '/dock_control', self.dock_control_callback, callback_group=self.callback_group)
         self.speedPub = self.create_publisher(Twist, '/cmd_vel', 30)
         self.nav2speedPub = self.create_publisher(Twist, '/cmd_vel_nav', 30)
@@ -128,11 +124,6 @@ class MyRobotDockingController(Node):
         twist.angular.z = angularSpeed
         self.speedPub.publish(twist)
     # Callback function for the left ultrasonic sensor
-    def ultrasonic_rl_callback(self, msg):
-        self.usrleft_value = msg.range
-
-    def ultrasonic_rr_callback(self, msg):
-        self.usrright_value = msg.range
     # Callback function for the right ultrasonic sensor
     #
     #

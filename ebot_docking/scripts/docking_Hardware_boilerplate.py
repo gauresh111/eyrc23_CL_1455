@@ -14,19 +14,14 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
-from sensor_msgs.msg import Range
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from tf_transformations import euler_from_quaternion
 from ebot_docking.srv import DockSw  # Import custom service message
-from usb_relay.srv import RelaySw
 import math
 from threading import Thread
-from linkattacher_msgs.srv import AttachLink , DetachLink
-from sensor_msgs.msg import Imu
 from rclpy.time import Time
-from std_msgs.msg import Bool
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Bool,Float32MultiArray,Float32
 rclpy.init()
 global robot_pose
 global ultrasonic_value
@@ -92,10 +87,6 @@ class MyRobotDockingController(Node):
         self.dock_control_srv = self.create_service(DockSw, '/dock_control', self.dock_control_callback, callback_group=self.callback_group)
         self.speedPub = self.create_publisher(Twist, '/cmd_vel', 30)
         self.nav2speedPub = self.create_publisher(Twist, '/cmd_vel_nav', 30)
-        self.MagentCli = self.create_client(RelaySw, '/usb_relay_sw')
-        while not self.link_attach_cli.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('Link attacher service not available, waiting again...')
-        
         # Initialize all  flags and parameters here
         self.is_docking = False
         self.dock_aligned=False
@@ -121,13 +112,22 @@ class MyRobotDockingController(Node):
         twist.angular.z = angularSpeed
         self.speedPub.publish(twist)
         
-    def magentSwitch(self,relayNo,relayStatus):
-        req = RelaySw.Request()
-        req.relaychannel = relayNo
-        req.relaystate = relayStatus
-        self.MagentCli.call_async(req)
-            # rclpy.spin_until_future_complete(self, self.lind_detached_cli) 
-    # Utility function to normalize angles within the range of -π to π (OPTIONAL)
+    
+    def switch_eletromagent(self,relayState):
+        self.get_logger().info('Changing state of the relay to '+str(relayState))
+        # # self.trigger_usb_relay = self.create_client(RelaySw, 'usb_relay_sw')
+        # # while not self.trigger_usb_relay.wait_for_service(timeout_sec=1.0):
+        # #     self.get_logger().warn('USB Trigger Service not available, waiting...')
+
+        # # request_relay = RelaySw.Request()
+        # request_relay.relaychannel = True
+        # request_relay.relaystate = relayState
+        # self.usb_relay_service_resp=self.trigger_usb_relay.call_async(request_relay)
+        # rclpy.spin_until_future_complete(self, self.usb_relay_service_resp)
+        # if(self.usb_relay_service_resp.result().success== True):
+        #     self.get_logger().info(self.usb_relay_service_resp.result().message)
+        # else:
+        #     self.get_logger().warn(self.usb_relay_service_resp.result().message)
     def normalize_angle(self,angle):
         """Normalizes an angle to the range [-π, π].
     
@@ -254,10 +254,10 @@ class MyRobotDockingController(Node):
             robot_pose[3] = round(msg.pose.pose.position.z,2)
         def imu_callback(msg):
             global robot_pose
-            quaternion_array = msg.orientation
-            orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
-            _, _, yaw = euler_from_quaternion(orientation_list)
-            yaw = math.degrees(yaw)
+            # quaternion_array = msg.orientation
+            # orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
+            # _, _, yaw = euler_from_quaternion(orientation_list)
+            yaw = math.degrees(msg.data)
             robot_pose[2] = round(yaw,2)
         def ultrasonic_callback(msg):
             global ultrasonic_value
@@ -278,7 +278,7 @@ class MyRobotDockingController(Node):
             executor_thread = Thread(target=executor.spin, daemon=True, args=())
             executor_thread.start()
             dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
-            dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10)
+            dockingNode.imu_sub = dockingNode.create_subscription(Float32, '/orientation', imu_callback, 10)
             dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
             dockingNodeClock = dockingNode.get_clock()
             def StopTime(StopSeconds):
@@ -297,25 +297,25 @@ class MyRobotDockingController(Node):
                 StopTime(0.1) 
             self.AngularDocking()
             stopBot(0.1)
-            #orientation done
-            if not self.rackName=="initalPose":
-                if self.isAttach:
-                    self.UltraLinearDocking()
-                    stopBot(0.1)
-                else:
-                    self.odomLinearDocking()
-                    stopBot(0.1) 
-                #linear done
-                self.AngularDocking()
-                stopBot(0.1)
-                #orientation done
-                print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
-                if self.isAttach:
-                    self.magentSwitch(0,True)
-                else :
-                    self.magentSwitch(0,False)
-                    stopBot(0.1,2.0,0.0)
-                    stopBot(0.1,0.0,0.0)
+            # #orientation done
+            # if not self.rackName=="initalPose":
+            #     if self.isAttach:
+            #         self.UltraLinearDocking()
+            #         stopBot(0.1)
+            #     else:
+            #         self.odomLinearDocking()
+            #         stopBot(0.1) 
+            #     #linear done
+            #     self.AngularDocking()
+            #     stopBot(0.1)
+            #     #orientation done
+            #     print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
+            #     if self.isAttach:
+            #         self.switch_eletromagent(True)
+            #     else :
+            #         self.switch_eletromagent(False)
+            #         stopBot(0.1,2.0,0.0)
+            #         stopBot(0.1,0.0,0.0)
             self.is_docking = False
             self.dock_aligned=True
             ## docking and orientation done
