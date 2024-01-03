@@ -22,7 +22,7 @@ def main():
     global positionToGO
     positionToGO = {
       'Pre_docking_pose':{'xyz' : [1.05, 2.04,0.0] , 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}, 
-      'Arm_pose':{'xyz': [5.0, 0.0,0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}
+      'Arm_pose':{'xyz': [5.0, 0.0,0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}
     }
     def getGoalPoseStamped(goal):
         global positionToGO
@@ -52,6 +52,7 @@ def main():
         # Keep doing stuff as long as the robot is moving towards the goal
         while not navigator.isTaskComplete():
             i = i + 1
+            print("moving to ",positionName)
         result = navigator.getResult()
         quaternion_array = goalPose.pose.orientation
         orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
