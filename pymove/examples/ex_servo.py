@@ -13,8 +13,8 @@ import tf2_ros
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from geometry_msgs.msg import TwistStamped
-from pymoveit2 import MoveIt2Servo, MoveIt2
-from pymoveit2.robots import ur5
+from pymove import MoveIt2Servo, MoveIt2
+from pymove.robots import ur5
 from rclpy.qos import (
     QoSDurabilityPolicy,
     QoSHistoryPolicy,

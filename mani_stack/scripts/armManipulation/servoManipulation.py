@@ -7,8 +7,8 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from std_msgs.msg import String
 from geometry_msgs.msg import TwistStamped
-from pymoveit2 import MoveIt2, MoveIt2Servo
-from pymoveit2.robots import ur5
+from pymove import MoveIt2, MoveIt2Servo
+from pymove.robots import ur5
 import tf2_ros
 import math
 from ur_msgs.srv import SetIO
