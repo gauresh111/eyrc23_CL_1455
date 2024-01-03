@@ -337,7 +337,7 @@ def main():
             else:
                 continue
 
-    def moveToPoseWithServo(TargetPose, quaternions, tolerance=0.2):
+    def moveToPoseWithServo(TargetPose, quaternions):
         switch_controller(useMoveit=False)
         global servo_status
         mission_status = True
