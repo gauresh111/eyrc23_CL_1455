@@ -74,6 +74,7 @@ class pid():
         output = self.ultraKp * error
         if abs(error)>5:
             output = 0.0 
+        print("usrleft_value Left:",ultrasonic_value[0]," usrright_value Right:",ultrasonic_value[1]," error:",error," output:",output)
         return output*-1.0
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
@@ -228,6 +229,10 @@ class MyRobotDockingController(Node):
         while (reached == False):
             angularValue = ultrasonicPid.UltraOrientation()
             self.moveBot(linearValue,angularValue)
+            avgUltraSonic = (ultrasonic_value[0]-ultrasonic_value[1])/2
+            if avgUltraSonic <0.14:
+                reached = True
+            self.GlobalStopTime(0.1)
     def distanceSingle(self,x1, x2):
         return math.sqrt((x1 - x2) ** 2)*1.0
     def UltralinearDockingprocess(self,leftUltraSonic,rightUltraSonic):
@@ -345,7 +350,7 @@ class MyRobotDockingController(Node):
             #orientation done
             if not self.rackName=="initalPose":
                 if self.isAttach:
-                    self.UltraLinearDocking()
+                    self.UltraOrientation()
                     stopBot(0.1)
                 else:
                     self.odomLinearDocking()
