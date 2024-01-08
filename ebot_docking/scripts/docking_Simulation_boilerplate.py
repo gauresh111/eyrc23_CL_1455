@@ -39,6 +39,7 @@ class pid():
         self.error = 0
         self.lastError = 0
         self.odomLinear = 0.5
+        self.ultraKp=0.04
     def computeAngle(self ,setPoint, Input,X,Y):
         error = Input - setPoint                                         
         output = self.angleKp * error
@@ -66,6 +67,13 @@ class pid():
         output = self.odomLinear * error  
         if output < 0.3:
             output = 0.3
+        return output*-1.0
+    def UltraOrientation(self):
+        global ultrasonic_value
+        error = ultrasonic_value[0] - ultrasonic_value[1]
+        output = self.ultraKp * error
+        if abs(error)>5:
+            output = 0.0 
         return output*-1.0
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
@@ -212,7 +220,14 @@ class MyRobotDockingController(Node):
 
         
         
-        
+    def UltraOrientation(self):
+        global ultrasonic_value
+        reached = False
+        ultrasonicPid = pid()
+        linearValue = 0.1
+        while (reached == False):
+            angularValue = ultrasonicPid.UltraOrientation()
+            self.moveBot(linearValue,angularValue)
     def distanceSingle(self,x1, x2):
         return math.sqrt((x1 - x2) ** 2)*1.0
     def UltralinearDockingprocess(self,leftUltraSonic,rightUltraSonic):
