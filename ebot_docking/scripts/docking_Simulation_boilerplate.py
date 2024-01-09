@@ -39,17 +39,17 @@ class pid():
         self.error = 0
         self.lastError = 0
         self.odomLinear = 0.5
-        self.ultraKp=0.04
+        self.ultraKp=0.6
     def computeAngle(self ,setPoint, Input,X,Y):
         error = Input - setPoint                                         
         output = self.angleKp * error
         
-        if(output > 1.5):
-            output = 1.5
+        if(output > 0.6):
+            output = 0.6
         elif(output < 0.2 and output > 0.0):
             output = 0.2
-        elif(output < -1.5):
-            output = -1.5
+        elif(output < -0.6):
+            output = -0.6
         elif(output > -0.2 and output < 0.0):
             output = -0.2         
         print("Input",Input,"setPoint",setPoint,"error",error,"output",output)
@@ -72,10 +72,10 @@ class pid():
         global ultrasonic_value
         error = ultrasonic_value[0] - ultrasonic_value[1]
         output = self.ultraKp * error
-        if abs(error)>5:
-            output = 0.0 
+        # if abs(error)<5:
+        #     output = 0.0 
         print("usrleft_value Left:",ultrasonic_value[0]," usrright_value Right:",ultrasonic_value[1]," error:",error," output:",output)
-        return output*-1.0
+        return output
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
     #     output = self.kp * error + self.kd * (error - self.lastError) + self.ki * (self.ki + error)
@@ -225,11 +225,11 @@ class MyRobotDockingController(Node):
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
-        linearValue = 0.1
+        linearValue = -0.05
         while (reached == False):
             angularValue = ultrasonicPid.UltraOrientation()
             self.moveBot(linearValue,angularValue)
-            avgUltraSonic = (ultrasonic_value[0]-ultrasonic_value[1])/2
+            avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
             if avgUltraSonic <0.14:
                 reached = True
             self.GlobalStopTime(0.1)
