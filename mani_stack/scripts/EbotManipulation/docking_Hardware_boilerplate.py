@@ -21,21 +21,24 @@ from usb_relay.srv import RelaySw
 import math
 from threading import Thread
 from rclpy.time import Time
-from std_msgs.msg import Bool,Float32MultiArray,Float32
+from std_msgs.msg import Bool,Float32MultiArray
+from sensor_msgs.msg import Imu
 rclpy.init()
 global robot_pose
 global ultrasonic_value
+from tf_transformations import euler_from_quaternion
 ultrasonic_value = [0.0, 0.0]
 robot_pose = [0.0, 0.0, 0.0,0.0]
 
 
 class pid():
     def __init__(self):
-        self.angleKp = 0.012
+        self.angleKp = 0.04
         self.linearKp = 0.5
         self.error = 0
         self.lastError = 0
         self.odomLinear = 0.5
+        self.ultraKp=4.0
     def computeAngle(self ,setPoint, Input,X,Y):
         error = Input - setPoint                                         
         output = self.angleKp * error
@@ -61,9 +64,18 @@ class pid():
     def odomComputeLinear(self,Input,Setpoint):
         error = Input - Setpoint                                         
         output = self.odomLinear * error  
-        if output < 0.2:
-            output = 0.2
+        if output < 0.3:
+            output = 0.3
         return output*-1.0
+    def UltraOrientation(self,input):
+        global ultrasonic_value
+        error = input
+        output = self.ultraKp * error
+        result = False
+        if abs(round(error,3))<=0.001:
+            result = True 
+        print("usrleft_value Left:",ultrasonic_value[0]," usrright_value Right:",ultrasonic_value[1]," error:",error," output:",output)
+        return output*-1.0,result
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
     #     output = self.kp * error + self.kd * (error - self.lastError) + self.ki * (self.ki + error)
@@ -234,7 +246,48 @@ class MyRobotDockingController(Node):
             speed=self.odomLinearDockingprocess(distance)
             self.moveBot(speed,0.0)
             self.GlobalStopTime(0.1)
-          
+    def UltraOrientation(self):
+        global ultrasonic_value
+        reached = False
+        ultrasonicPid = pid()
+        linearValue = -0.05
+        while (reached == False):
+            try:
+                m = (ultrasonic_value[1] - ultrasonic_value[0])
+                angularValue,reached = ultrasonicPid.UltraOrientation(m)
+            except ZeroDivisionError:
+                m = 0.0
+                angularValue=0.0
+            except KeyboardInterrupt:
+                self.destroy_node()
+                rclpy.shutdown()
+                exit(0)
+            print("m:",m)
+            self.moveBot(0.0,angularValue)
+            self.GlobalStopTime(0.1)
+    def UltraOrientationLinear(self):
+        global ultrasonic_value
+        reached = False
+        ultrasonicPid = pid()
+        linearValue = -0.05
+        while (reached == False):
+            try:
+                m = (ultrasonic_value[1] - ultrasonic_value[0])
+                angularValue ,check = ultrasonicPid.UltraOrientation(m)
+                linearValue=-0.05
+            except ZeroDivisionError:
+                m = 0.0
+                angularValue=0.0
+                linearValue=0.0
+            except KeyboardInterrupt:
+                self.destroy_node()
+                rclpy.shutdown()
+                exit(0)
+            self.moveBot(linearValue,angularValue)
+            avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
+            if avgUltraSonic <0.14:
+                reached = True
+            self.GlobalStopTime(0.1)    
     def AngularDocking(self):   
         yaw = False
         botPid = pid()
@@ -257,10 +310,10 @@ class MyRobotDockingController(Node):
             robot_pose[3] = round(msg.pose.pose.position.z,2)
         def imu_callback(msg):
             global robot_pose
-            # quaternion_array = msg.orientation
-            # orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
-            # _, _, yaw = euler_from_quaternion(orientation_list)
-            yaw = math.degrees(msg.data)
+            quaternion_array = msg.orientation
+            orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
+            _, _, yaw = euler_from_quaternion(orientation_list)
+            yaw = math.degrees(yaw)
             robot_pose[2] = round(yaw,2)
         def ultrasonic_callback(msg):
             global ultrasonic_value
@@ -281,7 +334,7 @@ class MyRobotDockingController(Node):
             executor_thread = Thread(target=executor.spin, daemon=True, args=())
             executor_thread.start()
             dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
-            dockingNode.imu_sub = dockingNode.create_subscription(Float32, '/orientation', imu_callback, 10)
+            dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10)
             dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
             dockingNodeClock = dockingNode.get_clock()
             def StopTime(StopSeconds):
@@ -301,13 +354,16 @@ class MyRobotDockingController(Node):
             self.AngularDocking()
             stopBot(0.1)
             # #orientation done
-            # if not self.rackName=="initalPose":
-            #     if self.isAttach:
-            #         self.UltraLinearDocking()
-            #         stopBot(0.1)
-            #     else:
-            #         self.odomLinearDocking()
-            #         stopBot(0.1) 
+            if self.isAttach:
+                self.switch_eletromagent(True)
+                self.UltraOrientation()
+                stopBot(0.1)
+                self.UltraOrientationLinear()
+                stopBot(0.1)
+            else:
+                self.odomLinearDocking()
+                stopBot(0.1) 
+                self.switch_eletromagent(False)
             #     #linear done
             #     self.AngularDocking()
             #     stopBot(0.1)
