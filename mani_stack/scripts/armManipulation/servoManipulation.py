@@ -7,8 +7,8 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from std_msgs.msg import String
 from geometry_msgs.msg import TwistStamped
-from pymove import MoveIt2, MoveIt2Servo
-from pymove.robots import ur5
+from pymoveit2 import MoveIt2, MoveIt2Servo
+from pymoveit2.robots import ur5
 import tf2_ros
 import math
 from ur_msgs.srv import SetIO
@@ -86,7 +86,7 @@ def main():
     Pickup_Joints_Right.joint_states = [-1.57, -2.43, 2.10, -2.81, -1.56, 3.15]
     Pickup_Joints_Right.name = "Pickup_Joints_Right"
 
-    Drop_Joints_List = [Drop_Joints_Left, Drop_Joints_Right, Drop_Joints_Back]
+    Drop_Joints_List = [Drop_Joints_Back, Drop_Joints_Back, Drop_Joints_Back]
 
     box_file_path = path.join(
         path.dirname(path.realpath(__file__)), "..", "assets", "box.stl"
@@ -389,7 +389,7 @@ def main():
             yawError = TargetEuler[0] - currentEuler[0]
             print("Yaw Error: ", yawError)
             while abs(yawError) >0.02:
-                moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
+                moveWithServo([0.0, 0.0, 0.01], [0.0, 0.0, az])
                 # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
                 currentEuler = getCurrentPose(
                     TargetPose=TargetPose, TargetQuats=TargetQuats, useEuler=True
@@ -426,7 +426,7 @@ def main():
         else:
             print("Servoing Pose and Quats")
             while sphericalToleranceAchieved == False:
-                moveWithServo([vx, vy, vz], [ax, ay, az])
+                moveWithServo([vx, vy, vz+0.01], [ax, ay, az])
                 # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
                 currentPose, currentQuats = getCurrentPose(
                     TargetPose=TargetPose, TargetQuats=TargetQuats
@@ -531,7 +531,7 @@ def main():
         else:
             moveToJointStates(Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name)
 
-        temp_result = moveToPoseWithServo(TargetPose=position, quaternions=quaternions)
+        temp_result = moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions)
         print("Servo Result: ", temp_result)
         global_counter = 0
         while global_counter < 5:
@@ -551,7 +551,7 @@ def main():
                         continue
                     else:
                         break
-                temp_result = moveToPoseWithServo(TargetPose=position, quaternions=quaternions)
+                temp_result = moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions)
                 if global_counter > 4:
                     print("[ERROR !!!] Failed to reach",position_name,"after 5 attempts, skipping to next box")
                     return
@@ -589,7 +589,7 @@ def main():
         moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions, QuatsOnly=True)
         # newMidPose = [position[0] / 2, position[1] / 2, midPosition[2]]
         print("### Pulling Box Out")
-        moveToPoseWithServo(TargetPose=midPosition, TargetQuats=quaternions, PoseOnly=True)
+        moveToPoseWithServo(TargetPose=midPosition, TargetQuats=quaternions)
         # if servo_status > 0:
         #         print("Exited next While Loop due to Servo Error", servo_status)
         #         continue
