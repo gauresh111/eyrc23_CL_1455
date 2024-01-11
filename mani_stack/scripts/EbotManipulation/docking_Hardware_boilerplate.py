@@ -43,12 +43,12 @@ class pid():
         error = Input - setPoint                                         
         output = self.angleKp * error
         
-        if(output > 0.6):
-            output = 0.6
+        if(output > 0.4):
+            output = 0.4
         elif(output < 0.2 and output > 0.0):
             output = 0.2
-        elif(output < -0.6):
-            output = -0.6
+        elif(output < -0.4):
+            output = -0.4
         elif(output > -0.2 and output < 0.0):
             output = -0.2         
         print("Input",Input,"setPoint",setPoint,"error",error,"output",output)
@@ -317,8 +317,8 @@ class MyRobotDockingController(Node):
             robot_pose[2] = round(yaw,2)
         def ultrasonic_callback(msg):
             global ultrasonic_value
-            ultrasonic_value[0] = round(msg.data[4],2)
-            ultrasonic_value[1] = round(msg.data[5],2)  
+            ultrasonic_value[0] = round(msg.data[4],4)
+            ultrasonic_value[1] = round(msg.data[5],4)  
             # print("ultrasonic_value",ultrasonic_value)
         if self.is_docking:
             # ...
@@ -333,7 +333,7 @@ class MyRobotDockingController(Node):
             executor.add_node(dockingNode)
             executor_thread = Thread(target=executor.spin, daemon=True, args=())
             executor_thread.start()
-            dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
+            # dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
             dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10)
             dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
             dockingNodeClock = dockingNode.get_clock()
