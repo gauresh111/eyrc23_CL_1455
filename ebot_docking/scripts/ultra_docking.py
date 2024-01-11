@@ -38,13 +38,13 @@ class pid():
         self.error = 0
         self.lastError = 0
         self.odomLinear = 0.5
-        self.ultraKp=1.0
+        self.ultraKp=4.0
     def UltraOrientation(self,input):
         global ultrasonic_value
         error = input
         output = self.ultraKp * error
         result = False
-        if abs(error)<0.02:
+        if abs(round(error,3))<=0.001:
             result = True 
         print("usrleft_value Left:",ultrasonic_value[0]," usrright_value Right:",ultrasonic_value[1]," error:",error," output:",output)
         return output*-1.0,result
@@ -64,16 +64,16 @@ def main():
     executor_thread.start()
     def ultrasonic_rl_callback(msg):
             global ultrasonic_value
-            ultrasonic_value[0] = round(msg.range,2)
+            ultrasonic_value[0] = round(msg.range,4)
 
     def ultrasonic_rr_callback(msg):
         global ultrasonic_value
-        ultrasonic_value[1] = round(msg.range,2)
+        ultrasonic_value[1] = round(msg.range,4)
     ultraDockingNode.ultrasonic_rl_sub = ultraDockingNode.create_subscription(Range, '/ultrasonic_rl/scan', ultrasonic_rl_callback, 10)
     ultraDockingNode.ultrasonic_rl_sub
     ultraDockingNode.ultrasonic_rr_sub = ultraDockingNode.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10)
     ultraDockingNode.ultrasonic_rr_sub
-    time.sleep(1)
+    time.sleep(5)
     def moveBot(linearSpeedX,angularSpeed):
         ultraDockingNode.speedPub = ultraDockingNode.create_publisher(Twist, '/cmd_vel', 30)
         twist = Twist()
@@ -89,7 +89,7 @@ def main():
             # angularValue = ultrasonicPid.UltraOrientation()
             # moveBot(linearValue,angularValue)
             try:
-                m = (ultrasonic_value[1] - ultrasonic_value[0]) / (ultrasonic_value[0] + ultrasonic_value[1])
+                m = (ultrasonic_value[1] - ultrasonic_value[0])
                 angularValue,reached = ultrasonicPid.UltraOrientation(m)
             except ZeroDivisionError:
                 m = 0.0
@@ -99,7 +99,7 @@ def main():
                 rclpy.shutdown()
                 exit(0)
             print("m:",m)
-            moveBot(0.0,angularValue*-1.0)
+            moveBot(0.0,angularValue)
             time.sleep(0.1)
     def UltraOrientationLinear():
         global ultrasonic_value
@@ -108,7 +108,7 @@ def main():
         linearValue = -0.05
         while (reached == False):
             try:
-                m = (ultrasonic_value[1] - ultrasonic_value[0]) / (ultrasonic_value[0] + ultrasonic_value[1])
+                m = (ultrasonic_value[1] - ultrasonic_value[0])
                 angularValue ,check = ultrasonicPid.UltraOrientation(m)
                 linearValue=-0.05
             except ZeroDivisionError:
