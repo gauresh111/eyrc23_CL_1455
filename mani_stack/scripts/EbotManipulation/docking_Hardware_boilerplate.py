@@ -99,9 +99,6 @@ class MyRobotDockingController(Node):
         self.dock_control_srv = self.create_service(DockSw, '/dock_control', self.dock_control_callback, callback_group=self.callback_group)
         self.speedPub = self.create_publisher(Twist, '/cmd_vel', 30)
         self.nav2speedPub = self.create_publisher(Twist, '/cmd_vel_nav', 30)
-        while not self.link_attach_cli.wait_for_service(timeout_sec=1.0):
-            self.get_logger().info('Link attacher service not available, waiting again...')
-        
         # Initialize all  flags and parameters here
         self.is_docking = False
         self.dock_aligned=False
@@ -358,7 +355,7 @@ class MyRobotDockingController(Node):
                 self.switch_eletromagent(True)
                 self.UltraOrientation()
                 stopBot(0.1)
-                self.UltraOrientationLinear()
+                # self.UltraOrientationLinear()
                 stopBot(0.1)
             else:
                 self.odomLinearDocking()
@@ -423,7 +420,7 @@ class MyRobotDockingController(Node):
 def main(args=None):
     
     my_robot_docking_controller = MyRobotDockingController()
-    executor = MultiThreadedExecutor(3)
+    executor = MultiThreadedExecutor(2)
     executor.add_node(my_robot_docking_controller)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
