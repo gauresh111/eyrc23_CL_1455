@@ -28,16 +28,7 @@ def main():
     dockNode.ultra_sub = dockNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)  
     time.sleep(2.0)
     while True:
-        try:
-            # moveBot(-0.05,0.0)
-            print("left: ",ultrasonic_value[0]," right: ",ultrasonic_value[1])
-        except KeyboardInterrupt:
-            moveBot(0.0,0.0)
-            moveBot(0.0,0.0)
-            print("left: ",ultrasonic_value[0]," right: ",ultrasonic_value[1])
-            dockNode.destroy_node()
-            rclpy.shutdown()
-            exit(0)
-            break
+        # moveBot(-0.05,0.0)
+        print("left: ",ultrasonic_value[0]," right: ",ultrasonic_value[1])
 if __name__ == '__main__':
     main()
