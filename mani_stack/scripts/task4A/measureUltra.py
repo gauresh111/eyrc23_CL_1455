@@ -29,7 +29,7 @@ def main():
     time.sleep(2.0)
     while True:
         try:
-            moveBot(-0.05,0.0)
+            # moveBot(-0.05,0.0)
             print("left: ",ultrasonic_value[0]," right: ",ultrasonic_value[1])
         except KeyboardInterrupt:
             moveBot(0.0,0.0)

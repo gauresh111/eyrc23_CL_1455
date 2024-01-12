@@ -38,7 +38,7 @@ class pid():
         self.error = 0
         self.lastError = 0
         self.odomLinear = 0.5
-        self.ultraKp=4.0
+        self.ultraKp=0.04
     def computeAngle(self ,setPoint, Input,X,Y):
         error = Input - setPoint                                         
         output = self.angleKp * error
@@ -72,7 +72,7 @@ class pid():
         error = input
         output = self.ultraKp * error
         result = False
-        if abs(round(error,3))<=0.001:
+        if abs(round(error,3))<=0.01:
             result = True 
         print("usrleft_value Left:",ultrasonic_value[0]," usrright_value Right:",ultrasonic_value[1]," error:",error," output:",output)
         return output*-1.0,result
@@ -252,9 +252,7 @@ class MyRobotDockingController(Node):
             try:
                 m = (ultrasonic_value[1] - ultrasonic_value[0])
                 angularValue,reached = ultrasonicPid.UltraOrientation(m)
-            except ZeroDivisionError:
-                m = 0.0
-                angularValue=0.0
+          
             except KeyboardInterrupt:
                 self.destroy_node()
                 rclpy.shutdown()
@@ -272,17 +270,13 @@ class MyRobotDockingController(Node):
                 m = (ultrasonic_value[1] - ultrasonic_value[0])
                 angularValue ,check = ultrasonicPid.UltraOrientation(m)
                 linearValue=-0.05
-            except ZeroDivisionError:
-                m = 0.0
-                angularValue=0.0
-                linearValue=0.0
             except KeyboardInterrupt:
                 self.destroy_node()
                 rclpy.shutdown()
                 exit(0)
             self.moveBot(linearValue,angularValue)
             avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
-            if avgUltraSonic <0.14:
+            if avgUltraSonic <14:
                 reached = True
             self.GlobalStopTime(0.1)    
     def AngularDocking(self):   
