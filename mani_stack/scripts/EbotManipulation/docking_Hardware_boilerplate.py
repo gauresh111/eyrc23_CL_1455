@@ -12,12 +12,14 @@
 import os
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionClient
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from mani_stack.srv import DockSw  # Import custom service message
 from usb_relay.srv import RelaySw
+from std_srvs.srv import Trigger
 import math
 from threading import Thread
 from rclpy.time import Time
@@ -114,9 +116,38 @@ class MyRobotDockingController(Node):
         # 
         # 
         # 
-
+        self.reset_imu()                                    # Reset IMU data
+        self.reset_odom()                                   # Reset Odom
         # Initialize a timer for the main control loop
         self.controller_timer = self.create_timer(0.1, self.controller_loop)
+
+    def reset_odom(self):
+        self.get_logger().info('Resetting Odometry. Please wait...')
+        self.reset_odom_ebot = self.create_client(Trigger, 'reset_odom')
+        while not self.reset_odom_ebot.wait_for_service(timeout_sec=1.0):
+            self.get_logger().warn('/reset_odom service not available. Waiting for /reset_odom to become available.')
+
+        self.request_odom_reset = Trigger.Request()
+        self.odom_service_resp=self.reset_odom_ebot.call_async(self.request_odom_reset)
+        rclpy.spin_until_future_complete(self, self.odom_service_resp)
+        if(self.odom_service_resp.result().success== True):
+            self.get_logger().info(self.odom_service_resp.result().message)
+        else:
+            self.get_logger().warn(self.odom_service_resp.result().message)
+
+    def reset_imu(self):
+        self.get_logger().info('Resetting IMU. Please wait...')
+        self.reset_imu_ebot = self.create_client(Trigger, 'reset_imu')
+        while not self.reset_imu_ebot.wait_for_service(timeout_sec=1.0):
+            self.get_logger().warn('/reset_imu service not available. Waiting for /reset_imu to become available.')
+
+        request_imu_reset = Trigger.Request()
+        self.imu_service_resp=self.reset_imu_ebot.call_async(request_imu_reset)
+        rclpy.spin_until_future_complete(self, self.imu_service_resp)
+        if(self.imu_service_resp.result().success== True):
+            self.get_logger().info(self.imu_service_resp.result().message)
+        else:
+            self.get_logger().warn(self.imu_service_resp.result().message)
 
     def moveBot(self,linearSpeedX,angularSpeed):
         twist = Twist()
@@ -150,6 +181,11 @@ class MyRobotDockingController(Node):
             A float representing the normalized angle in radians.
         """
         global robot_pose
+        if self.targetYaw == 0.0:
+            return angle
+
+        if angle<0:
+            angle = angle + 360
         return angle
     
     # Main control loop for managing docking behavior
@@ -324,8 +360,8 @@ class MyRobotDockingController(Node):
             executor.add_node(dockingNode)
             executor_thread = Thread(target=executor.spin, daemon=True, args=())
             executor_thread.start()
-            # dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
-            dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10)
+            dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
+            dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/sensors/imu1', imu_callback, 10)
             dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
             dockingNodeClock = dockingNode.get_clock()
             def StopTime(StopSeconds):
@@ -342,6 +378,7 @@ class MyRobotDockingController(Node):
                 twist.angular.z = 0.0
                 self.nav2speedPub.publish(twist)
                 StopTime(0.1) 
+            StopTime(2.0)
             self.AngularDocking()
             stopBot(0.1)
             # #orientation done
@@ -349,7 +386,7 @@ class MyRobotDockingController(Node):
                 self.switch_eletromagent(True)
                 self.UltraOrientation()
                 stopBot(0.1)
-                # self.UltraOrientationLinear()
+                self.UltraOrientationLinear()
                 stopBot(0.1)
             else:
                 self.odomLinearDocking()
