@@ -116,8 +116,9 @@ class MyRobotDockingController(Node):
         # 
         # 
         # 
-        self.reset_imu()                                    # Reset IMU data
-        self.reset_odom()                                   # Reset Odom
+        for i in range(3):
+            self.reset_imu()                                    # Reset IMU data
+            self.reset_odom()                                   # Reset Odom
         # Initialize a timer for the main control loop
         self.controller_timer = self.create_timer(0.1, self.controller_loop)
 
