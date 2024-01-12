@@ -38,13 +38,13 @@ class pid():
         self.error = 0
         self.lastError = 0
         self.odomLinear = 0.5
-        self.ultraKp=4.0
+        self.ultraKp=0.04
     def UltraOrientation(self,input):
         global ultrasonic_value
         error = input
         output = self.ultraKp * error
         result = False
-        if abs(round(error,3))<=0.001:
+        if abs(round(error,3))<=0.01:
             result = True 
         print("usrleft_value Left:",ultrasonic_value[0]," usrright_value Right:",ultrasonic_value[1]," error:",error," output:",output)
         return output*-1.0,result
@@ -65,10 +65,15 @@ def main():
     def ultrasonic_rl_callback(msg):
             global ultrasonic_value
             ultrasonic_value[0] = round(msg.range,4)
+            ultrasonic_value[0] = ultrasonic_value[0]*100
+            ultrasonic_value[0] = ultrasonic_value[0] 
 
     def ultrasonic_rr_callback(msg):
         global ultrasonic_value
         ultrasonic_value[1] = round(msg.range,4)
+        ultrasonic_value[1] = ultrasonic_value[1]*100
+        ultrasonic_value[1] = ultrasonic_value[1] 
+
     ultraDockingNode.ultrasonic_rl_sub = ultraDockingNode.create_subscription(Range, '/ultrasonic_rl/scan', ultrasonic_rl_callback, 10)
     ultraDockingNode.ultrasonic_rl_sub
     ultraDockingNode.ultrasonic_rr_sub = ultraDockingNode.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10)
@@ -91,13 +96,8 @@ def main():
             try:
                 m = (ultrasonic_value[1] - ultrasonic_value[0])
                 angularValue,reached = ultrasonicPid.UltraOrientation(m)
-            except ZeroDivisionError:
-                m = 0.0
-                angularValue=0.0
             except KeyboardInterrupt:
-                ultraDockingNode.destroy_node()
-                rclpy.shutdown()
-                exit(0)
+                raise SystemExit
             print("m:",m)
             moveBot(0.0,angularValue)
             time.sleep(0.1)
@@ -111,17 +111,11 @@ def main():
                 m = (ultrasonic_value[1] - ultrasonic_value[0])
                 angularValue ,check = ultrasonicPid.UltraOrientation(m)
                 linearValue=-0.05
-            except ZeroDivisionError:
-                m = 0.0
-                angularValue=0.0
-                linearValue=0.0
             except KeyboardInterrupt:
-                ultraDockingNode.destroy_node()
-                rclpy.shutdown()
-                exit(0)
+                raise SystemExit
             moveBot(linearValue,angularValue)
             avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
-            if avgUltraSonic <0.14:
+            if avgUltraSonic <14:
                 reached = True
             time.sleep(0.1)
            
@@ -130,8 +124,17 @@ def main():
     moveBot(0.0,0.0)
     UltraOrientationLinear()
     moveBot(0.0,0.0)
-    ultraDockingNode.destroy_node()
-    rclpy.shutdown()
-    exit(0)
+    try: 
+        rclpy.spin(ultraDockingNode)
+    except SystemError:
+        print("Shutting down")
+        for i in range(10):
+            moveBot(0.0,0.0)
+            time.sleep(0.1)
+        moveBot(0.0,0.0)
+        ultraDockingNode.destroy_node()
+        rclpy.shutdown()
+        exit(0)
+    
 if __name__ == '__main__':
     main()
