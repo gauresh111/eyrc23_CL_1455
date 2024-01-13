@@ -243,6 +243,15 @@ class MyRobotDockingController(Node):
         
     def distanceSingle(self,x1, x2):
         return math.sqrt((x1 - x2) ** 2)*1.0
+    def Whichaxistomove(self):
+        if self.targetYaw == 0.0:
+            return 0
+        elif self.targetYaw == 90.0:
+            return 1
+        elif self.targetYaw == 180.0:
+            return 0
+        elif self.targetYaw == 270.0:
+            return 1  
     def UltralinearDockingprocess(self,leftUltraSonic,rightUltraSonic):
         avgUltraSonic = (leftUltraSonic+rightUltraSonic)/2
         reached = False
@@ -265,7 +274,7 @@ class MyRobotDockingController(Node):
     def odomLinearDocking(self):
         global robot_pose
         reachedExtra = False    
-        X1 =self.getWhichIsGreater(robot_pose[0],robot_pose[1])
+        X1 = self.Whichaxistomove()
         while (reachedExtra == False):
             if X1 == 0:
                 distance=self.distanceSingle(self.targetX,robot_pose[0])
@@ -391,7 +400,7 @@ class MyRobotDockingController(Node):
                 self.UltraOrientationLinear()
                 stopBot(0.1)
             else:
-                self.odomLinearDocking()
+                # self.odomLinearDocking()
                 stopBot(0.1) 
                 self.switch_eletromagent(False)
             #     #linear done
@@ -441,7 +450,6 @@ class MyRobotDockingController(Node):
             # self.get_logger().info("Waiting for alignment...")
             
             rate.sleep()
-
         # Set the service response indicating success
         response.success = True
         
