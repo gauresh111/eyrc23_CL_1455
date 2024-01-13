@@ -23,12 +23,12 @@ from std_srvs.srv import Trigger
 import math
 from threading import Thread
 from rclpy.time import Time
-from std_msgs.msg import Bool,Float32MultiArray
+from std_msgs.msg import Bool,Float32MultiArray,Float32
 from sensor_msgs.msg import Imu
 rclpy.init()
 global robot_pose
 global ultrasonic_value
-from tf_transformations import euler_from_quaternion
+from tf_transformations import euler_from_quaternion,quaternion_from_euler
 ultrasonic_value = [0.0, 0.0]
 robot_pose = [0.0, 0.0, 0.0,0.0]
 
@@ -336,12 +336,19 @@ class MyRobotDockingController(Node):
             robot_pose[0] = round(msg.pose.pose.position.x,2)
             robot_pose[1] = round(msg.pose.pose.position.y,2)
             robot_pose[3] = round(msg.pose.pose.position.z,2)
+        
         def imu_callback(msg):
             global robot_pose
-            quaternion_array = msg.orientation
-            orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
-            _, _, yaw = euler_from_quaternion(orientation_list)
-            yaw = math.degrees(yaw)
+            # quaternion_array = msg.orientation
+            # orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
+            # _, _, yaw = euler_from_quaternion(orientation_list)
+            yaw = msg.data
+            if yaw > 3.14:
+                yaw_new = (6.28 - yaw) * 1
+            else:
+                yaw_new = yaw * -1
+            print(yaw_new)
+            yaw = math.degrees(yaw_new)
             robot_pose[2] = round(yaw,2)
         def ultrasonic_callback(msg):
             global ultrasonic_value
@@ -362,7 +369,7 @@ class MyRobotDockingController(Node):
             executor_thread = Thread(target=executor.spin, daemon=True, args=())
             executor_thread.start()
             dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
-            dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/sensors/imu1', imu_callback, 10)
+            dockingNode.imu_sub = dockingNode.create_subscription(Float32, '/orientation', imu_callback, 10)
             dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
             dockingNodeClock = dockingNode.get_clock()
             def StopTime(StopSeconds):
@@ -380,6 +387,9 @@ class MyRobotDockingController(Node):
                 self.nav2speedPub.publish(twist)
                 StopTime(0.1) 
             StopTime(2.0)
+            while ultrasonic_value[0] == 0.0 or ultrasonic_value[1] == 0.0:
+                StopTime(0.1)
+            print("ultrasonic_value_left",ultrasonic_value[0],"ultrasonic_value_right",ultrasonic_value[1])
             self.AngularDocking()
             stopBot(0.1)
             # #orientation done
