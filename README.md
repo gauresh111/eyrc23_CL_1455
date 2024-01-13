@@ -34,4 +34,16 @@ This repository contains three packages (as of now):
 ```sh
     ros2 run mani_stack EbotTask4A.py
 ```
+###service reset command
+```sh
+   ros2 service call /reset_odom std_srvs/srv/Trigger
+```
 
+```sh
+   ros2 service call /reset_imu std_srvs/srv/Trigger
+```
+### topic Visualization
+
+```sh
+   ros2 run mani_stack measureUltra.py
+```

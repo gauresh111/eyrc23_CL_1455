@@ -286,14 +286,8 @@ class MyRobotDockingController(Node):
         ultrasonicPid = pid()
         linearValue = -0.05
         while (reached == False):
-            try:
-                m = (ultrasonic_value[1] - ultrasonic_value[0])
-                angularValue,reached = ultrasonicPid.UltraOrientation(m)
-          
-            except KeyboardInterrupt:
-                self.destroy_node()
-                rclpy.shutdown()
-                exit(0)
+            m = (ultrasonic_value[1] - ultrasonic_value[0])
+            angularValue,reached = ultrasonicPid.UltraOrientation(m)
             print("m:",m)
             self.moveBot(0.0,angularValue)
             self.GlobalStopTime(0.1)
@@ -303,14 +297,9 @@ class MyRobotDockingController(Node):
         ultrasonicPid = pid()
         linearValue = -0.05
         while (reached == False):
-            try:
-                m = (ultrasonic_value[1] - ultrasonic_value[0])
-                angularValue ,check = ultrasonicPid.UltraOrientation(m)
-                linearValue=-0.05
-            except KeyboardInterrupt:
-                self.destroy_node()
-                rclpy.shutdown()
-                exit(0)
+            m = (ultrasonic_value[1] - ultrasonic_value[0])
+            angularValue ,check = ultrasonicPid.UltraOrientation(m)
+            linearValue=-0.05
             self.moveBot(linearValue,angularValue)
             avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
             if avgUltraSonic <14:
@@ -387,8 +376,10 @@ class MyRobotDockingController(Node):
                 self.nav2speedPub.publish(twist)
                 StopTime(0.1) 
             StopTime(2.0)
-            while ultrasonic_value[0] == 0.0 or ultrasonic_value[1] == 0.0:
+            while ultrasonic_value[0] <2.0 or ultrasonic_value[1] < 2.0:
                 StopTime(0.1)
+                print("waitng for ultraSonic",ultrasonic_value)
+            
             print("ultrasonic_value_left",ultrasonic_value[0],"ultrasonic_value_right",ultrasonic_value[1])
             self.AngularDocking()
             stopBot(0.1)
