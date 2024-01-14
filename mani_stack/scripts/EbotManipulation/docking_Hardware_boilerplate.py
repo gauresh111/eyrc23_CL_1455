@@ -116,7 +116,7 @@ class MyRobotDockingController(Node):
         # 
         # 
         # 
-        for i in range(3):
+        for i in range(2):
             self.reset_imu()                                    # Reset IMU data
             self.reset_odom()                                   # Reset Odom
         # Initialize a timer for the main control loop
@@ -157,27 +157,7 @@ class MyRobotDockingController(Node):
         self.speedPub.publish(twist)
         
     
-    def switch_eletromagent(self,relayState):
-        RelayNode = Node("RelayNode")    
-        executor = MultiThreadedExecutor(1)
-        executor.add_node(RelayNode)
-        executor_thread = Thread(target=executor.spin, daemon=True, args=())
-        executor_thread.start()
-        RelayNode.get_logger().info('Changing state of the relay to '+str(relayState))
-        RelayNode.trigger_usb_relay = RelayNode.create_client(RelaySw, 'usb_relay_sw')
-        while not RelayNode.trigger_usb_relay.wait_for_service(timeout_sec=1.0):
-            RelayNode.get_logger().warn('USB Trigger Service not available, waiting...')
-
-        request_relay = RelaySw.Request()
-        request_relay.relaychannel = True
-        request_relay.relaystate = relayState
-        RelayNode.usb_relay_service_resp=RelayNode.trigger_usb_relay.call_async(request_relay)
-        rclpy.spin_until_future_complete(RelayNode, RelayNode.usb_relay_service_resp)
-        if(RelayNode.usb_relay_service_resp.result().success== True):
-            RelayNode.get_logger().info(RelayNode.usb_relay_service_resp.result().message)
-        else:
-            RelayNode.get_logger().warn(RelayNode.usb_relay_service_resp.result().message)
-        RelayNode.destroy_node()
+    
     def normalize_angle(self,angle):
         """Normalizes an angle to the range [-π, π].
     
@@ -368,14 +348,18 @@ class MyRobotDockingController(Node):
             global ultrasonic_value
             dockingNode = Node("GlobalNodeDocking")
             
-            executor = MultiThreadedExecutor(1)
-            executor.add_node(dockingNode)
-            executor_thread = Thread(target=executor.spin, daemon=True, args=())
+            docking_executor = MultiThreadedExecutor(1)
+            docking_executor.add_node(dockingNode)
+            executor_thread = Thread(target=docking_executor.spin, daemon=True, args=())
             executor_thread.start()
             dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
             dockingNode.imu_sub = dockingNode.create_subscription(Float32, '/orientation', imu_callback, 10)
             dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
             dockingNodeClock = dockingNode.get_clock()
+            dockingNode.trigger_usb_relay = dockingNode.create_client(RelaySw, 'usb_relay_sw')
+            while not dockingNode.trigger_usb_relay.wait_for_service(timeout_sec=1.0):
+                dockingNode.get_logger().warn('USB Trigger Service not available, waiting...')
+
             def StopTime(StopSeconds):
                 future_time = Time(seconds=dockingNodeClock.now().nanoseconds / 1e9 + StopSeconds, clock_type=dockingNodeClock.clock_type)
                 dockingNodeClock.sleep_until(future_time)  
@@ -383,6 +367,18 @@ class MyRobotDockingController(Node):
                 for i in range(2):
                     self.moveBot(linearSpeedX,angularSpeed)   
                     StopTime(time)  
+            def switch_eletromagent(relayState):
+                dockingNode.get_logger().info('Changing state of the relay to '+str(relayState))
+                request_relay = RelaySw.Request()
+                request_relay.relaychannel = True
+                request_relay.relaystate = relayState
+                dockingNode.usb_relay_service_resp=dockingNode.trigger_usb_relay.call_async(request_relay)
+                rclpy.spin_until_future_complete(dockingNode, dockingNode.usb_relay_service_resp)
+                if(dockingNode.usb_relay_service_resp.result().success== True):
+                    dockingNode.get_logger().info(dockingNode.usb_relay_service_resp.result().message)
+                else:
+                    dockingNode.get_logger().warn(dockingNode.usb_relay_service_resp.result().message)
+                
             for i in range(2):
                 self.moveBot(0.0,0.0)   
                 twist = Twist()
@@ -400,7 +396,7 @@ class MyRobotDockingController(Node):
             stopBot(0.1)
             # #orientation done
             if self.isAttach:
-                self.switch_eletromagent(True)
+                switch_eletromagent(True)
                 self.UltraOrientation()
                 stopBot(0.1)
                 self.UltraOrientationLinear()
@@ -408,7 +404,7 @@ class MyRobotDockingController(Node):
             else:
                 # self.odomLinearDocking()
                 stopBot(0.1) 
-                self.switch_eletromagent(False)
+                switch_eletromagent(False)
             #     #linear done
             #     self.AngularDocking()
             #     stopBot(0.1)
