@@ -25,6 +25,7 @@ from linkattacher_msgs.srv import AttachLink , DetachLink
 from sensor_msgs.msg import Imu
 from rclpy.time import Time
 from std_msgs.msg import Bool
+
 rclpy.init()
 global robot_pose
 global ultrasonic_value
@@ -138,20 +139,35 @@ class MyRobotDockingController(Node):
     #
     #
     def attachRack(self,rackName):
+            RelayNode = Node("RelayNode")    
+            executor = MultiThreadedExecutor(1)
+            executor.add_node(RelayNode)
+            executor_thread = Thread(target=executor.spin, daemon=True, args=())
+            executor_thread.start()
             req = AttachLink.Request()
             req.model1_name =  'ebot'     
             req.link1_name  = 'ebot_base_link'       
             req.model2_name =  rackName       
             req.link2_name  = 'link' 
-            self.link_attach_cli.call_async(req) 
-            # rclpy.spin_until_future_complete(self, future) 
+            RelayNode.future = RelayNode.link_attach_cli.call_async(req) 
+            rclpy.spin_until_future_complete(RelayNode, RelayNode.future) 
+            print("RelayNode.future.result()",RelayNode.future.result())
+            RelayNode.destroy_node()
     def detachRack(self,rackName):
+            RelayNode = Node("RelayNode")    
+            executor = MultiThreadedExecutor(1)
+            executor.add_node(RelayNode)
+            executor_thread = Thread(target=executor.spin, daemon=True, args=())
+            executor_thread.start()
             req = DetachLink.Request()
             req.model1_name =  'ebot'     
             req.link1_name  = 'ebot_base_link'       
             req.model2_name =  rackName       
             req.link2_name  = 'link' 
-            self.lind_detached_cli.call_async(req)
+            RelayNode.future = self.lind_detached_cli.call_async(req)
+            rclpy.spin_until_future_complete(RelayNode, RelayNode.future)
+            print("RelayNode.future.result()",RelayNode.future.result())
+            RelayNode.destroy_node()
             # rclpy.spin_until_future_complete(self, self.lind_detached_cli) 
     # Utility function to normalize angles within the range of -π to π (OPTIONAL)
     def normalize_angle(self,angle):
@@ -244,10 +260,20 @@ class MyRobotDockingController(Node):
         if InputDistance <0.12:   
             return 0.0
         return odomlinearPid.odomComputeLinear(InputDistance,Setpoint)
+    def Whichaxistomove(self):
+        if self.targetYaw == 0.0:
+            return 0
+        elif self.targetYaw == 90.0:
+            return 1
+        elif self.targetYaw == 180.0:
+            return 0
+        elif self.targetYaw == 270.0:
+            return 1  
     def odomLinearDocking(self):
         global robot_pose
         reachedExtra = False    
-        X1 =self.getWhichIsGreater(robot_pose[0],robot_pose[1])
+        # X1 =self.getWhichIsGreater(robot_pose[0],robot_pose[1])
+        X1 = self.Whichaxistomove()
         while (reachedExtra == False):
             if X1 == 0:
                 distance=self.distanceSingle(self.targetX,robot_pose[0])
@@ -354,13 +380,9 @@ class MyRobotDockingController(Node):
             executor_thread = Thread(target=executor.spin, daemon=True, args=())
             executor_thread.start()
             dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
-            dockingNode.odom_sub
             dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10)
-            dockingNode.imu_sub
             dockingNode.ultrasonic_rl_sub = dockingNode.create_subscription(Range, '/ultrasonic_rl/scan', ultrasonic_rl_callback, 10)
-            dockingNode.ultrasonic_rl_sub
             dockingNode.ultrasonic_rr_sub = dockingNode.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10)
-            dockingNode.ultrasonic_rr_sub
             dockingNodeClock = dockingNode.get_clock()
             def StopTime(StopSeconds):
                 future_time = Time(seconds=dockingNodeClock.now().nanoseconds / 1e9 + StopSeconds, clock_type=dockingNodeClock.clock_type)

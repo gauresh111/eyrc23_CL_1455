@@ -3,25 +3,19 @@
 import rclpy
 from rclpy.node import Node
 from threading import Thread
-import time
 from geometry_msgs.msg import PoseStamped
-from rclpy.callback_groups import ReentrantCallbackGroup
 from nav2_simple_commander.robot_navigator import BasicNavigator
 from scipy.spatial.transform import Rotation as R
 from ebot_docking.srv import DockSw  # Import custom service message
 from tf_transformations import euler_from_quaternion
-import math
 from geometry_msgs.msg import Polygon,Point32
-
+import time
+import math
 from std_msgs.msg import Bool
 def main():
     rclpy.init()
     navigator = BasicNavigator()
     node = Node("moveBot")
-
-    # Create callback group that allows execution of callbacks in parallel without restrictions
-    callback_group = ReentrantCallbackGroup()
-    # Spin the node in background thread(s)
     executor = rclpy.executors.MultiThreadedExecutor(1)
     executor.add_node(node)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
@@ -30,35 +24,12 @@ def main():
     global positionToGO
     positionToGO = {
       'Pre_docking_pose':{'xyz' : [1.05, 2.04,0.0] , 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}, 
-      'Arm_pose':{'xyz': [5.0, 0.0,0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}
+      'Arm_pose':{'xyz': [5.0, 0.0,0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}
     }
-    withRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195]]
+    withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
-    def add_docking_position(name, xyz, quaternions, xy_offsets,yaw):
-        global positionToGO
-        positionToGO[name] = {
-            'xyz': xyz,
-            'quaternions': quaternions,
-            'XYoffsets': xy_offsets,
-            'Yaw':yaw
-        }
-    def getGoalPoseStamped(goal):
-        global positionToGO
-        Goal = positionToGO[goal]
-        goalPose = PoseStamped()
-        goalPose.header.frame_id = 'map'
-        goalPose.header.stamp = navigator.get_clock().now().to_msg()
-        goalPose.pose.position.x = Goal['xyz'][0]
-        goalPose.pose.position.y = Goal['xyz'][1]
-        goalPose.pose.position.z = Goal['xyz'][2]
-        goalPose.pose.orientation.x = Goal['quaternions'][0]
-        goalPose.pose.orientation.y = Goal['quaternions'][1]
-        goalPose.pose.orientation.z = Goal['quaternions'][2]
-        goalPose.pose.orientation.w = Goal['quaternions'][3]
-        print(goalPose)
-        return goalPose  
     def change_footprint(new_footprint,msg):
-        # Initialize ROS node
+    # Initialize ROS node
         nodeFootprint = rclpy.create_node('change_footprint_node')
         # Create a service client to set parameters
         nodeFootprint.localFootPrintPub=nodeFootprint.create_publisher(Polygon, '/local_costmap/footprint', 10)
@@ -73,21 +44,43 @@ def main():
             nodeFootprint.localFootPrintPub.publish(p)
             time.sleep(0.1)
             print("publishing:" ,msg)
-            
-        nodeFootprint.destroy_node()
+    def getGoalPoseStamped(goal):
+        global positionToGO
+        Goal = positionToGO[goal]
+        goalPose = PoseStamped()
+        goalPose.header.frame_id = 'map'
+        goalPose.header.stamp = navigator.get_clock().now().to_msg()
+        goalPose.pose.position.x = Goal['xyz'][0]
+        goalPose.pose.position.y = Goal['xyz'][1]
+        goalPose.pose.position.z = Goal['xyz'][2]
+        goalPose.pose.orientation.x = Goal['quaternions'][0]
+        goalPose.pose.orientation.y = Goal['quaternions'][1]
+        goalPose.pose.orientation.z = Goal['quaternions'][2]
+        goalPose.pose.orientation.w = Goal['quaternions'][3]
+        print(goalPose)
+        return goalPose 
     def moveToGoal(goalPose,rack_no,israck,positionName):
         global positionToGO
         dockingNodecli = rclpy.create_node("NodeDockingClient")
         dockingNodecli.dockingClient = dockingNodecli.create_client(DockSw, '/dock_control')
         while not dockingNodecli.dockingClient.wait_for_service(timeout_sec=1.0):
             print('docking Client service not available, waiting again...')
+        
         dockingNodecli.dockingRequest = DockSw.Request()    
+        if not israck:
+            
+            change_footprint(withRackFootprint,"withRackFootprint")
+        else:
+            change_footprint(withoutRackFootprint,"withoutRackFootprint")
+        
+        
         navigator.goToPose(goalPose)
         i = 0
 
         # Keep doing stuff as long as the robot is moving towards the goal
         while not navigator.isTaskComplete():
             i = i + 1
+            print("moving to ",positionName)
         result = navigator.getResult()
         quaternion_array = goalPose.pose.orientation
         orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
@@ -110,11 +103,11 @@ def main():
          
     navigator.waitUntilNav2Active()
     
-    moveToGoal(getGoalPoseStamped("Pre_docking_pose"),"Pre_docking_pose",True,"Pre_docking_pose")
+    moveToGoal(getGoalPoseStamped("Pre_docking_pose"),"rack3",True,"Pre_docking_pose")
         
         #goes to ap   
     node.get_logger().info("Going to Ap")
-    moveToGoal(getGoalPoseStamped("Arm_pose"),"Arm_pose",False,"Arm_pose")
+    moveToGoal(getGoalPoseStamped("Arm_pose"),"rack3",False,"Arm_pose")
         
    
     def ExitCallBack(msg):
