@@ -158,20 +158,26 @@ class MyRobotDockingController(Node):
         
     
     def switch_eletromagent(self,relayState):
-        self.get_logger().info('Changing state of the relay to '+str(relayState))
-        self.trigger_usb_relay = self.create_client(RelaySw, 'usb_relay_sw')
-        while not self.trigger_usb_relay.wait_for_service(timeout_sec=1.0):
-            self.get_logger().warn('USB Trigger Service not available, waiting...')
+        RelayNode = Node("RelayNode")    
+        executor = MultiThreadedExecutor(1)
+        executor.add_node(RelayNode)
+        executor_thread = Thread(target=executor.spin, daemon=True, args=())
+        executor_thread.start()
+        RelayNode.get_logger().info('Changing state of the relay to '+str(relayState))
+        RelayNode.trigger_usb_relay = RelayNode.create_client(RelaySw, 'usb_relay_sw')
+        while not RelayNode.trigger_usb_relay.wait_for_service(timeout_sec=1.0):
+            RelayNode.get_logger().warn('USB Trigger Service not available, waiting...')
 
         request_relay = RelaySw.Request()
         request_relay.relaychannel = True
         request_relay.relaystate = relayState
-        self.usb_relay_service_resp=self.trigger_usb_relay.call_async(request_relay)
-        rclpy.spin_until_future_complete(self, self.usb_relay_service_resp)
-        if(self.usb_relay_service_resp.result().success== True):
-            self.get_logger().info(self.usb_relay_service_resp.result().message)
+        RelayNode.usb_relay_service_resp=RelayNode.trigger_usb_relay.call_async(request_relay)
+        rclpy.spin_until_future_complete(RelayNode, RelayNode.usb_relay_service_resp)
+        if(RelayNode.usb_relay_service_resp.result().success== True):
+            RelayNode.get_logger().info(RelayNode.usb_relay_service_resp.result().message)
         else:
-            self.get_logger().warn(self.usb_relay_service_resp.result().message)
+            RelayNode.get_logger().warn(RelayNode.usb_relay_service_resp.result().message)
+        RelayNode.destroy_node()
     def normalize_angle(self,angle):
         """Normalizes an angle to the range [-π, π].
     
