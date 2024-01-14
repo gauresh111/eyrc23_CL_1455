@@ -373,7 +373,11 @@ class MyRobotDockingController(Node):
                 request_relay.relaychannel = True
                 request_relay.relaystate = relayState
                 dockingNode.usb_relay_service_resp=dockingNode.trigger_usb_relay.call_async(request_relay)
-                rclpy.spin_until_future_complete(dockingNode, dockingNode.usb_relay_service_resp)
+                self.is_docking = False
+                self.dock_aligned=True
+                rclpy.spin_until_future_complete(dockingNode, dockingNode.usb_relay_service_resp,docking_executor,1.0)
+                self.is_docking = True
+                self.dock_aligned=False
                 if(dockingNode.usb_relay_service_resp.result().success== True):
                     dockingNode.get_logger().info(dockingNode.usb_relay_service_resp.result().message)
                 else:
