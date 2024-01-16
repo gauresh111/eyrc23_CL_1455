@@ -40,7 +40,7 @@ class pid():
         self.error = 0
         self.lastError = 0
         self.odomLinear = 0.5
-        self.ultraKp=4.0
+        self.ultraKp=0.08
     def computeAngle(self ,setPoint, Input,X,Y):
         error = Input - setPoint                                         
         output = self.angleKp * error
@@ -73,15 +73,16 @@ class pid():
         global ultrasonic_value
         error = input
         output = self.ultraKp * error
+        output = round(output,3)
         result = False
-        if abs(round(error,3))<=0.001:
+        if abs(round(error,3))<=0.3:
             result = True 
         mode=""
         if isLinear:
             mode="Linear"
         else:
             mode="Angular"
-        print("mode",mode,"usrleft_value Left:",ultrasonic_value[0]," usrright_value Right:",ultrasonic_value[1]," error:",error," output:",output)
+        print("mode",mode,"usrleft_value Left:",round(ultrasonic_value[0],1)," usrright_value Right:",round(ultrasonic_value[1],1)," error:",error," output:",output)
         return output*-1.0,result
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
@@ -265,16 +266,9 @@ class MyRobotDockingController(Node):
         ultrasonicPid = pid()
         linearValue = -0.05
         while (reached == False):
-            try:
-                m = (ultrasonic_value[1] - ultrasonic_value[0])
-                angularValue,reached = ultrasonicPid.UltraOrientation(m,False)
-            except ZeroDivisionError:
-                m = 0.0
-                angularValue=0.0
-            except KeyboardInterrupt:
-                self.destroy_node()
-                rclpy.shutdown()
-                exit(0)
+        
+            m = (ultrasonic_value[1] - ultrasonic_value[0])
+            angularValue,reached = ultrasonicPid.UltraOrientation(m,False)
             print("m:",m)
             self.moveBot(0.0,angularValue)
             self.GlobalStopTime(0.1)
@@ -282,23 +276,13 @@ class MyRobotDockingController(Node):
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
-        linearValue = -0.05
+        linearValue = -0.08
         while (reached == False):
-            try:
-                m = (ultrasonic_value[1] - ultrasonic_value[0])
-                angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
-                linearValue=-0.05
-            except ZeroDivisionError:
-                m = 0.0
-                angularValue=0.0
-                linearValue=0.0
-            except KeyboardInterrupt:
-                self.destroy_node()
-                rclpy.shutdown()
-                exit(0)
+            m = (ultrasonic_value[1] - ultrasonic_value[0])
+            angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
             self.moveBot(linearValue,angularValue)
             avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
-            if avgUltraSonic <0.14:
+            if avgUltraSonic <18.0:
                 reached = True
             self.GlobalStopTime(0.1)    
     def AngularDocking(self):   
@@ -331,11 +315,13 @@ class MyRobotDockingController(Node):
             # print("robot_pose",robot_pose)
         def ultrasonic_rl_callback(msg):
             global ultrasonic_value
-            ultrasonic_value[0] = round(msg.range,4)
+            ultrasonic_value[0] = round(msg.range,3)
+            ultrasonic_value[0] = ultrasonic_value[0]*100
 
         def ultrasonic_rr_callback(msg):
             global ultrasonic_value
-            ultrasonic_value[1] = round(msg.range,4)
+            ultrasonic_value[1] = round(msg.range,3)
+            ultrasonic_value[1] = ultrasonic_value[1]*100
             # print("ultrasonic_value",ultrasonic_value)
         if self.is_docking:
             # ...
@@ -401,6 +387,9 @@ class MyRobotDockingController(Node):
                 twist.angular.z = 0.0
                 self.nav2speedPub.publish(twist)
                 StopTime(0.1) 
+            while ultrasonic_value[0] <2.0 or ultrasonic_value[1] < 2.0:
+                StopTime(0.1)
+                print("waitng for ultraSonic",ultrasonic_value)
             self.AngularDocking()
             stopBot(0.1)
             # #orientation done
@@ -410,6 +399,8 @@ class MyRobotDockingController(Node):
                 self.UltraOrientation()
                 stopBot(0.1)
                 self.UltraOrientationLinear()
+                stopBot(0.1)
+                stopBot(0.15,-0.05,0.0)
                 stopBot(0.1)
                 attachRack(self.rackName)
             else:
