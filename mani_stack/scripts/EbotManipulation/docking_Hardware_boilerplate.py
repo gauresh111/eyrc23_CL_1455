@@ -40,7 +40,7 @@ class pid():
         self.error = 0
         self.lastError = 0
         self.odomLinear = 0.5
-        self.ultraKp=0.04
+        self.ultraKp=0.08
     def computeAngle(self ,setPoint, Input,X,Y):
         error = Input - setPoint                                         
         output = self.angleKp * error
@@ -69,14 +69,20 @@ class pid():
         if output < 0.3:
             output = 0.3
         return output*-1.0
-    def UltraOrientation(self,input):
+    def UltraOrientation(self,input,isLinear):
         global ultrasonic_value
         error = input
         output = self.ultraKp * error
+        output = round(output,3)
         result = False
-        if abs(round(error,3))<=0.01:
+        if abs(round(error,3))<=0.3:
             result = True 
-        print("usrleft_value Left:",ultrasonic_value[0]," usrright_value Right:",ultrasonic_value[1]," error:",error," output:",output)
+        mode=""
+        if isLinear:
+            mode="Linear"
+        else:
+            mode="Angular"
+        print("mode",mode,"usrleft_value Left:",round(ultrasonic_value[0],1)," usrright_value Right:",round(ultrasonic_value[1],1)," error:",error," output:",output)
         return output*-1.0,result
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
@@ -110,6 +116,7 @@ class MyRobotDockingController(Node):
         self.rackName = ""
         self.isAttach = False
         self.globalnodeClock = self.get_clock()
+        self.isRackDetach=False
         #         
         # 
         # 
@@ -238,20 +245,6 @@ class MyRobotDockingController(Node):
             return 0
         elif self.targetYaw == 270.0:
             return 1  
-    def UltralinearDockingprocess(self,leftUltraSonic,rightUltraSonic):
-        avgUltraSonic = (leftUltraSonic+rightUltraSonic)/2
-        reached = False
-        if avgUltraSonic <0.14:
-            reached = True
-        linearPid = pid()
-        return linearPid.computeLinear(avgUltraSonic,0.1),reached
-    def UltraLinearDocking(self):
-        reached = False    
-        while (reached == False):
-            X,reached=self.UltralinearDockingprocess(ultrasonic_value[0],ultrasonic_value[1]) 
-            print("usrleft_value:",ultrasonic_value[0]," usrright_value:",ultrasonic_value[1]," Reached:",reached)
-            self.moveBot(X,0.0)
-            self.GlobalStopTime(0.1)
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
         if InputDistance <0.12:   
@@ -282,7 +275,7 @@ class MyRobotDockingController(Node):
         linearValue = -0.05
         while (reached == False):
             m = (ultrasonic_value[1] - ultrasonic_value[0])
-            angularValue,reached = ultrasonicPid.UltraOrientation(m)
+            angularValue,reached = ultrasonicPid.UltraOrientation(m,False)
             print("m:",m)
             self.moveBot(0.0,angularValue)
             self.GlobalStopTime(0.1)
@@ -290,14 +283,14 @@ class MyRobotDockingController(Node):
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
-        linearValue = -0.05
+        linearValue = -0.08
         while (reached == False):
             m = (ultrasonic_value[1] - ultrasonic_value[0])
-            angularValue ,check = ultrasonicPid.UltraOrientation(m)
+            angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
             linearValue=-0.05
             self.moveBot(linearValue,angularValue)
             avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
-            if avgUltraSonic <14:
+            if avgUltraSonic <19.0:
                 reached = True
             self.GlobalStopTime(0.1)    
     def AngularDocking(self):   
@@ -382,6 +375,13 @@ class MyRobotDockingController(Node):
                     dockingNode.get_logger().info(dockingNode.usb_relay_service_resp.result().message)
                 else:
                     dockingNode.get_logger().warn(dockingNode.usb_relay_service_resp.result().message)
+            def rackAttach():
+                switch_eletromagent(True)
+                self.UltraOrientation()
+                stopBot(0.1)
+                self.UltraOrientationLinear()
+                stopBot(0.1)
+                stopBot(0.6,-0.08,0.0)
                 
             for i in range(2):
                 self.moveBot(0.0,0.0)   
@@ -394,17 +394,17 @@ class MyRobotDockingController(Node):
             while ultrasonic_value[0] <2.0 or ultrasonic_value[1] < 2.0:
                 StopTime(0.1)
                 print("waitng for ultraSonic",ultrasonic_value)
-            
+            if self.isRackDetach:
+                rackAttach()
+                self.is_docking = False
+                self.dock_aligned=True
+                return None
             print("ultrasonic_value_left",ultrasonic_value[0],"ultrasonic_value_right",ultrasonic_value[1])
             self.AngularDocking()
             stopBot(0.1)
             # #orientation done
             if self.isAttach:
-                switch_eletromagent(True)
-                self.UltraOrientation()
-                stopBot(0.1)
-                self.UltraOrientationLinear()
-                stopBot(0.1)
+                rackAttach()
             else:
                 # self.odomLinearDocking()
                 stopBot(0.1) 
@@ -436,6 +436,7 @@ class MyRobotDockingController(Node):
         self.targetYaw = request.orientation
         self.rackName = request.rack_no
         self.isAttach = request.rack_attach
+        self.isRackDetach = request.is_rack_detached
         # Reset flags and start the docking process
         #
         #
