@@ -398,9 +398,11 @@ class MyRobotDockingController(Node):
                 print(self.rackName,"rackName")
                 rackAttach()
             else:
-                self.odomLinearDocking()
-                stopBot(0.1) 
+                # self.odomLinearDocking()
+                stopBot(0.8,-0.2,0.0) 
+                stopBot(0.4) 
                 detachRack(self.rackName)
+                
             #     #linear done
             #     self.AngularDocking()
             #     stopBot(0.1)

@@ -27,6 +27,7 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/DockSw.srv"
   "srv/RackSw.srv"
   "srv/ManipulationSw.srv"
+  "srv/RelaySw.srv"
   #DEPENDENCIES geometry_msgs # Add packages that above messages depend on, in this case geometry_msgs for Sphere.msg
 )
 

@@ -18,7 +18,7 @@ from geometry_msgs.msg import Twist
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from ebot_docking.srv import DockSw  # Import custom service message
-from usb_relay.srv import RelaySw
+from ebot_docking.srv import RelaySw
 from std_srvs.srv import Trigger
 import math
 from threading import Thread
@@ -27,11 +27,13 @@ from std_msgs.msg import Bool,Float32MultiArray,Float32
 from sensor_msgs.msg import Imu
 from linkattacher_msgs.srv import AttachLink , DetachLink
 from std_msgs.msg import Bool
+from sensor_msgs.msg import Range
+from tf_transformations import euler_from_quaternion
 rclpy.init()
-global robot_pose
+global heading
 global ultrasonic_value
 ultrasonic_value = [0.0, 0.0]
-robot_pose = [0.0, 0.0, 0.0,0.0]
+heading = 0.0
 def main():
     duplicateNode = Node('duplicate_node')
     executor = rclpy.executors.MultiThreadedExecutor(3)
@@ -39,14 +41,74 @@ def main():
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
     
-    def sendUltaData(msg):
-        ultraData = msg.data
+    def ultrasonic_rl_callback(msg):
+            global ultrasonic_value
+            ultrasonic_value[0] = round(msg.range,3)
+            ultrasonic_value[0] = ultrasonic_value[0]*100
+
+    def ultrasonic_rr_callback(msg):
+        global ultrasonic_value
+        ultrasonic_value[1] = round(msg.range,3)
+        ultrasonic_value[1] = ultrasonic_value[1]*100
+    def imu_callback(msg):
+        global heading
+        quaternion_array = msg.orientation
+        orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
+        _, _, yaw = euler_from_quaternion(orientation_list)
+        yaw = math.degrees(yaw)
+        heading = round(yaw,2)
+    def usb_relay_sw_callback(request, response):
+        print("usb_relay_sw_callback")
+        result = ""
+        if request.relaystate == True:
+            req = AttachLink.Request()
+            req.model1_name =  'ebot'     
+            req.link1_name  = 'ebot_base_link'       
+            req.model2_name =  request.rackname       
+            req.link2_name  = 'link'
+            duplicateNode.future = duplicateNode.link_attach_cli.call_async(req) 
+            
+            print("Rack attached")
+        else:
+        
+            req = DetachLink.Request()
+            req.model1_name =  'ebot'     
+            req.link1_name  = 'ebot_base_link'       
+            req.model2_name =  request.rackname       
+            req.link2_name  = 'link'  
+            duplicateNode.future = duplicateNode.lind_detached_cli.call_async(req)
+            print("Rack detached")
+        if not result:
+            result="Unable to connect to board of the relay"
+            response.success = False
+            response.message = result
+        else:
+            result = "success"        
+            response.success = True
+            response.message = str(result)
+            #self.get_logger().info('Incoming request',request.data)
+        return response
     
-    
-    
-    
-    
-    rclpy.spin(duplicateNode)
+    duplicateNode.ultrasonic_rl_sub = duplicateNode.create_subscription(Range, '/ultrasonic_rl/scan', ultrasonic_rl_callback, 10)
+    duplicateNode.ultrasonic_rr_sub = duplicateNode.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10)
+    duplicateNode.ultrasonic_pub = duplicateNode.create_publisher(Float32MultiArray, '/ultrasonic_sensor_std_float', 10)
+    duplicateNode.imu_sub = duplicateNode.create_subscription(Imu, '/imu', imu_callback, 10)
+    duplicateNode.imu_pub = duplicateNode.create_publisher(Float32, '/orientation', 10)
+    duplicateNode.srv = duplicateNode.create_service(RelaySw, 'usb_relay_sw', usb_relay_sw_callback)
+    duplicateNode.link_attach_cli = duplicateNode.create_client(AttachLink, '/ATTACH_LINK')
+    duplicateNode.lind_detached_cli = duplicateNode.create_client(DetachLink, '/DETACH_LINK')
+    def ultrasonic_publisher():
+        global ultrasonic_value
+        global heading
+        msg = Float32MultiArray()
+        msg.data = [0.0,0.0,0.0,0.0,ultrasonic_value[0],ultrasonic_value[1]]
+        duplicateNode.ultrasonic_pub.publish(msg)
+        msg = Float32()
+        msg.data = heading
+        duplicateNode.imu_pub.publish(msg)
+    while True:
+        ultrasonic_publisher()
+        # rclpy.spin_(duplicateNode)
     duplicateNode.destroy_node()
     rclpy.shutdown()
     exit(0)
