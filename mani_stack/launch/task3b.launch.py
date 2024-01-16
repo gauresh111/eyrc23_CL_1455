@@ -43,6 +43,6 @@ def generate_launch_description():
     start_docking,
     start_yaml_controller,
     start_nav2,
-    Start_perceiption,
+    # Start_perceiption,
     Start_arm_manipulation
     ])

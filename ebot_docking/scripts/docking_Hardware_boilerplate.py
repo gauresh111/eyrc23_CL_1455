@@ -12,40 +12,47 @@
 import os
 import rclpy
 from rclpy.node import Node
+from rclpy.action import ActionClient
 from nav_msgs.msg import Odometry
 from geometry_msgs.msg import Twist
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
-from tf_transformations import euler_from_quaternion
 from ebot_docking.srv import DockSw  # Import custom service message
+from usb_relay.srv import RelaySw
+from std_srvs.srv import Trigger
 import math
 from threading import Thread
 from rclpy.time import Time
 from std_msgs.msg import Bool,Float32MultiArray,Float32
+from sensor_msgs.msg import Imu
+from linkattacher_msgs.srv import AttachLink , DetachLink
+from std_msgs.msg import Bool
 rclpy.init()
 global robot_pose
 global ultrasonic_value
+from tf_transformations import euler_from_quaternion,quaternion_from_euler
 ultrasonic_value = [0.0, 0.0]
 robot_pose = [0.0, 0.0, 0.0,0.0]
 
 
 class pid():
     def __init__(self):
-        self.angleKp = 0.012
+        self.angleKp = 0.04
         self.linearKp = 0.5
         self.error = 0
         self.lastError = 0
         self.odomLinear = 0.5
+        self.ultraKp=0.04
     def computeAngle(self ,setPoint, Input,X,Y):
         error = Input - setPoint                                         
         output = self.angleKp * error
         
-        if(output > 0.6):
-            output = 0.6
+        if(output > 0.4):
+            output = 0.4
         elif(output < 0.2 and output > 0.0):
             output = 0.2
-        elif(output < -0.6):
-            output = -0.6
+        elif(output < -0.4):
+            output = -0.4
         elif(output > -0.2 and output < 0.0):
             output = -0.2         
         print("Input",Input,"setPoint",setPoint,"error",error,"output",output)
@@ -61,9 +68,18 @@ class pid():
     def odomComputeLinear(self,Input,Setpoint):
         error = Input - Setpoint                                         
         output = self.odomLinear * error  
-        if output < 0.2:
-            output = 0.2
+        if output < 0.3:
+            output = 0.3
         return output*-1.0
+    def UltraOrientation(self,input):
+        global ultrasonic_value
+        error = input
+        output = self.ultraKp * error
+        result = False
+        if abs(round(error,3))<=0.01:
+            result = True 
+        print("usrleft_value Left:",ultrasonic_value[0]," usrright_value Right:",ultrasonic_value[1]," error:",error," output:",output)
+        return output*-1.0,result
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
     #     output = self.kp * error + self.kd * (error - self.lastError) + self.ki * (self.ki + error)
@@ -102,9 +118,39 @@ class MyRobotDockingController(Node):
         # 
         # 
         # 
-
+        for i in range(3):
+            self.reset_imu()                                    # Reset IMU data
+            self.reset_odom()                                   # Reset Odom
         # Initialize a timer for the main control loop
         self.controller_timer = self.create_timer(0.1, self.controller_loop)
+
+    def reset_odom(self):
+        self.get_logger().info('Resetting Odometry. Please wait...')
+        self.reset_odom_ebot = self.create_client(Trigger, 'reset_odom')
+        # while not self.reset_odom_ebot.wait_for_service(timeout_sec=1.0):
+        #     self.get_logger().warn('/reset_odom service not available. Waiting for /reset_odom to become available.')
+
+        self.request_odom_reset = Trigger.Request()
+        self.odom_service_resp=self.reset_odom_ebot.call_async(self.request_odom_reset)
+        # rclpy.spin_until_future_complete(self, self.odom_service_resp)
+        # if(self.odom_service_resp.result().success== True):
+        #     self.get_logger().info(self.odom_service_resp.result().message)
+        # else:
+        #     self.get_logger().warn(self.odom_service_resp.result().message)
+
+    def reset_imu(self):
+        self.get_logger().info('Resetting IMU. Please wait...')
+        self.reset_imu_ebot = self.create_client(Trigger, 'reset_imu')
+        # while not self.reset_imu_ebot.wait_for_service(timeout_sec=1.0):
+        #     self.get_logger().warn('/reset_imu service not available. Waiting for /reset_imu to become available.')
+
+        request_imu_reset = Trigger.Request()
+        self.imu_service_resp=self.reset_imu_ebot.call_async(request_imu_reset)
+        # rclpy.spin_until_future_complete(self, self.imu_service_resp)
+        # if(self.imu_service_resp.result().success== True):
+        #     self.get_logger().info(self.imu_service_resp.result().message)
+        # else:
+        #     self.get_logger().warn(self.imu_service_resp.result().message)
 
     def moveBot(self,linearSpeedX,angularSpeed):
         twist = Twist()
@@ -114,20 +160,26 @@ class MyRobotDockingController(Node):
         
     
     def switch_eletromagent(self,relayState):
-        self.get_logger().info('Changing state of the relay to '+str(relayState))
-        # # self.trigger_usb_relay = self.create_client(RelaySw, 'usb_relay_sw')
-        # # while not self.trigger_usb_relay.wait_for_service(timeout_sec=1.0):
-        # #     self.get_logger().warn('USB Trigger Service not available, waiting...')
+        RelayNode = Node("RelayNode")    
+        executor = MultiThreadedExecutor(1)
+        executor.add_node(RelayNode)
+        executor_thread = Thread(target=executor.spin, daemon=True, args=())
+        executor_thread.start()
+        RelayNode.get_logger().info('Changing state of the relay to '+str(relayState))
+        RelayNode.trigger_usb_relay = RelayNode.create_client(RelaySw, 'usb_relay_sw')
+        while not RelayNode.trigger_usb_relay.wait_for_service(timeout_sec=1.0):
+            RelayNode.get_logger().warn('USB Trigger Service not available, waiting...')
 
-        # # request_relay = RelaySw.Request()
-        # request_relay.relaychannel = True
-        # request_relay.relaystate = relayState
-        # self.usb_relay_service_resp=self.trigger_usb_relay.call_async(request_relay)
-        # rclpy.spin_until_future_complete(self, self.usb_relay_service_resp)
-        # if(self.usb_relay_service_resp.result().success== True):
-        #     self.get_logger().info(self.usb_relay_service_resp.result().message)
-        # else:
-        #     self.get_logger().warn(self.usb_relay_service_resp.result().message)
+        request_relay = RelaySw.Request()
+        request_relay.relaychannel = True
+        request_relay.relaystate = relayState
+        RelayNode.usb_relay_service_resp=RelayNode.trigger_usb_relay.call_async(request_relay)
+        rclpy.spin_until_future_complete(RelayNode, RelayNode.usb_relay_service_resp)
+        if(RelayNode.usb_relay_service_resp.result().success== True):
+            RelayNode.get_logger().info(RelayNode.usb_relay_service_resp.result().message)
+        else:
+            RelayNode.get_logger().warn(RelayNode.usb_relay_service_resp.result().message)
+        RelayNode.destroy_node()
     def normalize_angle(self,angle):
         """Normalizes an angle to the range [-π, π].
     
@@ -138,6 +190,11 @@ class MyRobotDockingController(Node):
             A float representing the normalized angle in radians.
         """
         global robot_pose
+        if self.targetYaw == 0.0:
+            return angle
+
+        if angle<0:
+            angle = angle + 360
         return angle
     
     # Main control loop for managing docking behavior
@@ -194,6 +251,15 @@ class MyRobotDockingController(Node):
         
     def distanceSingle(self,x1, x2):
         return math.sqrt((x1 - x2) ** 2)*1.0
+    def Whichaxistomove(self):
+        if self.targetYaw == 0.0:
+            return 0
+        elif self.targetYaw == 90.0:
+            return 1
+        elif self.targetYaw == 180.0:
+            return 0
+        elif self.targetYaw == 270.0:
+            return 1  
     def UltralinearDockingprocess(self,leftUltraSonic,rightUltraSonic):
         avgUltraSonic = (leftUltraSonic+rightUltraSonic)/2
         reached = False
@@ -216,7 +282,7 @@ class MyRobotDockingController(Node):
     def odomLinearDocking(self):
         global robot_pose
         reachedExtra = False    
-        X1 =self.getWhichIsGreater(robot_pose[0],robot_pose[1])
+        X1 = self.Whichaxistomove()
         while (reachedExtra == False):
             if X1 == 0:
                 distance=self.distanceSingle(self.targetX,robot_pose[0])
@@ -231,7 +297,31 @@ class MyRobotDockingController(Node):
             speed=self.odomLinearDockingprocess(distance)
             self.moveBot(speed,0.0)
             self.GlobalStopTime(0.1)
-          
+    def UltraOrientation(self):
+        global ultrasonic_value
+        reached = False
+        ultrasonicPid = pid()
+        linearValue = -0.05
+        while (reached == False):
+            m = (ultrasonic_value[1] - ultrasonic_value[0])
+            angularValue,reached = ultrasonicPid.UltraOrientation(m)
+            print("m:",m)
+            self.moveBot(0.0,angularValue)
+            self.GlobalStopTime(0.1)
+    def UltraOrientationLinear(self):
+        global ultrasonic_value
+        reached = False
+        ultrasonicPid = pid()
+        linearValue = -0.05
+        while (reached == False):
+            m = (ultrasonic_value[1] - ultrasonic_value[0])
+            angularValue ,check = ultrasonicPid.UltraOrientation(m)
+            linearValue=-0.05
+            self.moveBot(linearValue,angularValue)
+            avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
+            if avgUltraSonic <14:
+                reached = True
+            self.GlobalStopTime(0.1)    
     def AngularDocking(self):   
         yaw = False
         botPid = pid()
@@ -252,17 +342,24 @@ class MyRobotDockingController(Node):
             robot_pose[0] = round(msg.pose.pose.position.x,2)
             robot_pose[1] = round(msg.pose.pose.position.y,2)
             robot_pose[3] = round(msg.pose.pose.position.z,2)
+        
         def imu_callback(msg):
             global robot_pose
-            # quaternion_array = msg.orientation
-            # orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
-            # _, _, yaw = euler_from_quaternion(orientation_list)
-            yaw = math.degrees(msg.data)
-            robot_pose[2] = round(yaw,2)
+            quaternion_array = msg.orientation
+            orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
+            _, _, yaw = euler_from_quaternion(orientation_list)
+            # yaw = msg.data
+            # if yaw > 3.14:
+            #     yaw_new = (6.28 - yaw) * 1
+            # else:
+            #     yaw_new = yaw * -1
+            # print(yaw_new)
+            yaw = math.degrees(yaw)
+            # robot_pose[2] = round(yaw,2)
         def ultrasonic_callback(msg):
             global ultrasonic_value
-            ultrasonic_value[0] = round(msg.data[4],2)
-            ultrasonic_value[1] = round(msg.data[5],2)  
+            ultrasonic_value[0] = round(msg.data[4],4)
+            ultrasonic_value[1] = round(msg.data[5],4)  
             # print("ultrasonic_value",ultrasonic_value)
         if self.is_docking:
             # ...
@@ -278,7 +375,7 @@ class MyRobotDockingController(Node):
             executor_thread = Thread(target=executor.spin, daemon=True, args=())
             executor_thread.start()
             dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
-            dockingNode.imu_sub = dockingNode.create_subscription(Float32, '/orientation', imu_callback, 10)
+            dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10)
             dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
             dockingNodeClock = dockingNode.get_clock()
             def StopTime(StopSeconds):
@@ -295,16 +392,25 @@ class MyRobotDockingController(Node):
                 twist.angular.z = 0.0
                 self.nav2speedPub.publish(twist)
                 StopTime(0.1) 
+            StopTime(2.0)
+            while ultrasonic_value[0] <2.0 or ultrasonic_value[1] < 2.0:
+                StopTime(0.1)
+                print("waitng for ultraSonic",ultrasonic_value)
+            
+            print("ultrasonic_value_left",ultrasonic_value[0],"ultrasonic_value_right",ultrasonic_value[1])
             self.AngularDocking()
             stopBot(0.1)
             # #orientation done
-            # if not self.rackName=="initalPose":
-            #     if self.isAttach:
-            #         self.UltraLinearDocking()
-            #         stopBot(0.1)
-            #     else:
-            #         self.odomLinearDocking()
-            #         stopBot(0.1) 
+            if self.isAttach:
+                self.switch_eletromagent(True)
+                self.UltraOrientation()
+                stopBot(0.1)
+                self.UltraOrientationLinear()
+                stopBot(0.1)
+            else:
+                # self.odomLinearDocking()
+                stopBot(0.1) 
+                self.switch_eletromagent(False)
             #     #linear done
             #     self.AngularDocking()
             #     stopBot(0.1)
@@ -352,7 +458,6 @@ class MyRobotDockingController(Node):
             # self.get_logger().info("Waiting for alignment...")
             
             rate.sleep()
-
         # Set the service response indicating success
         response.success = True
         
@@ -364,7 +469,7 @@ class MyRobotDockingController(Node):
 def main(args=None):
     
     my_robot_docking_controller = MyRobotDockingController()
-    executor = MultiThreadedExecutor(3)
+    executor = MultiThreadedExecutor(2)
     executor.add_node(my_robot_docking_controller)
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
