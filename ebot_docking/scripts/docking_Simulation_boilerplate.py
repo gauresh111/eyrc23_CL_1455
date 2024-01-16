@@ -39,7 +39,7 @@ class pid():
         self.linearKp = 0.5
         self.error = 0
         self.lastError = 0
-        self.odomLinear = 0.5
+        self.odomLinear = 0.2
         self.ultraKp=0.08
     def computeAngle(self ,setPoint, Input,X,Y):
         error = Input - setPoint                                         
