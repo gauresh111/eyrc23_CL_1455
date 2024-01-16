@@ -120,6 +120,7 @@ class MyRobotDockingController(Node):
         self.rackName = ""
         self.isAttach = False
         self.globalnodeClock = self.get_clock()
+        self.isRackDetach = False
         #         
         # 
         # 
@@ -213,20 +214,7 @@ class MyRobotDockingController(Node):
         
     def distanceSingle(self,x1, x2):
         return math.sqrt((x1 - x2) ** 2)*1.0
-    def UltralinearDockingprocess(self,leftUltraSonic,rightUltraSonic):
-        avgUltraSonic = (leftUltraSonic+rightUltraSonic)/2
-        reached = False
-        if avgUltraSonic <0.14:
-            reached = True
-        linearPid = pid()
-        return linearPid.computeLinear(avgUltraSonic,0.1),reached
-    def UltraLinearDocking(self):
-        reached = False    
-        while (reached == False):
-            X,reached=self.UltralinearDockingprocess(ultrasonic_value[0],ultrasonic_value[1]) 
-            print("usrleft_value:",ultrasonic_value[0]," usrright_value:",ultrasonic_value[1]," Reached:",reached)
-            self.moveBot(X,0.0)
-            self.GlobalStopTime(0.1)
+    
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
         if InputDistance <0.12:   
@@ -380,6 +368,14 @@ class MyRobotDockingController(Node):
                 self.is_docking = True
                 self.dock_aligned=False
                 print("Rack detached")
+            def rackAttach():
+                self.UltraOrientation()
+                stopBot(0.1)
+                self.UltraOrientationLinear()
+                stopBot(0.1)
+                stopBot(0.15,-0.05,0.0)
+                stopBot(0.1)
+                attachRack(self.rackName)
             for i in range(2):
                 self.moveBot(0.0,0.0)   
                 twist = Twist()
@@ -390,19 +386,17 @@ class MyRobotDockingController(Node):
             while ultrasonic_value[0] <2.0 or ultrasonic_value[1] < 2.0:
                 StopTime(0.1)
                 print("waitng for ultraSonic",ultrasonic_value)
+            if self.isRackDetach:
+                rackAttach()
+                self.is_docking = False
+                self.dock_aligned=True
+                return None
             self.AngularDocking()
             stopBot(0.1)
             # #orientation done
             if self.isAttach:
-                
                 print(self.rackName,"rackName")
-                self.UltraOrientation()
-                stopBot(0.1)
-                self.UltraOrientationLinear()
-                stopBot(0.1)
-                stopBot(0.15,-0.05,0.0)
-                stopBot(0.1)
-                attachRack(self.rackName)
+                rackAttach()
             else:
                 self.odomLinearDocking()
                 stopBot(0.1) 
@@ -434,6 +428,7 @@ class MyRobotDockingController(Node):
         self.targetYaw = request.orientation
         self.rackName = request.rack_no
         self.isAttach = request.rack_attach
+        self.isRackDetach = request.is_rack_detached
         # Reset flags and start the docking process
         #
         #

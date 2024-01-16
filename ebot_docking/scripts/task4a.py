@@ -12,6 +12,9 @@ from geometry_msgs.msg import Polygon,Point32
 import time
 import math
 from std_msgs.msg import Bool
+from sensor_msgs.msg import Range
+global ultrasonic_value
+ultrasonic_value = [0.0,0.0]
 def main():
     rclpy.init()
     navigator = BasicNavigator()
@@ -76,11 +79,43 @@ def main():
         
         navigator.goToPose(goalPose)
         i = 0
-
+        UltraSoniceForNAv2 = Node("UltraSoniceForNAv2")
+        UltraSoniceForNAv2_executor = rclpy.executors.MultiThreadedExecutor(1)
+        UltraSoniceForNAv2_executor.add_node(UltraSoniceForNAv2)
+        executor_thread = Thread(target=UltraSoniceForNAv2_executor.spin, daemon=True, args=())
+        executor_thread.start()
         # Keep doing stuff as long as the robot is moving towards the goal
+        global ultrasonic_value
+        ultrasonic_value = [0.0,0.0]
+        def ultrasonic_rl_callback(msg):
+            global ultrasonic_value
+            ultrasonic_value[0] = round(msg.range,3)
+            ultrasonic_value[0] = ultrasonic_value[0]*100
+
+        def ultrasonic_rr_callback(msg):
+            global ultrasonic_value
+            ultrasonic_value[1] = round(msg.range,3)
+            ultrasonic_value[1] = ultrasonic_value[1]*100
+        UltraSoniceForNAv2.ultrasonic_rl_sub = UltraSoniceForNAv2.create_subscription(Range, '/ultrasonic_rl/scan', ultrasonic_rl_callback, 10)
+        UltraSoniceForNAv2.ultrasonic_rr_sub = UltraSoniceForNAv2.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10)
+        
         while not navigator.isTaskComplete():
-            i = i + 1
-            print("moving to ",positionName)
+            if positionName == "Arm_pose":
+                print("moving to ",positionName," ",ultrasonic_value)
+                if (ultrasonic_value[0]+ultrasonic_value[1])/2 >=16:
+                    navigator.cancelTask()
+                    
+                    UltraSoniceForNAv2.dockingClient = UltraSoniceForNAv2.create_client(DockSw, '/dock_control')
+                    UltraSoniceForNAv2.dockingRequest = DockSw.Request()
+                    UltraSoniceForNAv2.dockingRequest.rack_no = rack_no
+                    UltraSoniceForNAv2.dockingRequest.is_rack_detached = True
+                    future = UltraSoniceForNAv2.dockingClient.call_async(UltraSoniceForNAv2.dockingRequest)
+                    rclpy.spin_until_future_complete(UltraSoniceForNAv2, future)
+                    navigator.goToPose(goalPose)
+                rclpy.spin_once(UltraSoniceForNAv2, timeout_sec=0.1)
+
+        
+        UltraSoniceForNAv2.destroy_node()
         result = navigator.getResult()
         quaternion_array = goalPose.pose.orientation
         orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
@@ -95,6 +130,7 @@ def main():
         dockingNodecli.dockingRequest.orientation = round(yaw,2)
         dockingNodecli.dockingRequest.rack_no = rack_no
         dockingNodecli.dockingRequest.rack_attach=israck
+        dockingNodecli.dockingRequest.is_rack_detached = False
         future = dockingNodecli.dockingClient.call_async(dockingNodecli.dockingRequest)
         rclpy.spin_until_future_complete(dockingNodecli, future)
         dockingNodecli.destroy_node()
