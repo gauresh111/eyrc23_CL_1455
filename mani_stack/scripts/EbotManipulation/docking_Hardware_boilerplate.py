@@ -408,6 +408,8 @@ class MyRobotDockingController(Node):
             else:
                 # self.odomLinearDocking()
                 stopBot(0.1) 
+                stopBot(0.8,-0.2,0.0) 
+                stopBot(0.4) 
                 switch_eletromagent(False)
             #     #linear done
             #     self.AngularDocking()
