@@ -330,7 +330,7 @@ class MyRobotDockingController(Node):
         def ultrasonic_callback(msg):
             global ultrasonic_value
             ultrasonic_value[0] = round(msg.data[4],4)
-            ultrasonic_value[1] = round(msg.data[5],4)  
+            ultrasonic_value[1] = round(msg.data[5],4)
             # print("ultrasonic_value",ultrasonic_value)
         if self.is_docking:
             # ...
@@ -341,7 +341,7 @@ class MyRobotDockingController(Node):
             global ultrasonic_value
             dockingNode = Node("GlobalNodeDocking")
             
-            docking_executor = MultiThreadedExecutor(1)
+            docking_executor = MultiThreadedExecutor(2)
             docking_executor.add_node(dockingNode)
             executor_thread = Thread(target=docking_executor.spin, daemon=True, args=())
             executor_thread.start()
@@ -365,17 +365,20 @@ class MyRobotDockingController(Node):
                 request_relay = RelaySw.Request()
                 request_relay.relaychannel = True
                 request_relay.relaystate = relayState
-                request_relay.rackname = self.rackName
+                request_relay.rackname = "rack3"
                 dockingNode.usb_relay_service_resp=dockingNode.trigger_usb_relay.call_async(request_relay)
                 self.is_docking = False
                 self.dock_aligned=True
-                rclpy.spin_until_future_complete(dockingNode, dockingNode.usb_relay_service_resp,docking_executor,1.0)
+                while dockingNode.usb_relay_service_resp is None:
+                    rclpy.spin_once(dockingNode)
+                # rclpy.spin_until_future_complete(dockingNode, dockingNode.usb_relay_service_resp,docking_executor)
                 self.is_docking = True
                 self.dock_aligned=False
                 if(dockingNode.usb_relay_service_resp.result().success== True):
                     dockingNode.get_logger().info(dockingNode.usb_relay_service_resp.result().message)
                 else:
                     dockingNode.get_logger().warn(dockingNode.usb_relay_service_resp.result().message)
+                rclpy.spin_once(dockingNode)
             def rackAttach():
                 switch_eletromagent(True)
                 self.UltraOrientation()
@@ -406,21 +409,12 @@ class MyRobotDockingController(Node):
             # #orientation done
             if self.isAttach:
                 rackAttach()
+                    # print("ultrasonic_value_left",ultrasonic_value[0],"ultrasonic_value_right",ultrasonic_value[1])
             else:
                 # self.odomLinearDocking()
                 stopBot(0.1) 
                 switch_eletromagent(False)
-            #     #linear done
-            #     self.AngularDocking()
-            #     stopBot(0.1)
-            #     #orientation done
-            #     print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
-            #     if self.isAttach:
-            #         self.switch_eletromagent(True)
-            #     else :
-            #         self.switch_eletromagent(False)
-            #         stopBot(0.1,2.0,0.0)
-            #         stopBot(0.1,0.0,0.0)
+           
             self.is_docking = False
             self.dock_aligned=True
             ## docking and orientation done

@@ -59,7 +59,7 @@ def main():
         heading = round(yaw,2)
     def usb_relay_sw_callback(request, response):
         print("usb_relay_sw_callback")
-        result = ""
+        result = False
         if request.relaystate == True:
             req = AttachLink.Request()
             req.model1_name =  'ebot'     
@@ -67,7 +67,7 @@ def main():
             req.model2_name =  request.rackname       
             req.link2_name  = 'link'
             duplicateNode.future = duplicateNode.link_attach_cli.call_async(req) 
-            
+            result = True
             print("Rack attached")
         else:
         
