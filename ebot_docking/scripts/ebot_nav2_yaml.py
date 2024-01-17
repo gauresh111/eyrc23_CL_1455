@@ -119,21 +119,21 @@ def main():
         add_docking_position(rackName,xyz,quaternions,offsetXY,yaw)
     print(dockingPosition)
     rackPresentSub=[-1]
-    # while(-1 in rackPresentSub):
-    #         time.sleep(0.1)
-    #         print("waiting for ap list Node")
-    #         print("rackPresentSub",rackPresentSub)
-    #         # print("Key found:",rackName, value)
-    # if "-2" not in rackPresentSub:
-    #     for boxPresent in rackPresentSub:
-    #         node.ArmManipulationRequest.ap_name = boxPresent
-    #         node.ArmManipulationRequest.box_id = int(boxPresent[-1])
-    #         node.ArmManipulationRequest.total_racks = totalRacks
-    #         node.ArmManipulationRequest.starting = True
-    #         print("going to racks",node.ArmManipulationRequest)
-    #         del dockingPosition[boxPresent] 
-    #         package_id.remove(int(boxPresent[-1]))
-    #         futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
+    while(-1 in rackPresentSub):
+            time.sleep(0.1)
+            print("waiting for ap list Node")
+            print("rackPresentSub",rackPresentSub)
+            # print("Key found:",rackName, value)
+    if "-2" not in rackPresentSub:
+        for boxPresent in rackPresentSub:
+            node.ArmManipulationRequest.ap_name = boxPresent
+            node.ArmManipulationRequest.box_id = int(boxPresent[-1])
+            node.ArmManipulationRequest.total_racks = totalRacks
+            node.ArmManipulationRequest.starting = True
+            print("going to racks",node.ArmManipulationRequest)
+            del dockingPosition[boxPresent] 
+            package_id.remove(int(boxPresent[-1]))
+            futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
     def distance(p1, p2):
         return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
     def findNearestAp(X,Y):
