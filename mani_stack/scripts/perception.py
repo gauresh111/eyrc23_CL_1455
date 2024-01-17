@@ -553,8 +553,8 @@ class aruco_tf(Node):
         #       Refer MD book on portal for sample image -> https://portal.e-yantra.org/
         
         try:
-            cv2.imshow("aruco_image", arucoImageWindow)
-            cv2.waitKey(1)
+            # cv2.imshow("aruco_image", arucoImageWindow)
+            # cv2.waitKey(1)
             tempStr = " "
             tempName = " "
             aruco_string = String()

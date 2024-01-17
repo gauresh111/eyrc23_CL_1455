@@ -251,7 +251,7 @@ class MyRobotDockingController(Node):
                 if distance < 0.15:
                     reachedExtra = True
                 print("X: target",self.targetX,"current",robot_pose[0],"distance",distance)
-            elif X1 == 1:
+            else:
                 distance=self.distanceSingle(self.targetY,robot_pose[1])
                 if distance < 0.15:
                     reachedExtra = True
@@ -282,12 +282,12 @@ class MyRobotDockingController(Node):
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
-        linearValue = -0.05
+        linearValue = -0.1
         while (reached == False):
             try:
                 m = (ultrasonic_value[1] - ultrasonic_value[0])
                 angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
-                linearValue=-0.05
+                linearValue=-0.1
             except ZeroDivisionError:
                 m = 0.0
                 angularValue=0.0
