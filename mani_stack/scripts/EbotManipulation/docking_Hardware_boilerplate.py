@@ -365,16 +365,19 @@ class MyRobotDockingController(Node):
                 request_relay = RelaySw.Request()
                 request_relay.relaychannel = True
                 request_relay.relaystate = relayState
-                dockingNode.usb_relay_service_resp=dockingNode.trigger_usb_relay.call_async(request_relay)
+                
+                dockingNode.future=dockingNode.trigger_usb_relay.call_async(request_relay)
                 self.is_docking = False
                 self.dock_aligned=True
-                rclpy.spin_until_future_complete(dockingNode, dockingNode.usb_relay_service_resp,docking_executor,1.0)
+                while(dockingNode.future.result() is  None):
+                    stopBot(0.1)
                 self.is_docking = True
                 self.dock_aligned=False
-                if(dockingNode.usb_relay_service_resp.result().success== True):
-                    dockingNode.get_logger().info(dockingNode.usb_relay_service_resp.result().message)
+                if(dockingNode.future.result().success== True):
+                    dockingNode.get_logger().info(dockingNode.future.result().message)
                 else:
-                    dockingNode.get_logger().warn(dockingNode.usb_relay_service_resp.result().message)
+                    dockingNode.get_logger().warn(dockingNode.future.result().message)
+                
             def rackAttach():
                 switch_eletromagent(True)
                 self.UltraOrientation()
