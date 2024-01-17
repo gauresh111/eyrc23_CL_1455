@@ -196,9 +196,9 @@ def main():
                 angle -= 2 * math.pi
         else:
             if angle < -180:
-                angle += 360
+                angle += 180
             elif angle > 180:
-                angle -= 360
+                angle -= 180
         
         return angle
     
