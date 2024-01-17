@@ -372,11 +372,10 @@ class MyRobotDockingController(Node):
                 req.model2_name =  rackName       
                 req.link2_name  = 'link'
                 dockingNode.future = dockingNode.link_attach_cli.call_async(req) 
-                self.is_docking = False
-                self.dock_aligned=True
-                rclpy.spin_until_future_complete(dockingNode, dockingNode.future,docking_executor,1.0) 
-                self.is_docking = True
-                self.dock_aligned=False
+                
+                # rclpy.spin_until_future_complete(dockingNode, dockingNode.future,docking_executor,1.0) 
+                while dockingNode.future is None :
+                    stopBot(0.1)
                 # print("RelayNode.future.result()",RelayNode.future)
                 print("Rack attached")
             def detachRack(rackName):
@@ -388,11 +387,8 @@ class MyRobotDockingController(Node):
                 req.link2_name  = 'link'  
                 
                 dockingNode.future = dockingNode.lind_detached_cli.call_async(req)
-                self.is_docking = False
-                self.dock_aligned=True
-                rclpy.spin_until_future_complete(dockingNode, dockingNode.future,docking_executor,1.0) 
-                self.is_docking = True
-                self.dock_aligned=False
+                while dockingNode.future is None :
+                    stopBot(0.1)
                 print("Rack detached")
             for i in range(2):
                 self.moveBot(0.0,0.0)   
