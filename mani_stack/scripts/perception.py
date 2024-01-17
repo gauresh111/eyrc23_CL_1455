@@ -359,6 +359,14 @@ class aruco_tf(Node):
             self.cv_image = image.copy()
         except:
             pass
+
+    def normalizeAngle(self,angle: int):
+        if angle < -180:
+            angle += 360
+        elif angle > 180:
+            angle -= 360
+        return angle
+    
     def nearest_angle(self,angle):
         if angle < -180:
             angle += 360
@@ -403,6 +411,7 @@ class aruco_tf(Node):
         focalY = 931.1829833984375
 
         aruco_name_list = []
+        aruco_angle_list = []
         rackName = []
         ############ ADD YOUR CODE HERE ############
 
@@ -529,12 +538,16 @@ class aruco_tf(Node):
                 transformStamped.transform.rotation.w = tranform.transform.rotation.w
                 self.br.sendTransform(transformStamped)
                 aruco_name_list.append("obj_" + str(id))
-                angleDegree=math.degrees(-angle[1])
+                angleDegree=int(math.degrees(-angle[1]))
+                print("angleDegree:", angleDegree)
+                tempValue = self.normalizeAngle(angleDegree)
+                # aruco_angle_list.append(self.normalizeAngle(1))
+                print("angle:", tempValue)
+                aruco_angle_list.append(angleDegree)
                 rackName.append(self.get_rack_name(self.nearest_angle(angleDegree)))
-            except:
-                pass
-
-        
+            except Exception as e:
+                print(e)
+                pass        
 
         #   ->  At last show cv2 image window having detected markers drawn and center points located using 'cv2.imshow' function.
         #       Refer MD book on portal for sample image -> https://portal.e-yantra.org/
@@ -553,6 +566,12 @@ class aruco_tf(Node):
             self.Ap_name_publisher.publish(rack_string)
             print("Rack_string:",rack_string)
             print("Aruco_List:", aruco_string)
+            # if len(aruco_name_list)!=0:
+            #     for name, angle in zip(aruco_name_list, aruco_angle_list):
+            #         print(name+":", angle, end=" ")
+            #     print()
+            print(aruco_name_list)
+            print(aruco_angle_list)
             self.aruco_name_publisher.publish(aruco_string)
         except:
             pass
