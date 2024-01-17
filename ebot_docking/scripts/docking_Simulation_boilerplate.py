@@ -231,12 +231,13 @@ class MyRobotDockingController(Node):
         if InputDistance <0.12:   
             return 0.0
         return odomlinearPid.odomComputeLinear(InputDistance,Setpoint)
-    def Whichaxistomove(self):  
-        if self.targetYaw > 200.0:
+    def Whichaxistomove(self): 
+        yaw = abs(self.targetYaw) 
+        if yaw > 200.0:
             return 1
-        elif self.targetYaw > 150.0:
+        elif yaw > 150.0:
             return 0
-        elif self.targetYaw > 80.0:
+        elif yaw > 80.0:
             return 1
         else:
             return 0
