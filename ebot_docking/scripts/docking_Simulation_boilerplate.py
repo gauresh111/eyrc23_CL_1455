@@ -253,7 +253,7 @@ class MyRobotDockingController(Node):
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
-        linearValue = -0.05
+        
         while (reached == False):
         
             m = (ultrasonic_value[1] - ultrasonic_value[0])
