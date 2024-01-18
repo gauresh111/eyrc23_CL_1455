@@ -409,7 +409,7 @@ def main():
             else:
                 continue
 
-    def moveToPoseWithServo(TargetPose, TargetQuats, QuatsOnly=False, PoseOnly=False):
+    def moveToPoseWithServo(TargetPose, TargetQuats, QuatsOnly=False, PoseOnly=False, TargetYaw = 0):
         global servo_status
         mission_status = True
         moveit2Servo.enable()
@@ -426,8 +426,8 @@ def main():
         )
         TargetEuler =  tf3d.euler.quat2euler([TargetQuats[3], TargetQuats[0], TargetQuats[1], TargetQuats[2]])
         currentEuler = tf3d.euler.quat2euler([currentQuats[3], currentQuats[0], currentQuats[1], currentQuats[2]])
-        TargetEuler = [normalizeAngle(angle, radians=True) for angle in TargetEuler]
-        currentEuler = [normalizeAngle(angle, radians=True) for angle in currentEuler]
+        # TargetEuler = [normalizeAngle(angle, radians=True) for angle in TargetEuler]
+        # currentEuler = [normalizeAngle(angle, radians=True) for angle in currentEuler]
         ax, ay, az = (
             (TargetEuler[0] - currentEuler[0]) / magnitude,
             (TargetEuler[1] - currentEuler[1]) / magnitude,
@@ -441,11 +441,12 @@ def main():
         
         if QuatsOnly == True:
             print("Servoing Quats Only")
-            if currentEuler[0] >= TargetEuler[0]:
+            TargetYaw = math.radians(TargetYaw)
+            if currentEuler[0] >= TargetYaw:
                 az *= -1
             else:
                 az *= 1
-            yawError = TargetEuler[0] - currentEuler[0]
+            yawError = TargetYaw - currentEuler[0]
             print("Yaw Error: ", yawError)
             while abs(yawError) >0.02:
                 moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
@@ -453,7 +454,7 @@ def main():
                 currentEuler = getCurrentPose(
                     TargetPose=TargetPose, TargetQuats=TargetQuats, useEuler=True
                 )[1]
-                yawError = TargetEuler[0] - currentEuler[0]
+                yawError = TargetYaw - currentEuler[0]
                 print("Yaw Error: ", yawError)
                 time.sleep(0.01)
                 if servo_status > 0:
@@ -483,7 +484,7 @@ def main():
         else:
             print("Servoing Pose and Quats")
             while sphericalToleranceAchieved == False:
-                moveWithServo([vx, vy, vz], [ax, ay, az])
+                moveWithServo([vx, vy, vz], [0.0, 0.0, az])
                 # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
                 currentPose, currentQuats = getCurrentPose(
                     TargetPose=TargetPose, TargetQuats=TargetQuats
@@ -662,7 +663,12 @@ def main():
         # while a>0:
         #     a = 5
         print("### Box in-place Yaw Correction")
-        moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions, QuatsOnly=True)
+        if rotation_name == "Left":
+            moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions, QuatsOnly=True, TargetYaw = 90)
+        elif rotation_name == "Right":
+            moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions, QuatsOnly=True, TargetYaw = -90)
+        else:
+            moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions, QuatsOnly=True, TargetYaw = 0)
 
         position, quaternions = getCurrentPose()
         if rotation_name == "Left":
