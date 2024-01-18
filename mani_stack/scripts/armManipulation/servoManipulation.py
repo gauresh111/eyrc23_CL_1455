@@ -152,6 +152,37 @@ def main():
         node.get_logger().info('EEF Tool service not available, waiting again...')
     time.sleep(5)
 
+    def normalizeAngle(angle, radians=False):
+        if radians == True:
+            if angle < -math.pi:
+                angle += 2 * math.pi
+            elif angle > math.pi:
+                angle -= 2 * math.pi
+        else:
+            if angle < -180:
+                angle += 180
+            elif angle > 180:
+                angle -= 180
+        
+        return angle
+    
+    def nearestAngle(angle, radians=False):
+        if radians == True:
+            if abs(angle) < math.pi/4:
+                nearest = 0
+            elif abs(angle) < 3*math.pi/4:
+                nearest = math.pi/2 if angle > 0 else -math.pi/2
+            else:
+                nearest = math.pi if angle > 0 else -math.pi
+        else:
+            if abs(angle) < 45:
+                nearest = 0
+            elif abs(angle) < 135:
+                nearest = 90 if angle > 0 else -90
+            else:
+                nearest = 180 if angle > 0 else -180
+        return nearest
+
     arucoData = []
 
     while len(arucoData) < len(aruco_name_list):
@@ -185,18 +216,19 @@ def main():
                 arucoData[i].eulerAngles = tf3d.euler.quat2euler(
                     arucoData[i].quaternions
                 )
+                angles = tf3d.euler.quat2euler([arucoData[i].quaternions[3], arucoData[i].quaternions[0], arucoData[i].quaternions[1], arucoData[i].quaternions[2]])
+                angles = [math.degrees(angle) for angle in angles]
+                angles = [normalizeAngle(angle, radians=True) for angle in angles]
+                #subtract 90 from all angles
+                angles = [angle - 90 for angle in angles]
+                yaw = angles[2]
+
                 if (
-                    round(arucoData[i].quaternions[0], 1) == arucoPossibleAngles["left"][0]
-                    and round(arucoData[i].quaternions[1], 1) == arucoPossibleAngles["left"][1]
-                    and round(arucoData[i].quaternions[2], 1) == arucoPossibleAngles["left"][2]
-                    and round(arucoData[i].quaternions[3], 1) == arucoPossibleAngles["left"][3]
-                    ):
+                    nearestAngle(yaw) == 90.0
+                ):
                     arucoData[i].rotationName = "Left"
                 elif (
-                round(arucoData[i].quaternions[0], 1) == arucoPossibleAngles["right"][0]
-                and round(arucoData[i].quaternions[1], 1) == arucoPossibleAngles["right"][1]
-                and round(arucoData[i].quaternions[2], 1) == arucoPossibleAngles["right"][2]
-                and round(arucoData[i].quaternions[3], 1) == arucoPossibleAngles["right"][3]
+                    nearestAngle(yaw) == -90.0
                 ):
                     arucoData[i].rotationName = "Right"
                 else:
@@ -351,7 +383,7 @@ def main():
             else:
                 continue
 
-    def moveToPoseWithServo(TargetPose, TargetQuats, QuatsOnly=False, PoseOnly=False):
+    def moveToPoseWithServo(TargetPose, TargetQuats, QuatsOnly=False, PoseOnly=False, TargetYaw = 0):
         switch_controller(useMoveit=False)
         global servo_status
         mission_status = True
@@ -367,8 +399,10 @@ def main():
             (TargetPose[1] - currentPose[1]) / magnitude,
             (TargetPose[2] - currentPose[2]) / magnitude,
         )
-        TargetEuler = tf3d.euler.quat2euler([TargetQuats[3], TargetQuats[0], TargetQuats[1], TargetQuats[2]])
+        TargetEuler =  tf3d.euler.quat2euler([TargetQuats[3], TargetQuats[0], TargetQuats[1], TargetQuats[2]])
         currentEuler = tf3d.euler.quat2euler([currentQuats[3], currentQuats[0], currentQuats[1], currentQuats[2]])
+        # TargetEuler = [normalizeAngle(angle, radians=True) for angle in TargetEuler]
+        # currentEuler = [normalizeAngle(angle, radians=True) for angle in currentEuler]
         ax, ay, az = (
             (TargetEuler[0] - currentEuler[0]) / magnitude,
             (TargetEuler[1] - currentEuler[1]) / magnitude,
@@ -382,19 +416,20 @@ def main():
         
         if QuatsOnly == True:
             print("Servoing Quats Only")
-            if currentEuler[0] >= TargetEuler[0]:
+            TargetYaw = math.radians(TargetYaw)
+            if currentEuler[0] >= TargetYaw:
                 az *= -1
             else:
                 az *= 1
-            yawError = TargetEuler[0] - currentEuler[0]
+            yawError = TargetYaw - currentEuler[0]
             print("Yaw Error: ", yawError)
             while abs(yawError) >0.02:
-                moveWithServo([0.0, 0.0, 0.01], [0.0, 0.0, az])
+                moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
                 # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
                 currentEuler = getCurrentPose(
                     TargetPose=TargetPose, TargetQuats=TargetQuats, useEuler=True
                 )[1]
-                yawError = TargetEuler[0] - currentEuler[0]
+                yawError = TargetYaw - currentEuler[0]
                 print("Yaw Error: ", yawError)
                 time.sleep(0.01)
                 if servo_status > 0:
@@ -426,7 +461,7 @@ def main():
         else:
             print("Servoing Pose and Quats")
             while sphericalToleranceAchieved == False:
-                moveWithServo([vx, vy, vz+0.01], [ax, ay, az])
+                moveWithServo([vx, vy, vz], [0.0, 0.0, az])
                 # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
                 currentPose, currentQuats = getCurrentPose(
                     TargetPose=TargetPose, TargetQuats=TargetQuats
@@ -586,10 +621,23 @@ def main():
         # while a>0:
         #     a = 5
         print("### Box in-place Yaw Correction")
-        moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions, QuatsOnly=True)
-        # newMidPose = [position[0] / 2, position[1] / 2, midPosition[2]]
+        if rotation_name == "Left":
+            moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions, QuatsOnly=True, TargetYaw = 90)
+        elif rotation_name == "Right":
+            moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions, QuatsOnly=True, TargetYaw = -90)
+        else:
+            moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions, QuatsOnly=True, TargetYaw = 0)
+
+        position, quaternions = getCurrentPose()
+        if rotation_name == "Left":
+            midPosition = [position[0], position[1] - 0.23, position[2]]
+        elif rotation_name == "Right":
+            midPosition = [position[0], position[1] + 0.23, position[2]]
+        else:
+            midPosition = [position[0] - 0.23, position[1], position[2]]
+
         print("### Pulling Box Out")
-        moveToPoseWithServo(TargetPose=midPosition, TargetQuats=quaternions)
+        moveToPoseWithServo(TargetPose=midPosition, TargetQuats=quaternions, PoseOnly=True)
         # if servo_status > 0:
         #         print("Exited next While Loop due to Servo Error", servo_status)
         #         continue
@@ -623,37 +671,48 @@ def main():
 
     
     collisionObjectDistances = {"left": 0.0, "front": 0.0, "right": 0.0}
+    # def decideRequiredCollisionRacks():
     left_flag, front_flag, right_flag = False, False, False
     for aruco in arucoData:
+        angles = tf3d.euler.quat2euler([aruco.quaternions[3], aruco.quaternions[0], aruco.quaternions[1], aruco.quaternions[2]])
+        angles = [math.degrees(angle) for angle in angles]
+        angles = [normalizeAngle(angle, radians=True) for angle in angles]
+        #subtract 90 from all angles
+        angles = [angle - 90 for angle in angles]
+        yaw = angles[2]
+        print(aruco.name+":", angles)
+
         if left_flag == False:
+            # print(aruco.name)
+            print("Left Nearest:",nearestAngle(yaw))
             if (
-                round(aruco.quaternions[0], 1) == arucoPossibleAngles["left"][0]
-                and round(aruco.quaternions[1], 1) == arucoPossibleAngles["left"][1]
-                and round(aruco.quaternions[2], 1) == arucoPossibleAngles["left"][2]
-                and round(aruco.quaternions[3], 1) == arucoPossibleAngles["left"][3]
+                nearestAngle(yaw) == 90.0
             ):
                 left_flag = True
                 collisionObjectDistances["left"] = round(aruco.position[1], 2) + 0.16
+                print(aruco.name+":", "Left")
+                
+            # print("Left Flag: ", left_flag)
         if front_flag == False:
-            print(aruco.name)
+            # print(aruco.name)
+            print("Front Nearest:",nearestAngle(yaw))
             if (
-                round(aruco.quaternions[0], 1) == arucoPossibleAngles["front"][0]
-                and round(aruco.quaternions[1], 1) == arucoPossibleAngles["front"][1]
-                and round(aruco.quaternions[2], 1) == arucoPossibleAngles["front"][2]
-                and round(aruco.quaternions[3], 1) == arucoPossibleAngles["front"][3]
+                nearestAngle(yaw) == 0.0
             ):
                 front_flag = True
                 collisionObjectDistances["front"] = round(aruco.position[0], 2) + 0.16
+                print(aruco.name+":", "Left")
+            # print("Front Flag: ", front_flag)
         if right_flag == False:
-            print(aruco.name)
+            # print(aruco.name)
+            print("Right Nearest:",nearestAngle(yaw))
             if (
-                round(aruco.quaternions[0], 1) == arucoPossibleAngles["right"][0]
-                and round(aruco.quaternions[1], 1) == arucoPossibleAngles["right"][1]
-                and round(aruco.quaternions[2], 1) == arucoPossibleAngles["right"][2]
-                and round(aruco.quaternions[3], 1) == arucoPossibleAngles["right"][3]
+                nearestAngle(yaw) == -90.0
             ):
                 right_flag = True
                 collisionObjectDistances["right"] = round(aruco.position[2], 2) + 0.0
+                print(aruco.name+":", "Left")
+            # print("Right Flag: ", right_flag)
     print(
         "Left Flag: ", left_flag, "Front Flag: ", front_flag, "Right Flag: ", right_flag
     )
@@ -687,7 +746,7 @@ def main():
             "Right",
             "base_link",
         )
-
+        
     moveit2.add_collision_mesh(
         filepath=floor_file_path,
         id="Floor",
