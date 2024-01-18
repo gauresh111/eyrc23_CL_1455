@@ -368,25 +368,23 @@ class MyRobotDockingController(Node):
                 request_relay.rackname = "rack3"
                 
                 dockingNode.future=dockingNode.trigger_usb_relay.call_async(request_relay)
-                self.is_docking = False
-                self.dock_aligned=True
                 while(dockingNode.future.result() is  None):
                     stopBot(0.1)
-                self.is_docking = True
-                self.dock_aligned=False
+                
                 if(dockingNode.future.result().success== True):
                     dockingNode.get_logger().info(dockingNode.future.result().message)
                 else:
                     dockingNode.get_logger().warn(dockingNode.future.result().message)
                 
             def rackAttach():
-                switch_eletromagent(True)
+                
                 self.UltraOrientation()
                 stopBot(0.1)
                 self.UltraOrientationLinear()
                 stopBot(0.1)
                 stopBot(0.6,-0.08,0.0)
-                
+                stopBot(0.1)
+                switch_eletromagent(True)
             for i in range(2):
                 self.moveBot(0.0,0.0)   
                 twist = Twist()
