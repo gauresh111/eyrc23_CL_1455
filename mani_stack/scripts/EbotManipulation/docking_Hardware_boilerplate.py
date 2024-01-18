@@ -237,14 +237,15 @@ class MyRobotDockingController(Node):
     def distanceSingle(self,x1, x2):
         return math.sqrt((x1 - x2) ** 2)*1.0
     def Whichaxistomove(self):
-        if self.targetYaw == 0.0:
-            return 0
-        elif self.targetYaw == 90.0:
+        yaw = abs(self.targetYaw) 
+        if yaw > 200.0:
             return 1
-        elif self.targetYaw == 180.0:
+        elif yaw > 150.0:
             return 0
-        elif self.targetYaw == 270.0:
-            return 1  
+        elif yaw > 80.0:
+            return 1
+        else:
+            return 0
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
         if InputDistance <0.12:   
@@ -272,7 +273,6 @@ class MyRobotDockingController(Node):
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
-        linearValue = -0.05
         while (reached == False):
             m = (ultrasonic_value[1] - ultrasonic_value[0])
             angularValue,reached = ultrasonicPid.UltraOrientation(m,False)
@@ -287,7 +287,6 @@ class MyRobotDockingController(Node):
         while (reached == False):
             m = (ultrasonic_value[1] - ultrasonic_value[0])
             angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
-            linearValue=-0.05
             self.moveBot(linearValue,angularValue)
             avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
             if avgUltraSonic <19.0:
@@ -324,7 +323,7 @@ class MyRobotDockingController(Node):
                 yaw_new = (6.28 - yaw) * 1
             else:
                 yaw_new = yaw * -1
-            print(yaw_new)
+            # print(yaw_new)
             yaw = math.degrees(yaw_new)
             robot_pose[2] = round(yaw,2)
         def ultrasonic_callback(msg):
