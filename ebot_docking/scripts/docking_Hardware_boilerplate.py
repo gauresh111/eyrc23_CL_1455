@@ -404,7 +404,7 @@ class MyRobotDockingController(Node):
                 rackAttach()
                     # print("ultrasonic_value_left",ultrasonic_value[0],"ultrasonic_value_right",ultrasonic_value[1])
             else:
-                # self.odomLinearDocking()
+                self.odomLinearDocking()
                 stopBot(0.1) 
                 switch_eletromagent(False)
            
