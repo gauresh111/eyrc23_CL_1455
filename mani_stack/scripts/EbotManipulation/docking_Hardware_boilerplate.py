@@ -258,12 +258,12 @@ class MyRobotDockingController(Node):
         while (reachedExtra == False):
             if X1 == 0:
                 distance=self.distanceSingle(self.targetX,robot_pose[0])
-                if distance < 0.15:
+                if distance < 0.02:
                     reachedExtra = True
                 print("X: target",self.targetX,"current",robot_pose[0],"distance",distance)
             elif X1 == 1:
                 distance=self.distanceSingle(self.targetY,robot_pose[1])
-                if distance < 0.15:
+                if distance < 0.02:
                     reachedExtra = True
                 print("Y: target",self.targetY,"current",robot_pose[1],"distance",distance)
             speed=self.odomLinearDockingprocess(distance)
@@ -409,7 +409,7 @@ class MyRobotDockingController(Node):
             else:
                 # self.odomLinearDocking()
                 stopBot(0.1) 
-                stopBot(0.5,-0.2,0.0) 
+                stopBot(0.5,-0.1,0.0) 
                 stopBot(0.4) 
                 switch_eletromagent(False)
             #     #linear done
