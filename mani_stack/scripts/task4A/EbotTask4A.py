@@ -26,7 +26,7 @@ def main():
     global positionToGO
     positionToGO = {
       'Pre_docking_pose':{'xyz' : [1.05, 2.04,0.0] , 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}, 
-      'Arm_pose':{'xyz': [5.0, 0.0,0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}
+      'Arm_pose':{'xyz': [4.6, 0.0,0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}
     }
     withRackFootprint = [ [0.31, 0.50],[0.31, -0.50],[-0.31, -0.50],[-0.31, 0.50] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
