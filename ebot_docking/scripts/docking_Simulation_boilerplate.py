@@ -45,12 +45,12 @@ class pid():
         error = Input - setPoint                                         
         output = self.angleKp * error
         
-        if(output > 0.6):
-            output = 0.6
+        if(output > 1.0):
+            output = 1.0
         elif(output < 0.2 and output > 0.0):
             output = 0.2
-        elif(output < -0.6):
-            output = -0.6
+        elif(output < -1.0):
+            output = -1.0
         elif(output > -0.2 and output < 0.0):
             output = -0.2         
         print("Input",Input,"setPoint",setPoint,"error",error,"output",output)
@@ -265,20 +265,12 @@ class MyRobotDockingController(Node):
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
-        linearValue = -0.1
+        linearValue = -0.2
         while (reached == False):
-            try:
-                m = (ultrasonic_value[1] - ultrasonic_value[0])
-                angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
-                linearValue=-0.1
-            except ZeroDivisionError:
-                m = 0.0
-                angularValue=0.0
-                linearValue=0.0
-            except KeyboardInterrupt:
-                self.destroy_node()
-                rclpy.shutdown()
-                exit(0)
+
+            m = (ultrasonic_value[1] - ultrasonic_value[0])
+            angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
+
             self.moveBot(linearValue,angularValue)
             avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
             if avgUltraSonic <18.0:
@@ -376,8 +368,8 @@ class MyRobotDockingController(Node):
                     stopBot(0.1)
                 print("Rack detached")
             def rackAttach():
-                self.UltraOrientation()
-                stopBot(0.1)
+                # self.UltraOrientation()
+                # stopBot(0.1)
                 self.UltraOrientationLinear()
                 stopBot(0.1)
                 stopBot(0.15,-0.05,0.0)
@@ -405,8 +397,8 @@ class MyRobotDockingController(Node):
                 print(self.rackName,"rackName")
                 rackAttach()
             else:
-                # self.odomLinearDocking()
-                stopBot(0.8,-0.2,0.0) 
+                self.odomLinearDocking()
+                # stopBot(0.8,-0.2,0.0) 
                 stopBot(0.4) 
                 detachRack(self.rackName)
                 

@@ -178,6 +178,11 @@ def main():
         print("going to racks",node.nav2RackRequest)
         futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
         counter=0
+        for i in range(2):
+            msg = Bool()
+            msg.data = False
+            node.racksApsPub.publish(msg)
+            time.sleep(0.1)
         while(futureArm.result() is  None and counter<10):
             try:
                 # node.aruco_name_publisher.publish(box_string)
