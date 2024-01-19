@@ -137,7 +137,9 @@ class MyRobotDockingController(Node):
 
         self.request_odom_reset = Trigger.Request()
         self.odom_service_resp=self.reset_odom_ebot.call_async(self.request_odom_reset)
-        rclpy.spin_until_future_complete(self, self.odom_service_resp)
+        while self.odom_service_resp is None:
+            self.GlobalStopTime(0.1)
+        # rclpy.spin_until_future_complete(self, self.odom_service_resp)
         if(self.odom_service_resp.result().success== True):
             self.get_logger().info(self.odom_service_resp.result().message)
         else:
@@ -151,7 +153,8 @@ class MyRobotDockingController(Node):
 
         request_imu_reset = Trigger.Request()
         self.imu_service_resp=self.reset_imu_ebot.call_async(request_imu_reset)
-        rclpy.spin_until_future_complete(self, self.imu_service_resp)
+        while self.imu_service_resp is None:
+            self.GlobalStopTime(0.1)
         if(self.imu_service_resp.result().success== True):
             self.get_logger().info(self.imu_service_resp.result().message)
         else:
