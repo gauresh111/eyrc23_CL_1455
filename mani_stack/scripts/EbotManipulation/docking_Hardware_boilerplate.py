@@ -40,7 +40,7 @@ class pid():
         self.error = 0
         self.lastError = 0
         self.odomLinear = 0.5
-        self.ultraKp=0.08
+        self.ultraKp=0.01
     def computeAngle(self ,setPoint, Input,X,Y):
         error = Input - setPoint                                         
         output = self.angleKp * error
@@ -75,7 +75,7 @@ class pid():
         output = self.ultraKp * error
         output = round(output,3)
         result = False
-        if abs(round(error,3))<=0.3:
+        if abs(round(error,3))<=10.0:
             result = True 
         mode=""
         if isLinear:
@@ -123,9 +123,9 @@ class MyRobotDockingController(Node):
         # 
         # 
         # 
-        for i in range(2):
-            self.reset_imu()                                    # Reset IMU data
-            self.reset_odom()                                   # Reset Odom
+        # for i in range(2):
+        #     self.reset_imu()                                    # Reset IMU data
+        #     self.reset_odom()                                   # Reset Odom
         # Initialize a timer for the main control loop
         self.controller_timer = self.create_timer(0.1, self.controller_loop)
 
@@ -140,10 +140,10 @@ class MyRobotDockingController(Node):
         while self.odom_service_resp is None:
             self.GlobalStopTime(0.1)
         # rclpy.spin_until_future_complete(self, self.odom_service_resp)
-        if(self.odom_service_resp.result().success== True):
-            self.get_logger().info(self.odom_service_resp.result().message)
-        else:
-            self.get_logger().warn(self.odom_service_resp.result().message)
+        # if(self.odom_service_resp.result().success== True):
+        #     self.get_logger().info(self.odom_service_resp.result().message)
+        # else:
+        #     self.get_logger().warn(self.odom_service_resp.result().message)
 
     def reset_imu(self):
         self.get_logger().info('Resetting IMU. Please wait...')
@@ -155,10 +155,10 @@ class MyRobotDockingController(Node):
         self.imu_service_resp=self.reset_imu_ebot.call_async(request_imu_reset)
         while self.imu_service_resp is None:
             self.GlobalStopTime(0.1)
-        if(self.imu_service_resp.result().success== True):
-            self.get_logger().info(self.imu_service_resp.result().message)
-        else:
-            self.get_logger().warn(self.imu_service_resp.result().message)
+        # if(self.imu_service_resp.result().success== True):
+        #     self.get_logger().info(self.imu_service_resp.result().message)
+        # else:
+        #     self.get_logger().warn(self.imu_service_resp.result().message)
 
     def moveBot(self,linearSpeedX,angularSpeed):
         twist = Twist()
