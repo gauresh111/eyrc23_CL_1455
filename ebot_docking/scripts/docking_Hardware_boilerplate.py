@@ -320,12 +320,7 @@ class MyRobotDockingController(Node):
             # orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
             # _, _, yaw = euler_from_quaternion(orientation_list)
             yaw = msg.data
-            # if yaw > 3.14:
-            #     yaw_new = (6.28 - yaw) * 1
-            # else:
-            #     yaw_new = yaw * -1
-            # print(yaw_new)
-            # yaw = math.degrees(yaw_new)
+           
             robot_pose[2] = round(yaw,2)
         def ultrasonic_callback(msg):
             global ultrasonic_value
@@ -365,7 +360,7 @@ class MyRobotDockingController(Node):
                 request_relay = RelaySw.Request()
                 request_relay.relaychannel = True
                 request_relay.relaystate = relayState
-                request_relay.rackname = "rack3"
+                request_relay.rackname = self.rackName
                 
                 dockingNode.future=dockingNode.trigger_usb_relay.call_async(request_relay)
                 while(dockingNode.future.result() is  None):
