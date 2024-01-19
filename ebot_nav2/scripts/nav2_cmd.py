@@ -38,6 +38,10 @@ def main():
       'ap2': {'xyz': [1.61,-4.50, 0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, 1.0], 'Yaw': -1.57}, 
       'ap3': {'xyz': [1.61,-0.42, 0.0], 'quaternions': [0.0, 0.0, 0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, -1.0], 'Yaw': 1.57}
        }
+    # positionToGO = {
+    #   'Pre_docking_pose':{'xyz' : [1.30, 2.04,0.0] , 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}, 
+    #   'Arm_pose':{'xyz': [4.6, -0.5 ,0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}
+    # }
     withRackFootprint = [ [0.31, 0.50],[0.31, -0.50],[-0.31, -0.50],[-0.31, 0.50] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
     def add_docking_position(name, xyz, quaternions, xy_offsets,yaw):
