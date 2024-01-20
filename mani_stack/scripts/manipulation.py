@@ -77,7 +77,7 @@ def Arm_manipulation_callback(request, response):
 def main():
     rclpy.init()
 
-    print("Starting Task 1AB Manipulation Servo")
+    print("Starting Task Manipulation Script")
 
     Initial_Pose = ArucoBoxPose()
     Initial_Pose.position = [0.18, 0.10, 0.46]
@@ -241,7 +241,8 @@ def main():
     global ApQueue, BoxId, totalRacks, isStarting
     while len(ApQueue) == 0:
         time.sleep(0.1)
-    while rackCounter <= totalRacks:
+    dropAngleIterator = 0
+    while rackCounter < totalRacks:
         rackCounter += 1
         print("Rack Counter: ", rackCounter)
         arucoData = []
@@ -451,7 +452,7 @@ def main():
                 TargetPose=TargetPose, TargetQuats=quaternions
             )[0]
             _, magnitude = checkSphericalTolerance(currentPose, TargetPose, tolerance)
-            magnitude *= 3
+            magnitude *= 1.5
             vx, vy, vz = (
                 (TargetPose[0] - currentPose[0]) / magnitude,
                 (TargetPose[1] - currentPose[1]) / magnitude,
@@ -581,7 +582,7 @@ def main():
                     moveit2.add_collision_mesh(
                         filepath=box_file_path,
                         id="currentBox",
-                        position=[0.0, -0.12, 0.11],
+                        position=[0.0, -0.1, 0.11],
                         quat_xyzw=[-0.5, 0.5, 0.5, 0.5],
                         frame_id="tool0",
                     )
@@ -733,14 +734,23 @@ def main():
             if int(re.search(r"\d+", aruco.name).group()) in BoxId:
                 arucoTargets.append(aruco)
 
-        for aruco, drop in zip(arucoTargets, Drop_Joints_List):
+        # for aruco, drop in zip(arucoTargets, Drop_Joints_List):
+        #     moveToPose(
+        #         aruco.position, aruco.quaternions, aruco.name, aruco.rotationName, drop
+        #     )
+        #     BoxId.pop(0)
+        #     # print("Reached ", aruco.name)
+        #     # moveToPose(Drop.position, Drop.quaternions, "Drop")
+        #     # print("Reached Drop")
+        for aruco in arucoTargets:
             moveToPose(
-                aruco.position, aruco.quaternions, aruco.name, aruco.rotationName, drop
+                aruco.position, aruco.quaternions, aruco.name, aruco.rotationName, Drop_Joints_List[dropAngleIterator]
             )
             BoxId.pop(0)
             # print("Reached ", aruco.name)
             # moveToPose(Drop.position, Drop.quaternions, "Drop")
             # print("Reached Drop")
+        dropAngleIterator += 1
     print("done")
     node.destroy_node()
     rclpy.shutdown()

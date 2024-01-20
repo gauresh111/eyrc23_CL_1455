@@ -21,28 +21,28 @@ def generate_launch_description():
         ]],
         shell=True
     )
-    Start_exitNav = ExecuteProcess(
-        cmd=[[
-            'ros2 run mani_stack exitNav2.py',
-        ]],
-        shell=True
-    )
+    # Start_exitNav = ExecuteProcess(
+    #     cmd=[[
+    #         'ros2 run mani_stack exitNav2.py',
+    #     ]],
+    #     shell=True
+    # )
     Start_perceiption = ExecuteProcess( 
                                        cmd=[[
             'ros2 run mani_stack perception.py',
         ]],
         shell=True
     )
-    Start_arm_manipulation = ExecuteProcess(
-        cmd=[[
-            'ros2 run mani_stack servoManipulationQueue.py',
-        ]],
-        shell=True
-    )
+    # Start_arm_manipulation = ExecuteProcess(
+    #     cmd=[[
+    #         'ros2 run mani_stack manipulation.py',
+    #     ]],
+    #     shell=True
+    # )
     return LaunchDescription([
     start_docking,
     start_yaml_controller,
     start_nav2,
-    # Start_perceiption,
-    Start_arm_manipulation
+    Start_perceiption,
+    # Start_arm_manipulation
     ])
