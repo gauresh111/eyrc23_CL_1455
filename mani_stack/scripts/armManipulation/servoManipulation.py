@@ -11,7 +11,7 @@ from pymoveit2 import MoveIt2, MoveIt2Servo
 from pymoveit2.robots import ur5
 import tf2_ros
 import math
-from ur_msgs.srv import SetIO
+from ur_msgs.srv import SetIO #type: ignore
 from controller_manager_msgs.srv import SwitchController 
 # from linkattacher_msgs.srv import AttachLink, DetachLink
 import re
