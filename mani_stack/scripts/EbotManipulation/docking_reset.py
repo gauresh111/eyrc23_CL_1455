@@ -2,7 +2,7 @@
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
-from usb_relay.srv import RelaySw
+from usb_relay.srv import RelaySw # type: ignore
 from threading import Thread
 import time
 

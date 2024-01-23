@@ -18,13 +18,14 @@ from geometry_msgs.msg import Twist
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from mani_stack.srv import DockSw  # Import custom service message
-from usb_relay.srv import RelaySw
+
+from usb_relay.srv import RelaySw # type: ignore
 from std_srvs.srv import Trigger
 import math
 from threading import Thread
 from rclpy.time import Time
 from std_msgs.msg import Bool,Float32MultiArray,Float32
-from sensor_msgs.msg import Imu
+
 rclpy.init()
 global robot_pose
 global ultrasonic_value
@@ -75,7 +76,11 @@ class pid():
         output = self.ultraKp * error
         output = round(output,3)
         result = False
-        if abs(round(error,3))<=10.0:
+        if output > 0.6:
+            output = 0.6
+        elif output < -0.6:
+            output = -0.6
+        if abs(round(error,3))<=5.0:
             result = True 
         mode=""
         if isLinear:
@@ -123,43 +128,11 @@ class MyRobotDockingController(Node):
         # 
         # 
         # 
-        # for i in range(2):
-        #     self.reset_imu()                                    # Reset IMU data
-        #     self.reset_odom()                                   # Reset Odom
+       
         # Initialize a timer for the main control loop
         self.controller_timer = self.create_timer(0.1, self.controller_loop)
 
-    def reset_odom(self):
-        self.get_logger().info('Resetting Odometry. Please wait...')
-        self.reset_odom_ebot = self.create_client(Trigger, 'reset_odom')
-        while not self.reset_odom_ebot.wait_for_service(timeout_sec=1.0):
-            self.get_logger().warn('/reset_odom service not available. Waiting for /reset_odom to become available.')
-
-        self.request_odom_reset = Trigger.Request()
-        self.odom_service_resp=self.reset_odom_ebot.call_async(self.request_odom_reset)
-        while self.odom_service_resp is None:
-            self.GlobalStopTime(0.1)
-        # rclpy.spin_until_future_complete(self, self.odom_service_resp)
-        # if(self.odom_service_resp.result().success== True):
-        #     self.get_logger().info(self.odom_service_resp.result().message)
-        # else:
-        #     self.get_logger().warn(self.odom_service_resp.result().message)
-
-    def reset_imu(self):
-        self.get_logger().info('Resetting IMU. Please wait...')
-        self.reset_imu_ebot = self.create_client(Trigger, 'reset_imu')
-        while not self.reset_imu_ebot.wait_for_service(timeout_sec=1.0):
-            self.get_logger().warn('/reset_imu service not available. Waiting for /reset_imu to become available.')
-
-        request_imu_reset = Trigger.Request()
-        self.imu_service_resp=self.reset_imu_ebot.call_async(request_imu_reset)
-        while self.imu_service_resp is None:
-            self.GlobalStopTime(0.1)
-        # if(self.imu_service_resp.result().success== True):
-        #     self.get_logger().info(self.imu_service_resp.result().message)
-        # else:
-        #     self.get_logger().warn(self.imu_service_resp.result().message)
-
+    
     def moveBot(self,linearSpeedX,angularSpeed):
         twist = Twist()
         twist.linear.x = linearSpeedX
@@ -412,20 +385,12 @@ class MyRobotDockingController(Node):
             else:
                 # self.odomLinearDocking()
                 stopBot(0.1) 
-                stopBot(0.5,-0.1,0.0) 
+                stopBot(0.5,-0.1,0.0) #implement odom docking and camera docking
                 stopBot(0.4) 
                 switch_eletromagent(False)
-            #     #linear done
-            #     self.AngularDocking()
-            #     stopBot(0.1)
-            #     #orientation done
-            #     print("is_robot_within_tolerance",self.is_robot_within_tolerance(robot_pose[0], robot_pose[1], robot_pose[2],self.targetX, self.targetY, self.targetYaw))
-            #     if self.isAttach:
-            #         self.switch_eletromagent(True)
-            #     else :
-            #         self.switch_eletromagent(False)
-            #         stopBot(0.1,2.0,0.0)
-            #         stopBot(0.1,0.0,0.0)
+                stopBot(0.1,2.0,0.0)
+                stopBot(0.1)
+            
             self.is_docking = False
             self.dock_aligned=True
             ## docking and orientation done
