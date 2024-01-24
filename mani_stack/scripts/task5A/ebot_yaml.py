@@ -35,7 +35,6 @@ def add_docking_position(name, xyz, quaternions, xy_offsets):
         'xyz': xyz,
         'quaternions': quaternions,
         'XYoffsets': xy_offsets
-       
     }
 def switch_case(yaw,cordinates):
     x, y = cordinates[0],cordinates[1]
@@ -151,26 +150,24 @@ def main():
                     nearest_ap = ap
         del dockingPosition[nearest_ap]        
         return nearest_ap
-    for data in range(len(package_id)):
+    for boxes in range(len(package_id)):
         print("Start Loop")
         
-        rackName="rack"+str(package_id[data])
+        rackName="rack"+str(package_id[boxes])
         x=dockingPosition[rackName]['xyz'][0]
         y=dockingPosition[rackName]['xyz'][1]
         ap=findNearestAp(x,y)
-        yaw=dockingPosition[rackName]['Yaw']
         x_offset=dockingPosition[rackName]['XYoffsets'][0]
         y_offset=dockingPosition[rackName]['XYoffsets'][1]
         node.nav2RackRequest.rack_name = rackName
-        node.nav2RackRequest.box_id = package_id[data]
+        node.nav2RackRequest.box_id = package_id[boxes]
         node.nav2RackRequest.ap_name = ap
         node.nav2RackRequest.x = x
         node.nav2RackRequest.y = y
-        node.nav2RackRequest.yaw = yaw
         node.nav2RackRequest.offset_x = x_offset
         node.nav2RackRequest.offset_y = y_offset
         node.ArmManipulationRequest.ap_name = ap
-        node.ArmManipulationRequest.box_id = package_id[data]
+        node.ArmManipulationRequest.box_id = package_id[boxes]
         node.ArmManipulationRequest.total_racks = totalRacks
         node.ArmManipulationRequest.starting = False
         print("going to racks",node.nav2RackRequest)
