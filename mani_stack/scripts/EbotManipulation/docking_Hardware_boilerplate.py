@@ -388,6 +388,7 @@ class MyRobotDockingController(Node):
                 stopBot(0.5,-0.1,0.0) #implement odom docking and camera docking
                 stopBot(0.4) 
                 switch_eletromagent(False)
+                #moving ebot back from rack
                 stopBot(0.1,2.0,0.0)
                 stopBot(0.1)
             
