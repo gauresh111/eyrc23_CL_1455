@@ -9,11 +9,12 @@ from scipy.spatial.transform import Rotation as R
 from ebot_docking.srv import RackSw ,ManipulationSw # Import custom service message
 import yaml
 from ament_index_python.packages import get_package_share_directory
-config_folder_name = 'ebot_docking'
+config_folder_name = 'mani_stack'
 from std_msgs.msg import String,Bool
 global dockingPosition
 dockingPosition = {
     'Ap1':{'xyz': [4.6, -0.3 ,0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.0, 0.0] }
+    
     }   
     
 def load_yaml(file_path):
