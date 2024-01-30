@@ -454,9 +454,7 @@ def main():
             mission_status = True
             moveit2Servo.enable()
             sphericalToleranceAchieved = False
-            currentPose, currentQuats = getCurrentPose(
-                TargetPose=TargetPose, TargetQuats=TargetQuats
-            )
+            currentPose, currentQuats = getCurrentPose()
             _, magnitude = checkSphericalTolerance(currentPose, TargetPose, tolerance)
             magnitude *= 3
             vx, vy, vz = (
@@ -493,9 +491,7 @@ def main():
                 while abs(yawError) > 0.02:
                     moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
                     # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
-                    currentEuler = getCurrentPose(
-                        TargetPose=TargetPose, TargetQuats=TargetQuats, useEuler=True
-                    )[1]
+                    currentEuler = getCurrentPose(useEuler=True)[1]
                     yawError = TargetYaw - currentEuler[0]
                     print("Yaw Error: ", yawError)
                     time.sleep(0.01)
@@ -510,9 +506,7 @@ def main():
                 while sphericalToleranceAchieved == False:
                     moveWithServo([vx, vy, vz], [0.0, 0.0, 0.0])
                     # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
-                    currentPose = getCurrentPose(
-                        TargetPose=TargetPose, TargetQuats=TargetQuats
-                    )[0]
+                    currentPose = getCurrentPose()[0]
                     sphericalToleranceAchieved, _ = checkSphericalTolerance(
                         currentPose, TargetPose, tolerance
                     )
@@ -528,9 +522,7 @@ def main():
                 while sphericalToleranceAchieved == False:
                     moveWithServo([vx, vy, vz], [0.0, 0.0, az])
                     # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
-                    currentPose, currentQuats = getCurrentPose(
-                        TargetPose=TargetPose, TargetQuats=TargetQuats
-                    )
+                    currentPose, currentQuats = getCurrentPose()
                     sphericalToleranceAchieved, _ = checkSphericalTolerance(
                         currentPose, TargetPose, tolerance
                     )
@@ -607,7 +599,9 @@ def main():
             ]
             box_name = "box" + str(int(re.search(r"\d+", position_name).group()))
 
-            temp_result = moveToPoseWithServo(TargetPose=position, TargetQuats=quaternions)
+            temp_result = moveToPoseWithServo(
+                TargetPose=position, TargetQuats=quaternions
+            )
             print("Servo Result: ", temp_result)
             global_counter = 0
             while global_counter < 5:
@@ -655,84 +649,83 @@ def main():
                     break
                 global_counter += 1
 
-                print("Tolerance Achieved: Reached Box")
-                time.sleep(0.1)
+            print("Tolerance Achieved: Reached Box")
+            time.sleep(0.1)
 
-                controlGripper("ON", box_name)
-                time.sleep(0.2)
+            controlGripper("ON", box_name)
+            time.sleep(0.2)
 
-                for i in range(3):
-                    moveit2.add_collision_mesh(
-                        filepath=box_file_path,
-                        id="currentBox",
-                        position=[0.0, -0.1, 0.11],
-                        quat_xyzw=[-0.5, 0.5, 0.5, 0.5],
-                        frame_id="tool0",
-                    )
-                    time.sleep(0.2)
-
-                print("### Box in-place Yaw Correction")
-                if rotation_name == "Left":
-                    moveToPoseWithServo(
-                        TargetPose=position,
-                        TargetQuats=quaternions,
-                        QuatsOnly=True,
-                        TargetYaw=90,
-                    )
-                elif rotation_name == "Right":
-                    moveToPoseWithServo(
-                        TargetPose=position,
-                        TargetQuats=quaternions,
-                        QuatsOnly=True,
-                        TargetYaw=-90,
-                    )
-                else:
-                    moveToPoseWithServo(
-                        TargetPose=position,
-                        TargetQuats=quaternions,
-                        QuatsOnly=True,
-                        TargetYaw=0,
-                    )
-                
-                position, quaternions = getCurrentPose()
-                if rotation_name == "Left":
-                    midPosition = [position[0], position[1] - 0.23, position[2]]
-                elif rotation_name == "Right":
-                    midPosition = [position[0], position[1] + 0.23, position[2]]
-                else:
-                    midPosition = [position[0] - 0.23, position[1], position[2]]
-
-                print("### Pulling Box Out")
-                moveToPoseWithServo(
-                    TargetPose=midPosition, TargetQuats=quaternions, PoseOnly=True
+            for i in range(3):
+                moveit2.add_collision_mesh(
+                    filepath=box_file_path,
+                    id="currentBox",
+                    position=[0.0, -0.1, 0.11],
+                    quat_xyzw=[-0.5, 0.5, 0.5, 0.5],
+                    frame_id="tool0",
                 )
-
-                print("Tolerance Achieved: Came out")
-                time.sleep(0.1)
-
-                # Move to Pre Drop Pose
-                moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
-                print("Reached Pre-Drop")
-
-                # Move to Drop Pose
-                moveToJointStates(dropData.joint_states, dropData.name)
-                print("Reached Drop")
-
-                controlGripper("OFF", box_name)
-
-                for i in range(3):
-                    moveit2.remove_collision_mesh(id="currentBox")
-                    time.sleep(0.2)
                 time.sleep(0.2)
 
-                # Move to Pre Drop Pose
+            # print("### Box in-place Yaw Correction")
+            # if rotation_name == "Left":
+            #     moveToPoseWithServo(
+            #         TargetPose=position,
+            #         TargetQuats=quaternions,
+            #         QuatsOnly=True,
+            #         TargetYaw=90,
+            #     )
+            # elif rotation_name == "Right":
+            #     moveToPoseWithServo(
+            #         TargetPose=position,
+            #         TargetQuats=quaternions,
+            #         QuatsOnly=True,
+            #         TargetYaw=-90,
+            #     )
+            # else:
+            #     moveToPoseWithServo(
+            #         TargetPose=position,
+            #         TargetQuats=quaternions,
+            #         QuatsOnly=True,
+            #         TargetYaw=0,
+            #     )
 
-                moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
-                print("Reached Initial Pose")
+            position, quaternions = getCurrentPose()
+            if rotation_name == "Left":
+                midPosition = [position[0], position[1] - 0.23, position[2]]
+            elif rotation_name == "Right":
+                midPosition = [position[0], position[1] + 0.23, position[2]]
+            else:
+                midPosition = [position[0] - 0.23, position[1], position[2]]
 
-                servoNode.destroy_node()
-                # jointStatesNode.destroy_node()
-                break
+            print("### Pulling Box Out")
+            moveToPoseWithServo(
+                TargetPose=midPosition, TargetQuats=quaternions, PoseOnly=True
+            )
+
+            print("Tolerance Achieved: Came out")
+            time.sleep(0.1)
+
+            # Move to Pre Drop Pose
+            moveToJointStates(Pre_Drop_Joints.joint_states, Pre_Drop_Joints.name)
+            print("Reached Pre-Drop")
+
+            # Move to Drop Pose
+            moveToJointStates(dropData.joint_states, dropData.name)
+            print("Reached Drop")
+
+            controlGripper("OFF", box_name)
+
+            for i in range(3):
+                moveit2.remove_collision_mesh(id="currentBox")
+                time.sleep(0.2)
+            time.sleep(0.2)
+
+            # Move to Pre Drop Pose
+
+            moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
+            print("Reached Initial Pose")
+
+            servoNode.destroy_node()
+            # jointStatesNode.destroy_node()
 
         collisionObjectDistances = {"left": 0.0, "front": 0.0, "right": 0.0}
         left_flag, front_flag, right_flag = False, False, False
@@ -756,7 +749,9 @@ def main():
                 print("Left Nearest:", nearestAngle(yaw))
                 if nearestAngle(yaw) == 90.0:
                     left_flag = True
-                    collisionObjectDistances["left"] = round(aruco.position[1], 2) + 0.16
+                    collisionObjectDistances["left"] = (
+                        round(aruco.position[1], 2) + 0.16
+                    )
                     print(aruco.name + ":", "Left")
 
                 # print("Left Flag: ", left_flag)
@@ -764,18 +759,27 @@ def main():
                 print("Front Nearest:", nearestAngle(yaw))
                 if nearestAngle(yaw) == 0.0:
                     front_flag = True
-                    collisionObjectDistances["front"] = round(aruco.position[0], 2) + 0.16
+                    collisionObjectDistances["front"] = (
+                        round(aruco.position[0], 2) + 0.16
+                    )
                     print(aruco.name + ":", "Left")
                 # print("Front Flag: ", front_flag)
             if right_flag == False:
                 print("Right Nearest:", nearestAngle(yaw))
                 if nearestAngle(yaw) == -90.0:
                     right_flag = True
-                    collisionObjectDistances["right"] = round(aruco.position[2], 2) + 0.0
+                    collisionObjectDistances["right"] = (
+                        round(aruco.position[2], 2) + 0.0
+                    )
                     print(aruco.name + ":", "Left")
                 # print("Right Flag: ", right_flag)
         print(
-            "Left Flag: ", left_flag, "Front Flag: ", front_flag, "Right Flag: ", right_flag
+            "Left Flag: ",
+            left_flag,
+            "Front Flag: ",
+            front_flag,
+            "Right Flag: ",
+            right_flag,
         )
         if left_flag:
             print("Adding Left Collision Object")
