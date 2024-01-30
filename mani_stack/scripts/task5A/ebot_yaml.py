@@ -175,7 +175,7 @@ def main():
         node.ArmManipulationRequest.total_racks = totalRacks
         node.ArmManipulationRequest.starting = False
         print("going to racks",node.nav2RackRequest)
-        futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
+        # futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
         counter=0
         for i in range(2):
             msg = Bool()
