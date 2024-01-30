@@ -170,10 +170,10 @@ def main():
         node.nav2RackRequest.yaw = yaw
         node.nav2RackRequest.offset_x = x_offset
         node.nav2RackRequest.offset_y = y_offset
-        node.ArmManipulationRequest.ap_name = ap
-        node.ArmManipulationRequest.box_id = package_id[data]
-        node.ArmManipulationRequest.total_racks = totalRacks
-        node.ArmManipulationRequest.starting = False
+        # node.ArmManipulationRequest.ap_name = ap
+        # node.ArmManipulationRequest.box_id = package_id[data]
+        # node.ArmManipulationRequest.total_racks = totalRacks
+        # node.ArmManipulationRequest.starting = False
         print("going to racks",node.nav2RackRequest)
         # futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
         counter=0

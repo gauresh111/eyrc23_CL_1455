@@ -67,8 +67,8 @@ class pid():
     def odomComputeLinear(self,Input,Setpoint):
         error = Input - Setpoint                                         
         output = self.odomLinear * error  
-        if output < 0.3:
-            output = 0.3
+        if output < 0.2:
+            output = 0.2
         return output*-1.0
     def UltraOrientation(self,input,isLinear):
         global ultrasonic_value
@@ -224,7 +224,7 @@ class MyRobotDockingController(Node):
             return 0
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
-        if InputDistance <0.04:   
+        if InputDistance <0.4:   
             return 0.0
         return odomlinearPid.odomComputeLinear(InputDistance,Setpoint)
     def odomLinearDocking(self):
@@ -234,12 +234,12 @@ class MyRobotDockingController(Node):
         while (reachedExtra == False):
             if X1 == 0:
                 distance=self.distanceSingle(self.targetX,robot_pose[0])
-                if distance < 0.04:
+                if distance < 0.4:
                     reachedExtra = True
                 print("X: target",self.targetX,"current",robot_pose[0],"distance",distance)
             elif X1 == 1:
                 distance=self.distanceSingle(self.targetY,robot_pose[1])
-                if distance < 0.04:
+                if distance < 0.4:
                     reachedExtra = True
                 print("Y: target",self.targetY,"current",robot_pose[1],"distance",distance)
             speed=self.odomLinearDockingprocess(distance)
@@ -263,7 +263,7 @@ class MyRobotDockingController(Node):
         while (reached == False):
             m = (ultrasonic_value[1] - ultrasonic_value[0])
             angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
-            self.moveBot(linearValue,angularValue)
+            self.moveBot(linearValue,0.0)
             avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
             if avgUltraSonic <19.0:
                 reached = True
