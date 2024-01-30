@@ -224,7 +224,7 @@ class MyRobotDockingController(Node):
             return 0
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
-        if InputDistance <0.12:   
+        if InputDistance <0.04:   
             return 0.0
         return odomlinearPid.odomComputeLinear(InputDistance,Setpoint)
     def odomLinearDocking(self):
@@ -234,12 +234,12 @@ class MyRobotDockingController(Node):
         while (reachedExtra == False):
             if X1 == 0:
                 distance=self.distanceSingle(self.targetX,robot_pose[0])
-                if distance < 0.02:
+                if distance < 0.04:
                     reachedExtra = True
                 print("X: target",self.targetX,"current",robot_pose[0],"distance",distance)
             elif X1 == 1:
                 distance=self.distanceSingle(self.targetY,robot_pose[1])
-                if distance < 0.02:
+                if distance < 0.04:
                     reachedExtra = True
                 print("Y: target",self.targetY,"current",robot_pose[1],"distance",distance)
             speed=self.odomLinearDockingprocess(distance)
@@ -383,13 +383,13 @@ class MyRobotDockingController(Node):
             if self.isAttach:
                 rackAttach()
             else:
-                # self.odomLinearDocking()
+                self.odomLinearDocking()
                 stopBot(0.1) 
-                stopBot(0.5,-0.1,0.0) #implement odom docking and camera docking
-                stopBot(0.4) 
+                # stopBot(0.5,-0.1,0.0) #implement odom docking and camera docking
+                # stopBot(0.4) 
                 switch_eletromagent(False)
                 #moving ebot back from rack
-                stopBot(0.1,2.0,0.0)
+                stopBot(0.8,1.0,0.0)
                 stopBot(0.1)
             
             self.is_docking = False

@@ -11,12 +11,16 @@ from tf_transformations import euler_from_quaternion
 import math
 from geometry_msgs.msg import Polygon,Point32
 from std_msgs.msg import Bool,Float32MultiArray
+from mani_stack.srv import RackSw
+from rclpy.callback_groups import ReentrantCallbackGroup
 
 global ultrasonic_value
+
 import time
 def main():
     rclpy.init()
     navigator = BasicNavigator()
+    callback_group = ReentrantCallbackGroup()
     node = Node("moveBot")
     executor = rclpy.executors.MultiThreadedExecutor(1)
     executor.add_node(node)
@@ -25,10 +29,20 @@ def main():
     
     global positionToGO
     positionToGO = {
-     'Ap1':{'xyz': [4.6, -0.3 ,0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.0, 0.0] }
+      'ap1':{'xyz': [4.63, -0.33,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [1.1,0.0], 'Yaw': 0.0},
+      'ap2':{'xyz': [6.45, -1.50,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,0.4 ] , 'Yaw': 90}
     }
-    withRackFootprint = [ [0.31, 0.55],[0.31, -0.55],[-0.31, -0.55],[-0.31, 0.55] ]
+    
+    withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
+    def add_docking_position(name, xyz, quaternions, xy_offsets,yaw):
+        global positionToGO
+        positionToGO[name] = {
+            'xyz': xyz,
+            'quaternions': quaternions,
+            'XYoffsets': xy_offsets,
+            'Yaw':yaw
+        }
     def change_footprint(new_footprint,msg):
     # Initialize ROS node
         nodeFootprint = rclpy.create_node('change_footprint_node')
@@ -130,16 +144,37 @@ def main():
          
     navigator.waitUntilNav2Active()
     
-    moveToGoal(getGoalPoseStamped("Pre_docking_pose"),"Pre_docking_pose",True,"Pre_docking_pose")
+    def Rack_control_callback(Request,Response):
+        global positionToGO
+        node.get_logger().info("Request Arrived")
+        RackRequest=Request.rack_name
+        ApRequest=Request.ap_name
+        x=Request.x
+        y=Request.y
+        yaw=Request.yaw
+        x_offset=Request.offset_x
+        y_offset=Request.offset_y
+        xyz=[x,y,0.0]
+        euler = [0,0,yaw]
+        quaternions = R.from_euler('xyz', euler).as_quat().tolist()
+        offsetXY=[x_offset,y_offset]
+        add_docking_position(RackRequest,xyz,quaternions,offsetXY,yaw)
+        #goes to rack
+        node.get_logger().info("Going to Rack")
+        moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
         
         #goes to ap   
-    node.get_logger().info("Going to Ap")
-    moveToGoal(getGoalPoseStamped("Arm_pose"),"Arm_pose",False,"Arm_pose")
+        node.get_logger().info("Going to Ap")
+        moveToGoal(getGoalPoseStamped(ApRequest),RackRequest,False,ApRequest)
         
-   
+        Response.success = True
+        Response.message = "Success"
+        node.get_logger().info("Request done with Succes")
+        return Response
     def ExitCallBack(msg):
         if msg.data:
             raise SystemExit
+    dock_control_srv = node.create_service(RackSw, '/RackNav2Sw', Rack_control_callback, callback_group=callback_group)
     exitNav2 = node.create_subscription(Bool, '/ExitNav',ExitCallBack, 10)
     try:
         rclpy.spin(node)
