@@ -63,7 +63,7 @@ planner_configs:
     planner_data_path: /tmp/roadmap.graph
 
 ur_manipulator:
-  default_planner_config: PRMkConfigDefault
+  default_planner_config: PRMstarkConfigDefault
   planner_configs:
     - SBLkConfigDefault
     - ESTkConfigDefault

@@ -1,0 +1,178 @@
+<?xml version="1.0"?>
+<!-- 
+*****************************************************************************************
+*
+*        =============================================
+*                  CL Theme (eYRC 2023-24)
+*        =============================================
+*
+*
+*  Filename:			eyantra_warehouse.world
+*  Created:				12/07/2023
+*  Last Modified:	12/09/2023
+*  Modified by:   Ravi, Jaison
+*  Author:				e-Yantra Team
+*  
+*****************************************************************************************
+-->
+<sdf version="1.6">
+  <world name="default">
+	<!-- <physics type="ode">
+		<max_step_size>0.002</max_step_size>
+		<real_time_factor>1</real_time_factor>
+		<real_time_update_rate>1000</real_time_update_rate>
+		<ode>
+			<solver>
+				<iters>75</iters>
+				<island_threads>4</island_threads>
+			</solver>
+			<constraints>
+				<contact_surface_layer>0.005</contact_surface_layer>
+			</constraints>
+		</ode>
+	</physics> -->
+
+    <gui>
+      <camera name="user_default">
+        <pose>-24.307 -9.572 4.851 0 0.071 0.316</pose>
+      </camera>
+    </gui>
+    <!-- <plugin name="ros_link_attacher_plugin" filename="libgazebo_ros_link_attacher.so"/> -->
+
+    <light name="light0" type="directional">
+      <pose frame="">0 -18.818 8 0.75 -0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0.1 0.1 -0.9</direction>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+    </light>
+
+
+    <light name="light3" type="directional">
+      <pose frame="">3.9239 1.64974 4 0 1.2 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0.1 0.1 -0.9</direction>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+    </light>
+
+
+    <light name="light5" type="directional">
+      <pose frame="">0.454419 12.4783 5 -0.8 0 0</pose>
+      <diffuse>0.5 0.5 0.5 1</diffuse>
+      <specular>0.1 0.1 0.1 1</specular>
+      <direction>0.1 0.1 -0.9</direction>
+      <attenuation>
+        <range>20</range>
+        <constant>0.5</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <cast_shadows>0</cast_shadows>
+    </light>
+
+    <scene>
+		<shadows>false</shadows>
+		<ambient>0.5 0.5 0.5 1.0</ambient>
+    <grid>false</grid>    
+      <sky>        
+        <time>22</time>
+        <sunrise>20</sunrise>
+        <sunset>21</sunset>
+        <clouds>
+          <humidity>0</humidity>
+          <!-- <cloud_ambient>1.0 1.0 1.0 1.0</cloud_ambient> Not working -->
+        </clouds>        
+      </sky>
+    </scene>
+
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+  <include>
+      <uri>model://moon_surface</uri>
+      <pose>0 0 -0.25 0 0 0</pose>
+	</include>
+ 
+  <!-- RACK 1 -->
+  <include>
+      <uri>model://rack</uri>
+      <name>rack1</name>
+      <!-- <pose>1.6373 -1.2511 6.1 0 -0 1.57</pose> -->
+      <!-- <pose>1.600 -1.248 0.07 0 -0 1.57</pose> -->
+      <pose> 6.5  0.75 0.0750  0.0 0.0 1.57</pose>
+	</include>
+  <include>
+      <uri>model://boxes/box_1</uri>
+      <name>box1</name>
+      <pose>6.5  0.75 1.35 0 -0 -1.57</pose>
+	</include>
+  <!-- RACK 1 -->
+
+  <!-- RACK 2 -->
+  <include>
+      <uri>model://rack</uri>
+      <name>rack2</name>
+      <!-- <pose>1.6373 -1.2511 6.1 0 -0 1.57</pose> -->
+      <!-- <pose>1.600 -1.248 0.07 0 -0 1.57</pose> -->
+      <pose>1.15 -2.2 0.075 0.0 0.0 0.0</pose>
+	</include>
+  <include>
+      <uri>model://boxes/box_2</uri>
+      <name>box2</name>
+      <pose>1.15 -2.2 1.35 0 -0 3.14</pose>
+	</include>
+  <include>
+      <uri>model://single_rack_base</uri>
+      <name>rack2Base</name>
+      <pose>1.0 -2.2 0.041430 0.0 0.0 1.57</pose>
+	</include>
+  <!-- RACK 2 -->
+  
+  <!-- RACK 3 -->
+  <include>
+      <uri>model://rack</uri>
+      <name>rack3</name>
+      <!-- <pose>1.6373 -1.2511 6.1 0 -0 1.57</pose> -->
+      <!-- <pose>1.600 -1.248 0.07 0 -0 1.57</pose> -->
+      <pose>0.5 2.05 0.075 0.0 0.0 0.0</pose>
+	</include>
+  <include>
+      <uri>model://boxes/box_3</uri>
+      <name>box3</name>
+      <pose>0.5 2.05 1.35 0 -0 3.14</pose>
+	</include>
+  <include>
+      <uri>model://single_rack_base</uri>
+      <name>rack3Base</name>
+      <pose>0.35 2.05 0.041430 0.0 0.0 1.57</pose>
+	</include>
+  <!-- RACK 3 -->
+
+
+
+  <include>
+      <uri>model://Cube</uri>
+      <name>boxes</name>
+      <pose>2.75 -0.250 0.0 0.0 0.0 0.0</pose>
+	</include>
+  
+
+  <plugin name="gazebo_link_attacher" filename="libgazebo_link_attacher.so"/>
+  <plugin name="gazebo_link_ur5_attacher" filename="libgazebo_link_ur5_attacher.so"/>
+
+  </world>
+</sdf>
