@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+
+is_sim = True
+
 from os import path
 from threading import Thread
 import time
@@ -11,13 +14,18 @@ from pymoveit2 import MoveIt2, MoveIt2Servo
 from pymoveit2.robots import ur5
 import tf2_ros
 import math
-from linkattacher_msgs.srv import AttachLink, DetachLink
 import re
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Int8
 import transforms3d as tf3d
 import numpy as np
 from std_msgs.msg import Bool
+
+if is_sim == True:
+    from linkattacher_msgs.srv import AttachLink, DetachLink
+else:
+    from ur_msgs.srv import SetIO  # type: ignore
+    from controller_manager_msgs.srv import SwitchController
 
 aruco_name_list = []
 global servo_status
@@ -54,7 +62,10 @@ def aruco_name_list_updater(msg):
 def main():
     rclpy.init()
 
-    print("Starting Task 1AB Manipulation Servo")
+    if is_sim == True:
+        print("Starting Simulation Manipulation Script")
+    else:
+        print("Starting Real Robot Manipulation Script")
 
     Initial_Pose = ArucoBoxPose()
     Initial_Pose.position = [0.18, 0.10, 0.46]
@@ -165,6 +176,14 @@ def main():
     }
 
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
+
+    if is_sim == False:
+        contolMSwitch = node.create_client(
+            SwitchController, "/controller_manager/switch_controller"
+        )
+
+        while not contolMSwitch.wait_for_service(timeout_sec=5.0):
+            node.get_logger().warn(f"Service control Manager is not yet available...")
 
     time.sleep(5)
 
@@ -280,6 +299,7 @@ def main():
                 else:
                     arucoData[i].rotationName = "Front"
 
+    print(" No. of Arucos Detected: ", len(arucoData))
     for aruco in arucoData:
         print(
             "Aruco Name: ",
@@ -292,6 +312,37 @@ def main():
             list(np.around(np.array(aruco.eulerAngles), 2)),
             "\n",
         )
+    if is_sim == False:
+
+        def switch_controller(useMoveit: bool):
+            contolMSwitch = node.create_client(
+                SwitchController, "/controller_manager/switch_controller"
+            )
+            # Parameters to switch controller
+            switchParam = SwitchController.Request()
+            if useMoveit == True:
+                switchParam.activate_controllers = [
+                    "scaled_joint_trajectory_controller"
+                ]  # for normal use of moveit
+                switchParam.deactivate_controllers = ["forward_position_controller"]
+            else:
+                switchParam.activate_controllers = [
+                    "forward_position_controller"
+                ]  # for servoing
+                switchParam.deactivate_controllers = [
+                    "scaled_joint_trajectory_controller"
+                ]
+            switchParam.strictness = 2
+            switchParam.start_asap = False
+
+            # calling control manager service after checking its availability
+            while not contolMSwitch.wait_for_service(timeout_sec=5.0):
+                node.get_logger().warn(
+                    f"Service control Manager is not yet available..."
+                )
+            contolMSwitch.call_async(switchParam)
+            time.sleep(1.0)
+            print("[CM]: Switching to", "Moveit" if useMoveit else "Servo", "Complete")
 
     def moveWithServo(linear_speed, angular_speed):
         twist_msg = TwistStamped()
@@ -344,24 +395,51 @@ def main():
         return tempPose, tempQuats
 
     def controlGripper(status, box_name):
-        if status == "ON":
-            gripper_control = node.create_client(AttachLink, "/GripperMagnetON")
-            req = AttachLink.Request()
+        if is_sim == True:
+            if status == "ON":
+                gripper_control = node.create_client(AttachLink, "/GripperMagnetON")
+                req = AttachLink.Request()
+            else:
+                gripper_control = node.create_client(DetachLink, "/GripperMagnetOFF")
+                req = DetachLink.Request()
+
+            while not gripper_control.wait_for_service(timeout_sec=1.0):
+                node.get_logger().info("EEF service not available, waiting again...")
+
+            req.model1_name = box_name
+            req.link1_name = "link"
+            req.model2_name = "ur5"
+            req.link2_name = "wrist_3_link"
+            print(gripper_control.call_async(req))
+            time.sleep(0.2)
+
+            print("Gripper Status: ", status, "has been requested")
         else:
-            gripper_control = node.create_client(DetachLink, "/GripperMagnetOFF")
-            req = DetachLink.Request()
-
-        while not gripper_control.wait_for_service(timeout_sec=1.0):
-            node.get_logger().info("EEF service not available, waiting again...")
-
-        req.model1_name = box_name
-        req.link1_name = "link"
-        req.model2_name = "ur5"
-        req.link2_name = "wrist_3_link"
-        print(gripper_control.call_async(req))
-        time.sleep(0.2)
-
-        print("Gripper Status: ", status, "has been requested")
+            """
+            based on the state given as i/p the service is called to activate/deactivate
+            pin 16 of TCP in UR5
+            i/p: node, state of pin:Bool
+            o/p or return: response from service call
+            """
+            if status == "ON":
+                state = 1
+            else:
+                state = 0
+            gripper_control = node.create_client(
+                SetIO, "/io_and_status_controller/set_io"
+            )
+            while not gripper_control.wait_for_service(timeout_sec=1.0):
+                node.get_logger().info(
+                    "EEF Tool service not available, waiting again..."
+                )
+            req = SetIO.Request()
+            req.fun = 1
+            req.pin = 16
+            req.state = float(state)
+            gripper_control.call_async(req)
+            print("Gripper Status: ", status, "has been requested")
+            time.sleep(1.0)
+            return state
 
     def checkSphericalTolerance(currentPose, targetPose, tolerance):
         currentTolerance = math.sqrt(
@@ -374,13 +452,13 @@ def main():
     def moveToPoseWithServo(
         TargetPose, TargetQuats, QuatsOnly=False, PoseOnly=False, TargetYaw=0
     ):
+        if is_sim == False:
+            switch_controller(useMoveit=False)
         global servo_status
         mission_status = True
         moveit2Servo.enable()
         sphericalToleranceAchieved = False
-        currentPose, currentQuats = getCurrentPose(
-            TargetPose=TargetPose, TargetQuats=TargetQuats
-        )
+        currentPose, currentQuats = getCurrentPose()
         _, magnitude = checkSphericalTolerance(currentPose, TargetPose, tolerance)
         magnitude *= 3
         vx, vy, vz = (
@@ -417,9 +495,7 @@ def main():
             while abs(yawError) > 0.02:
                 moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
                 # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
-                currentEuler = getCurrentPose(
-                    TargetPose=TargetPose, TargetQuats=TargetQuats, useEuler=True
-                )[1]
+                currentEuler = getCurrentPose(useEuler=True)[1]
                 yawError = TargetYaw - currentEuler[0]
                 print("Yaw Error: ", yawError)
                 time.sleep(0.01)
@@ -427,6 +503,8 @@ def main():
                     mission_status = False
                     print("Exited While Loop due to Servo Error", servo_status)
                     break
+            if is_sim == False:
+                switch_controller(useMoveit=True)
             return mission_status
 
         elif PoseOnly == True:
@@ -434,9 +512,7 @@ def main():
             while sphericalToleranceAchieved == False:
                 moveWithServo([vx, vy, vz], [0.0, 0.0, 0.0])
                 # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
-                currentPose = getCurrentPose(
-                    TargetPose=TargetPose, TargetQuats=TargetQuats
-                )[0]
+                currentPose = getCurrentPose()[0]
                 sphericalToleranceAchieved, _ = checkSphericalTolerance(
                     currentPose, TargetPose, tolerance
                 )
@@ -445,6 +521,8 @@ def main():
                     mission_status = False
                     print("Exited While Loop due to Servo Error", servo_status)
                     break
+            if is_sim == False:
+                switch_controller(useMoveit=True)
             return mission_status
 
         else:
@@ -452,9 +530,7 @@ def main():
             while sphericalToleranceAchieved == False:
                 moveWithServo([vx, vy, vz], [0.0, 0.0, az])
                 # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
-                currentPose, currentQuats = getCurrentPose(
-                    TargetPose=TargetPose, TargetQuats=TargetQuats
-                )
+                currentPose, currentQuats = getCurrentPose()
                 sphericalToleranceAchieved, _ = checkSphericalTolerance(
                     currentPose, TargetPose, tolerance
                 )
@@ -468,6 +544,8 @@ def main():
                     mission_status = False
                     print("Exited While Loop due to Servo Error", servo_status)
                     break
+            if is_sim == False:
+                switch_controller(useMoveit=True)
             return mission_status
 
     def moveToPose(position, quaternions, position_name, rotation_name, dropData):
@@ -602,28 +680,28 @@ def main():
             )
             time.sleep(0.2)
 
-        print("### Box in-place Yaw Correction")
-        if rotation_name == "Left":
-            moveToPoseWithServo(
-                TargetPose=position,
-                TargetQuats=quaternions,
-                QuatsOnly=True,
-                TargetYaw=90,
-            )
-        elif rotation_name == "Right":
-            moveToPoseWithServo(
-                TargetPose=position,
-                TargetQuats=quaternions,
-                QuatsOnly=True,
-                TargetYaw=-90,
-            )
-        else:
-            moveToPoseWithServo(
-                TargetPose=position,
-                TargetQuats=quaternions,
-                QuatsOnly=True,
-                TargetYaw=0,
-            )
+        # print("### Box in-place Yaw Correction")
+        # if rotation_name == "Left":
+        #     moveToPoseWithServo(
+        #         TargetPose=position,
+        #         TargetQuats=quaternions,
+        #         QuatsOnly=True,
+        #         TargetYaw=90,
+        #     )
+        # elif rotation_name == "Right":
+        #     moveToPoseWithServo(
+        #         TargetPose=position,
+        #         TargetQuats=quaternions,
+        #         QuatsOnly=True,
+        #         TargetYaw=-90,
+        #     )
+        # else:
+        #     moveToPoseWithServo(
+        #         TargetPose=position,
+        #         TargetQuats=quaternions,
+        #         QuatsOnly=True,
+        #         TargetYaw=0,
+        #     )
 
         position, quaternions = getCurrentPose()
         if rotation_name == "Left":
