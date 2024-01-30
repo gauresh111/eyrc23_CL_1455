@@ -112,6 +112,7 @@ class MyRobotDockingController(Node):
         self.dock_aligned=False
         self.targetX=0
         self.targetY=0
+        self.offsets=0
         self.targetYaw=0
         self.rackName = ""
         self.isAttach = False
@@ -210,32 +211,34 @@ class MyRobotDockingController(Node):
     def distanceSingle(self,x1, x2):
         return math.sqrt((x1 - x2) ** 2)*1.0
     def Whichaxistomove(self):
-        if self.targetYaw == 0.0:
-            return 0
-        elif self.targetYaw == 90.0:
+        yaw = abs(self.targetYaw) 
+        if yaw > 200.0:
             return 1
-        elif self.targetYaw == 180.0:
+        elif yaw > 150.0:
             return 0
-        elif self.targetYaw == 270.0:
-            return 1  
+        elif yaw > 80.0:
+            return 1
+        else:
+            return 0 
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
-        if InputDistance <0.12:   
+        if InputDistance <0.04:   
             return 0.0
         return odomlinearPid.odomComputeLinear(InputDistance,Setpoint)
     def odomLinearDocking(self):
         global robot_pose
         reachedExtra = False    
         X1 = self.Whichaxistomove()
+        print("X1",X1)
         while (reachedExtra == False):
             if X1 == 0:
                 distance=self.distanceSingle(self.targetX,robot_pose[0])
-                if distance < 0.15:
+                if distance < 0.04:
                     reachedExtra = True
                 print("X: target",self.targetX,"current",robot_pose[0],"distance",distance)
             elif X1 == 1:
                 distance=self.distanceSingle(self.targetY,robot_pose[1])
-                if distance < 0.15:
+                if distance < 0.04:
                     reachedExtra = True
                 print("Y: target",self.targetY,"current",robot_pose[1],"distance",distance)
             speed=self.odomLinearDockingprocess(distance)
@@ -380,6 +383,8 @@ class MyRobotDockingController(Node):
                 self.odomLinearDocking()
                 stopBot(0.1) 
                 switch_eletromagent(False)
+                stopBot(0.8,0.2,0.0)
+                stopBot(0.1)
            
             self.is_docking = False
             self.dock_aligned=True

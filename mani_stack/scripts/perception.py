@@ -562,7 +562,7 @@ class aruco_tf(Node):
             rack_string = String()
             rack_string.data =  tempName.join(rackName)
             if len(rack_string.data) == 0:
-                rack_string.data = "-2"
+                rack_string.data = "Box"
             self.Ap_name_publisher.publish(rack_string)
             print("Rack_string:",rack_string)
             print("Aruco_List:", aruco_string)

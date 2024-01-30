@@ -58,7 +58,7 @@ def generate_launch_description():
         package='gazebo_ros',
         name='ur5_spawner',
         executable='spawn_entity.py',
-        arguments=['-entity', 'ur5', '-topic', 'robot_description_ur5', '-x', '1.6', '-y', '-2.4', '-z', '0.58', '-Y',
+        arguments=['-entity', 'ur5', '-topic', 'robot_description_ur5', '-x', '6.3', '-y', '-0.05', '-z', '0.58', '-Y',
                    '3.14'],
         output='screen')
 
