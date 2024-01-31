@@ -267,11 +267,12 @@ def main():
                 break
             else:
                 continue
-
-    while not node.create_client(AttachLink, "/GripperMagnetON").wait_for_service(
-        timeout_sec=1.0
-    ):
-        node.get_logger().info("EEF service not available, waiting again...")
+    
+    if is_sim == True:
+        while not node.create_client(AttachLink, "/GripperMagnetON").wait_for_service(
+            timeout_sec=1.0
+        ):
+            node.get_logger().info("EEF service not available, waiting again...")
 
     rackCounter = 0
     global ApQueue, BoxId, totalRacks, isStarting
@@ -493,7 +494,7 @@ def main():
                 req.pin     = 16
                 req.state   = float(state)
                 gripper_control.call_async(req)
-                print("Gripper Status: ", status, "has been requested")
+                print("Gripper Hardware Status: ", status, "has been requested")
                 time.sleep(1.0)
                 return state
 

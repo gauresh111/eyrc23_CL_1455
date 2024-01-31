@@ -44,6 +44,9 @@ from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import TransformStamped
 from sensor_msgs.msg import CompressedImage, Image
 from scipy.spatial.transform import Rotation as R
+import yaml
+
+from tf_transformations import quaternion_from_euler, euler_from_quaternion
 
 ################### GLOBAL VARIABLES #######################
 
@@ -288,6 +291,9 @@ class aruco_tf(Node):
         self.aruco_name_publisher = self.create_publisher(
             String, "/aruco_list", 10
         )
+        self.aruco_data_publisher = self.create_publisher(
+            String, "/aruco_data", 10
+        )
         self.Ap_name_publisher = self.create_publisher(String, "/ap_list", 10)
         ############ Constructor VARIABLES/OBJECTS ############
 
@@ -412,7 +418,8 @@ class aruco_tf(Node):
 
         aruco_name_list = []
         aruco_angle_list = []
-        rackName = []
+        ap_list = []
+        aruco_data_yaml = {"id":[], "angle":[], "ap":[]}
         ############ ADD YOUR CODE HERE ############
 
         # INSTRUCTIONS & HELP :
@@ -427,8 +434,13 @@ class aruco_tf(Node):
 
             #   ->  Use this equation to correct the input aruco angle received from cv2 aruco function 'estimatePoseSingleMarkers' here
             #       It's a correction formula-
-            # angle_aruco = (0.788*angle_aruco) - ((angle_aruco**2)/3160)
+            # angle[1] = (0.788*angle[1]) - ((angle[1]**2)/3160)
             angle[1] = angle[1] + (0.2 * angle[1]) - ((angle[1] ** 2) / 3160)
+            angle[1] = math.degrees(angle[1])
+            if angle[1] < abs(80):
+                arucoAngle = -0.208 + 0.837*angle[1] + 7.38e-05*angle[1]**2 + 1.36e-05*angle[1]**3 + -2.63e-09*angle[1]**4
+            else:
+                arucoAngle = angle[1]
             # if id  == 3:
             #     print(angle[1])
 
@@ -492,7 +504,7 @@ class aruco_tf(Node):
                 print("no base_link to camera_link transform found")
                 pass
 
-            finalQuat = tf3d.euler.euler2quat(0, -angle[1], 0)
+            finalQuat = tf3d.euler.euler2quat(0, -math.radians(arucoAngle), 0)
 
             transformStamped = TransformStamped()
             transformStamped.header.stamp = self.get_clock().now().to_msg()
@@ -538,13 +550,10 @@ class aruco_tf(Node):
                 transformStamped.transform.rotation.w = tranform.transform.rotation.w
                 self.br.sendTransform(transformStamped)
                 aruco_name_list.append("obj_" + str(id))
-                angleDegree=int(math.degrees(-angle[1]))
-                print("angleDegree:", angleDegree)
-                tempValue = self.normalizeAngle(angleDegree)
-                # aruco_angle_list.append(self.normalizeAngle(1))
-                print("angle:", tempValue)
+                angleDegree=round(-arucoAngle)
+                # print("angleDegree:", angleDegree)
                 aruco_angle_list.append(angleDegree)
-                rackName.append(self.get_rack_name(self.nearest_angle(angleDegree)))
+                ap_list.append(self.get_rack_name(self.nearest_angle(angleDegree)))
             except Exception as e:
                 print(e)
                 pass        
@@ -553,26 +562,29 @@ class aruco_tf(Node):
         #       Refer MD book on portal for sample image -> https://portal.e-yantra.org/
         
         try:
-            # cv2.imshow("aruco_image", arucoImageWindow)
-            # cv2.waitKey(1)
+            cv2.imshow("aruco_image", arucoImageWindow)
+            cv2.waitKey(1)
             tempStr = " "
             tempName = " "
+            aruco_data_string = String()
             aruco_string = String()
             aruco_string.data =  tempStr.join(aruco_name_list)
             rack_string = String()
-            rack_string.data =  tempName.join(rackName)
+            rack_string.data =  tempName.join(ap_list)
             if len(rack_string.data) == 0:
                 rack_string.data = "-2"
             self.Ap_name_publisher.publish(rack_string)
             print("Rack_string:",rack_string)
             print("Aruco_List:", aruco_string)
-            # if len(aruco_name_list)!=0:
-            #     for name, angle in zip(aruco_name_list, aruco_angle_list):
-            #         print(name+":", angle, end=" ")
-            #     print()
             print(aruco_name_list)
             print(aruco_angle_list)
             self.aruco_name_publisher.publish(aruco_string)
+            aruco_data_yaml["id"] = aruco_name_list
+            aruco_data_yaml["angle"] = aruco_angle_list
+            aruco_data_yaml["ap"] = ap_list
+            aruco_data_string.data = yaml.dump(aruco_data_yaml)
+            self.aruco_data_publisher.publish(aruco_data_string)
+
         except:
             pass
         #   ->  NOTE:   The Z axis of TF should be pointing inside the box (Purpose of this will be known in task 1B)
