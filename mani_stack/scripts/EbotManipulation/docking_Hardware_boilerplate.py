@@ -374,7 +374,7 @@ class MyRobotDockingController(Node):
                 
             def rackAttach():
                 switch_eletromagent(True)
-                self.UltraOrientation()
+                # self.UltraOrientation()
                 stopBot(0.1)
                 self.UltraOrientationLinear()
                 stopBot(0.1)
