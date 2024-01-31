@@ -105,7 +105,7 @@ def main():
         UltraSoniceForNAv2.ultra_sub = UltraSoniceForNAv2.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)  
     
         while not navigator.isTaskComplete():
-            if positionName == "Arm_pose":
+            if not israck:
                 print("moving to ",positionName," ",ultrasonic_value)
                 if (ultrasonic_value[0]+ultrasonic_value[1])/2 >=16.0:
                     navigator.cancelTask()

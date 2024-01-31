@@ -43,21 +43,21 @@ def switch_case(yaw,cordinates):
     
     if yaw == 3.14:
         #180
-        x -= 0.7
-        offsetXY=[0.5,0.0]
+        x -= 0.9
+        offsetXY=[0.9,0.0]
       
     elif yaw == 1.57:
        #90
-        y+=0.7
-        offsetXY=[0.0,0.5]
+        y+=0.9
+        offsetXY=[0.0,0.9]
     elif yaw == -1.57:
         #-90
-        y-=0.7
-        offsetXY=[0.0,-0.5]
+        y-=0.9
+        offsetXY=[0.0,-0.9]
     else:
         #-180
-        x+=0.7
-        offsetXY=[-0.5,0.0]    
+        x+=0.9
+        offsetXY=[-0.9,0.0]    
     return x,y,offsetXY
 def find_string_in_list(string, list):
     for index, item in enumerate(list):

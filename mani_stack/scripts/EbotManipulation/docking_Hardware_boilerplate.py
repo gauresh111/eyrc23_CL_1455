@@ -62,13 +62,12 @@ class pid():
         if output < 0.1:
             output = 0.1
         # print("InputY",InputY,"setPointY",setPointY,"error",error,"output",output)
-        
         return output*-1.0    
     def odomComputeLinear(self,Input,Setpoint):
         error = Input - Setpoint                                         
         output = self.odomLinear * error  
-        if output < 0.2:
-            output = 0.2
+        if output < 0.1:
+            output = 0.1
         return output*-1.0
     def UltraOrientation(self,input,isLinear):
         global ultrasonic_value
@@ -76,18 +75,14 @@ class pid():
         output = self.ultraKp * error
         output = round(output,3)
         result = False
-        if output > 0.6:
-            output = 0.6
-        elif output < -0.6:
-            output = -0.6
+        if output > 0.1:
+            output = 0.1
+        elif output < -0.1:
+            output = -0.1
         if abs(round(error,3))<=5.0:
             result = True 
-        mode=""
-        if isLinear:
-            mode="Linear"
-        else:
-            mode="Angular"
-        print("mode",mode,"usrleft_value Left:",round(ultrasonic_value[0],1)," usrright_value Right:",round(ultrasonic_value[1],1)," error:",error," output:",output)
+        mode = "Linear" if isLinear else "Angular"
+        print(f"mode {mode} usrleft_value Left: {round(ultrasonic_value[0], 1)} usrright_value Right: {round(ultrasonic_value[1], 1)} error: {error} output: {output}")
         return output*-1.0,result
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
@@ -105,7 +100,9 @@ class MyRobotDockingController(Node):
         global robot_pose
         # Create a callback group for managing callbacks
         self.callback_group = ReentrantCallbackGroup()
-        
+        self.reset_imu()                                    # Reset IMU data
+        self.reset_odom()       
+        self.get_logger().info("imu and odom reset done")
         # Subscribe to odometry data for robot pose information
         
 
@@ -121,7 +118,8 @@ class MyRobotDockingController(Node):
         self.rackName = ""
         self.isAttach = False
         self.globalnodeClock = self.get_clock()
-        self.isRackDetach=False
+        self.isRackDetach=False 
+                                    
         #         
         # 
         # 
@@ -139,7 +137,37 @@ class MyRobotDockingController(Node):
         twist.angular.z = angularSpeed
         self.speedPub.publish(twist)
         
-    
+    def reset_odom(self):
+        self.get_logger().info('Resetting Odometry. Please wait...')
+        self.reset_odom_ebot = self.create_client(Trigger, 'reset_odom')
+        while not self.reset_odom_ebot.wait_for_service(timeout_sec=1.0):
+            self.get_logger().warn('/reset_odom service not available. Waiting for /reset_odom to become available.')
+            
+        self.request_odom_reset = Trigger.Request()
+        self.odom_service_resp=self.reset_odom_ebot.call_async(self.request_odom_reset)
+        # while self.odom_service_resp is None:
+        #     self.GlobalStopTime(0.1)
+        rclpy.spin_until_future_complete(self, self.odom_service_resp)
+        if(self.odom_service_resp.result().success == True):
+            self.get_logger().info(self.odom_service_resp.result().message)
+        else:
+            self.get_logger().warn(self.odom_service_resp.result().message)
+    def reset_imu(self):
+        self.get_logger().info('Resetting IMU. Please wait...')
+        self.reset_imu_ebot = self.create_client(Trigger, 'reset_imu')
+        while not self.reset_imu_ebot.wait_for_service(timeout_sec=1.0):
+            self.get_logger().warn('/reset_imu service not available. Waiting for /reset_imu to become available.')
+
+        request_imu_reset = Trigger.Request()
+        self.imu_service_resp=self.reset_imu_ebot.call_async(request_imu_reset)
+        # while self.imu_service_resp is None:
+        #     self.GlobalStopTime(0.1)
+        rclpy.spin_until_future_complete(self, self.imu_service_resp)
+        if(self.imu_service_resp.result().success== True):
+            self.get_logger().info(self.imu_service_resp.result().message)
+        else:
+            self.get_logger().warn(self.imu_service_resp.result().message)
+
     
     def normalize_angle(self,angle):
         """Normalizes an angle to the range [-π, π].
@@ -213,15 +241,8 @@ class MyRobotDockingController(Node):
     def distanceSingle(self,x1, x2):
         return math.sqrt((x1 - x2) ** 2)*1.0
     def Whichaxistomove(self):
-        yaw = abs(self.targetYaw) 
-        if yaw > 200.0:
-            return 1
-        elif yaw > 150.0:
-            return 0
-        elif yaw > 80.0:
-            return 1
-        else:
-            return 0
+        absolute_yaw = abs(self.target_yaw)
+        return 1 if absolute_yaw > 200.0 else 0 if absolute_yaw > 150.0 else 1 if absolute_yaw > 80.0 else 0
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
         if InputDistance <0.4:   
