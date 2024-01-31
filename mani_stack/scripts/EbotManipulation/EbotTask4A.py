@@ -29,8 +29,8 @@ def main():
     
     global positionToGO
     positionToGO = {
-      'ap1':{'xyz': [4.63, -0.2,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [1.1,0.0], 'Yaw': 0.0},
-      'ap2':{'xyz': [6.3, -1.6,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,0.4 ] , 'Yaw': 90}
+      'ap1':{'xyz': [4.63, -0.1,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [1.5,0.0], 'Yaw': 0.0},
+      'ap2':{'xyz': [6.2, -1.9,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,0.4] , 'Yaw': 90}
     }
     
     withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
@@ -109,7 +109,6 @@ def main():
                 print("moving to ",positionName," ",ultrasonic_value)
                 if (ultrasonic_value[0]+ultrasonic_value[1])/2 >=16.0:
                     navigator.cancelTask()
-                    
                     UltraSoniceForNAv2.dockingClient = UltraSoniceForNAv2.create_client(DockSw, '/dock_control')
                     UltraSoniceForNAv2.dockingRequest = DockSw.Request()
                     UltraSoniceForNAv2.dockingRequest.rack_no = rack_no
