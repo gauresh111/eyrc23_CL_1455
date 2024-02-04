@@ -46,6 +46,7 @@ class ArucoNameCoordinate:
         self.eulerAngles = None
         self.rotationName = None
 
+
 class ArucoData:
     def __init__(self):
         self.name = None
@@ -53,6 +54,7 @@ class ArucoData:
         self.position = None
         self.quaternions = None
         self.yaw = None
+        self.yaw_error = None
         self.ap = None
         self.rotation_name = None
 
@@ -73,6 +75,7 @@ def aruco_name_list_updater(msg):
     global aruco_name_list
     # aruco_name_list = msg.data.split()
 
+
 def aruco_data_updater(msg):
     global aruco_name_list
     global aruco_angle_list
@@ -81,7 +84,6 @@ def aruco_data_updater(msg):
     aruco_name_list = data.get("id")
     aruco_angle_list = data.get("angle")
     aruco_ap_list = data.get("ap")
-    
 
 
 def main():
@@ -276,6 +278,8 @@ def main():
         ):
             node.get_logger().info("EEF service not available, waiting again...")
 
+    arucoData = []
+
     while len(arucoData) < len(aruco_name_list):
         flag = True
         for aruco in aruco_name_list:
@@ -307,7 +311,19 @@ def main():
                 ]
                 arucoData[i].yaw = aruco_angle_list[i]
                 arucoData[i].ap = aruco_ap_list[i]
-                arucoData[i].rotation_name = "Front" if aruco_ap_list[i] == "ap1" else "Left" if aruco_ap_list[i] == "ap2" else "Right"
+                arucoData[i].rotation_name = (
+                    "Front"
+                    if aruco_ap_list[i] == "ap1"
+                    else "Left" if aruco_ap_list[i] == "ap2" else "Right"
+                )
+
+                if arucoData[i].ap == "ap1":
+                    error = arucoData[i].yaw
+                elif arucoData[i].ap == "ap2":
+                    error = arucoData[i].yaw - 90
+                else:
+                    error = arucoData[i].yaw + 90
+                arucoData[i].yaw_error = error
 
                 # angles = tf3d.euler.quat2euler(
                 #     [
@@ -330,7 +346,7 @@ def main():
                 # else:
                 #     arucoData[i].rotationName = "Front"
 
-    print(" No. of Arucos Detected: ", len(arucoData))
+    print("No. of Arucos Detected: ", len(arucoData), "\n")
     for aruco in arucoData:
         print(
             "Aruco Name: ",
@@ -341,10 +357,13 @@ def main():
             list(np.around(np.array(aruco.quaternions), 2)),
             "\nYaw: ",
             aruco.yaw,
+            "\nYaw Error: ",
+            aruco.yaw_error,
             "\nap: ",
             aruco.ap,
             "\nRotation Name: ",
             aruco.rotation_name,
+            "\n",
         )
     if is_sim == False:
 
@@ -448,7 +467,7 @@ def main():
             req.link1_name = "link"
             req.model2_name = "ur5"
             req.link2_name = "wrist_3_link"
-            print("ur5 ->",box_name)
+            print("ur5 ->", box_name)
             print(gripper_control.call_async(req))
             time.sleep(0.2)
 
@@ -489,7 +508,12 @@ def main():
         return True if currentTolerance <= tolerance else False, currentTolerance
 
     def moveToPoseWithServo(
-        TargetPose, TargetQuats, QuatsOnly=False, PoseOnly=False, TargetYaw=0
+        TargetPose,
+        TargetQuats,
+        QuatsOnly=False,
+        PoseOnly=False,
+        TargetYaw=0,
+        YawError=0,
     ):
         if is_sim == False:
             switch_controller(useMoveit=False)
@@ -499,12 +523,16 @@ def main():
         sphericalToleranceAchieved = False
         currentPose, currentQuats = getCurrentPose()
         _, magnitude = checkSphericalTolerance(currentPose, TargetPose, tolerance)
-        distance = magnitude
         magnitude *= 3
         vx, vy, vz = (
             (TargetPose[0] - currentPose[0]) / magnitude,
             (TargetPose[1] - currentPose[1]) / magnitude,
             (TargetPose[2] - currentPose[2]) / magnitude,
+        )
+        distance = magnitude
+        totalTime = (
+            distance
+            / checkSphericalTolerance([0.0, 0.0, 0.0], [vx, vy, vz], tolerance)[1]
         )
         print("TargetQuats:", TargetQuats, "CurrentQuats:", currentQuats)
         TargetEuler = euler_from_quaternion(
@@ -515,9 +543,11 @@ def main():
         )
         ax, ay, az = (
             (TargetEuler[0] - currentEuler[0]) / magnitude,
-            (TargetEuler[1] - currentEuler[1]) / magnitude,
             (TargetEuler[2] - currentEuler[2]) / magnitude,
+            (TargetEuler[1] - currentEuler[1]) / magnitude,
         )
+        print("yawError_d: ", YawError, "yawError_r: ", math.radians(YawError))
+        az = (math.radians(YawError) / totalTime) * 3
         print("TargetPose:", TargetPose, "CurrentPose:", currentPose)
         print("TargetEuler:", TargetEuler, "CurrentEuler:", currentEuler)
 
@@ -526,19 +556,20 @@ def main():
 
         if QuatsOnly == True:
             print("Servoing Quats Only")
-            TargetYaw = math.radians(TargetYaw)
-            if currentEuler[0] >= TargetYaw:
-                az *= -1
-            else:
-                az *= 1
-            yawError = TargetYaw - currentEuler[0]
+            yawError = math.radians(YawError)
+            az = -0.5 if yawError > 0.0 else 0.5 
             print("Yaw Error: ", yawError)
             while abs(yawError) > 0.02:
                 moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
                 # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
                 currentEuler = getCurrentPose(useEuler=True)[1]
-                yawError = TargetYaw - currentEuler[0]
-                print("Yaw Error: ", yawError)
+                if TargetYaw == 0:
+                    yawError =  - (currentEuler[2] - math.pi/2)
+                elif TargetYaw == 90:
+                    yawError = (currentEuler[2]-math.pi)
+                else:
+                    yawError = currentEuler[2] #math.radians(TargetYaw) - (currentEuler[2])
+                print("Yaw Error: ", yawError, "current: ", currentEuler[2], "Target: ", math.radians(TargetYaw))
                 time.sleep(0.01)
                 if servo_status > 0:
                     mission_status = False
@@ -568,6 +599,8 @@ def main():
 
         else:
             print("Servoing Pose and Quats")
+            print("Estimated Time: ", totalTime, " seconds")
+            currentTime = node.get_clock().now().nanoseconds * 1e-9
             while sphericalToleranceAchieved == False:
                 moveWithServo([vx, vy, vz], [0.0, 0.0, az])
                 # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
@@ -575,16 +608,21 @@ def main():
                 sphericalToleranceAchieved, _ = checkSphericalTolerance(
                     currentPose, TargetPose, tolerance
                 )
-                if (
-                    checkSphericalTolerance(currentQuats, TargetQuats, tolerance)
-                    == True
-                ):
-                    ax, ay, az = 0.0, 0.0, 0.0
+                # if (
+                #     checkSphericalTolerance(currentQuats, TargetQuats, tolerance)
+                #     == True
+                # ):
+                #     ax, ay, az = 0.0, 0.0, 0.0
                 time.sleep(0.01)
                 if servo_status > 0:
                     mission_status = False
                     print("Exited While Loop due to Servo Error", servo_status)
                     break
+            print(
+                "Time taken: ",
+                node.get_clock().now().nanoseconds * 1e-9 - currentTime,
+                " seconds",
+            )
             if is_sim == False:
                 switch_controller(useMoveit=True)
             return mission_status
@@ -594,11 +632,12 @@ def main():
         aruco_id = aruco_data.id
         aruco_position = aruco_data.position
         aruco_quaternions = aruco_data.quaternions
-        aruco_yaw = aruco_data.yaw
+        yaw = aruco_data.yaw
+        yaw_error = aruco_data.yaw_error
         aruco_ap = aruco_data.ap
         rotation_name = aruco_data.rotation_name
         box_name = "box" + str(aruco_id)
-        
+
         def servo_status_updater(msg):
             global servo_status
             servo_status = msg.data
@@ -644,11 +683,23 @@ def main():
             round(aruco_position[2], 2),
         ]
         if rotation_name == "Left":
-            midPosition = [aruco_position[0], aruco_position[1] - 0.23, aruco_position[2]]
+            midPosition = [
+                aruco_position[0],
+                aruco_position[1] - 0.23,
+                aruco_position[2],
+            ]
         elif rotation_name == "Right":
-            midPosition = [aruco_position[0], aruco_position[1] + 0.23, aruco_position[2]]
+            midPosition = [
+                aruco_position[0],
+                aruco_position[1] + 0.23,
+                aruco_position[2],
+            ]
         else:
-            midPosition = [aruco_position[0] - 0.23, aruco_position[1], aruco_position[2]]
+            midPosition = [
+                aruco_position[0] - 0.23,
+                aruco_position[1],
+                aruco_position[2],
+            ]
         aruco_quaternions = [
             round(aruco_quaternions[0], 4),
             round(aruco_quaternions[1], 4),
@@ -667,7 +718,14 @@ def main():
                 Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name
             )
 
-        temp_result = moveToPoseWithServo(TargetPose=aruco_position, TargetQuats=aruco_quaternions)
+        if is_sim == False:
+            time.sleep(0.1)
+            controlGripper("ON", box_name)
+            time.sleep(0.2)
+
+        temp_result = moveToPoseWithServo(
+            TargetPose=aruco_position, TargetQuats=aruco_quaternions, YawError=yaw_error
+        )
         print("Servo Result: ", temp_result)
         global_counter = 0
         while global_counter < 5:
@@ -716,9 +774,33 @@ def main():
             global_counter += 1
 
         print("Tolerance Achieved: Reached Box")
-        time.sleep(0.1)
-        controlGripper("ON", box_name)
-        time.sleep(0.2)
+
+        # print("## Pushing Box by 5cm")
+
+        # if rotation_name == "Left":
+        #     aruco_position[1] += 0.10
+        # elif rotation_name == "Right":
+        #     aruco_position[1] -= 0.10
+        # else:
+        #     aruco_position[0] += 0.10
+
+        # temp_result = moveToPoseWithServo(TargetPose=aruco_position, TargetQuats=aruco_quaternions)
+        if is_sim == True:
+            time.sleep(0.1)
+            controlGripper("ON", box_name)
+            time.sleep(0.2)
+            
+        targetYaw = (
+            90 if rotation_name == "Left" else -90 if rotation_name == "Right" else 0
+        )
+
+        temp_result = moveToPoseWithServo(
+            TargetPose=aruco_position,
+            TargetQuats=aruco_quaternions,
+            TargetYaw=targetYaw,
+            YawError=yaw_error,
+            QuatsOnly=True,
+        )
 
         for i in range(3):
             moveit2.add_collision_mesh(
@@ -755,11 +837,23 @@ def main():
 
         current_position, current_quaternions = getCurrentPose()
         if rotation_name == "Left":
-            midPosition = [current_position[0], current_position[1] - 0.23, current_position[2]]
+            midPosition = [
+                current_position[0],
+                current_position[1] - 0.23,
+                current_position[2],
+            ]
         elif rotation_name == "Right":
-            midPosition = [current_position[0], current_position[1] + 0.23, current_position[2]]
+            midPosition = [
+                current_position[0],
+                current_position[1] + 0.23,
+                current_position[2],
+            ]
         else:
-            midPosition = [current_position[0] - 0.23, current_position[1], current_position[2]]
+            midPosition = [
+                current_position[0] - 0.23,
+                current_position[1],
+                current_position[2],
+            ]
 
         print("### Pulling Box Out")
         moveToPoseWithServo(
@@ -795,7 +889,7 @@ def main():
     collisionObjectDistances = {"left": 0.0, "front": 0.0, "right": 0.0}
     left_flag, front_flag, right_flag = False, False, False
     for aruco in arucoData:
-        
+
         ap = aruco.ap
         print(aruco.name + ":", ap)
 
@@ -858,9 +952,7 @@ def main():
     )
 
     for aruco, drop in zip(arucoData, Drop_Joints_List):
-        moveToPose(
-            aruco, drop
-        )
+        moveToPose(aruco, drop)
 
     print("Done")
     rclpy.spin(node)

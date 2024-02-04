@@ -144,6 +144,7 @@ def detect_aruco(image):
     center_aruco_list = []
     distance_from_rgb_list = []
     angle_aruco_list = []
+    verify_angle_list = []
     width_aruco_list = []
     ids = []
 
@@ -163,6 +164,7 @@ def detect_aruco(image):
             angle_aruco_list,
             width_aruco_list,
             ids,
+            verify_angle_list
         )
 
     #   ->  Use these aruco parameters-
@@ -195,6 +197,7 @@ def detect_aruco(image):
             angle_aruco_list,
             width_aruco_list,
             ids,
+            verify_angle_list
         )
     # for corner, id, markerCorner in zip(corners, markerIds, markerCorners):
     for corner, id in zip(corners, markerIds):
@@ -232,6 +235,12 @@ def detect_aruco(image):
             [corner], size_of_aruco_m, cam_mat, dist_mat
         )
 
+        #Angles we get in "angles" dont go beyond 90 degrees and sign stays the same. Hence this is used.
+        rmat = cv2.Rodrigues(rvec)[0]
+        verify_angle = math.degrees(math.acos(rmat[0][0]))
+
+        verify_angle_list.append(verify_angle)
+
         rvec = np.array(rvec)
         rvec = rvec.reshape(3)
         tvec = np.array(tvec)
@@ -254,6 +263,7 @@ def detect_aruco(image):
         angle_aruco_list,
         width_aruco_list,
         ids,
+        verify_angle_list
     )
     ############################################
 
@@ -425,22 +435,31 @@ class aruco_tf(Node):
         # INSTRUCTIONS & HELP :
 
         # 	->  Get aruco center, distance from rgb, angle, width and ids list from 'detect_aruco_center' defined above
-        centers, distances, angles, widths, ids = detect_aruco(self.cv_image)
+        centers, distances, angles, widths, ids, verify_angles = detect_aruco(self.cv_image)
 
         #   ->  Loop over detected box ids received to calculate position and orientation transform to publish TF
-        for center, distance, angle, width, id in zip(
-            centers, distances, angles, widths, ids
+        for center, distance, angle, width, id, verify_angle in zip(
+            centers, distances, angles, widths, ids, verify_angles
         ):
 
             #   ->  Use this equation to correct the input aruco angle received from cv2 aruco function 'estimatePoseSingleMarkers' here
             #       It's a correction formula-
             # angle[1] = (0.788*angle[1]) - ((angle[1]**2)/3160)
+            
             angle[1] = angle[1] + (0.2 * angle[1]) - ((angle[1] ** 2) / 3160)
             angle[1] = math.degrees(angle[1])
             if angle[1] < abs(80):
                 arucoAngle = -0.208 + 0.837*angle[1] + 7.38e-05*angle[1]**2 + 1.36e-05*angle[1]**3 + -2.63e-09*angle[1]**4
             else:
                 arucoAngle = angle[1]
+            arucoAngle *= -1
+
+            tempAp = self.get_rack_name(self.nearest_angle(arucoAngle))
+            if tempAp == "ap3":
+                arucoAngle = -verify_angle
+            elif tempAp == "ap2":
+                arucoAngle = verify_angle
+
             # if id  == 3:
             #     print(angle[1])
 
@@ -504,7 +523,7 @@ class aruco_tf(Node):
                 print("no base_link to camera_link transform found")
                 pass
 
-            finalQuat = tf3d.euler.euler2quat(0, -math.radians(arucoAngle), 0)
+            finalQuat = tf3d.euler.euler2quat(0, math.radians(arucoAngle), 0)
 
             transformStamped = TransformStamped()
             transformStamped.header.stamp = self.get_clock().now().to_msg()
@@ -550,10 +569,10 @@ class aruco_tf(Node):
                 transformStamped.transform.rotation.w = tranform.transform.rotation.w
                 self.br.sendTransform(transformStamped)
                 aruco_name_list.append("obj_" + str(id))
-                angleDegree=round(-arucoAngle)
-                # print("angleDegree:", angleDegree)
-                aruco_angle_list.append(angleDegree)
-                ap_list.append(self.get_rack_name(self.nearest_angle(angleDegree)))
+                arucoAngle=round(arucoAngle)
+                aruco_angle_list.append(arucoAngle)
+                ap_list.append(self.get_rack_name(self.nearest_angle(arucoAngle)))
+                
             except Exception as e:
                 print(e)
                 pass        
@@ -562,8 +581,8 @@ class aruco_tf(Node):
         #       Refer MD book on portal for sample image -> https://portal.e-yantra.org/
         
         try:
-            cv2.imshow("aruco_image", arucoImageWindow)
-            cv2.waitKey(1)
+            # cv2.imshow("aruco_image", arucoImageWindow)
+            # cv2.waitKey(1)
             tempStr = " "
             tempName = " "
             aruco_data_string = String()
