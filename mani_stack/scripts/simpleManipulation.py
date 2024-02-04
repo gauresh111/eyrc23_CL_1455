@@ -325,27 +325,6 @@ def main():
                     error = arucoData[i].yaw + 90
                 arucoData[i].yaw_error = error
 
-                # angles = tf3d.euler.quat2euler(
-                #     [
-                #         arucoData[i].quaternions[3],
-                #         arucoData[i].quaternions[0],
-                #         arucoData[i].quaternions[1],
-                #         arucoData[i].quaternions[2],
-                #     ]
-                # )
-                # angles = [math.degrees(angle) for angle in angles]
-                # angles = [normalizeAngle(angle, radians=True) for angle in angles]
-                # # subtract 90 from all angles
-                # angles = [angle - 90 for angle in angles]
-                # yaw = angles[2]
-
-                # if nearestAngle(yaw) == 90.0:
-                #     arucoData[i].rotationName = "Left"
-                # elif nearestAngle(yaw) == -90.0:
-                #     arucoData[i].rotationName = "Right"
-                # else:
-                #     arucoData[i].rotationName = "Front"
-
     print("No. of Arucos Detected: ", len(arucoData), "\n")
     for aruco in arucoData:
         print(
@@ -557,19 +536,28 @@ def main():
         if QuatsOnly == True:
             print("Servoing Quats Only")
             yawError = math.radians(YawError)
-            az = -0.5 if yawError > 0.0 else 0.5 
+            az = -0.5 if yawError > 0.0 else 0.5
             print("Yaw Error: ", yawError)
             while abs(yawError) > 0.02:
                 moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
                 # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
                 currentEuler = getCurrentPose(useEuler=True)[1]
                 if TargetYaw == 0:
-                    yawError =  - (currentEuler[2] - math.pi/2)
+                    yawError = -(currentEuler[2] - math.pi / 2)
                 elif TargetYaw == 90:
-                    yawError = (currentEuler[2]-math.pi)
+                    yawError = currentEuler[2] - math.pi
                 else:
-                    yawError = currentEuler[2] #math.radians(TargetYaw) - (currentEuler[2])
-                print("Yaw Error: ", yawError, "current: ", currentEuler[2], "Target: ", math.radians(TargetYaw))
+                    yawError = currentEuler[
+                        2
+                    ]  # math.radians(TargetYaw) - (currentEuler[2])
+                print(
+                    "Yaw Error: ",
+                    yawError,
+                    "current: ",
+                    currentEuler[2],
+                    "Target: ",
+                    math.radians(TargetYaw),
+                )
                 time.sleep(0.01)
                 if servo_status > 0:
                     mission_status = False
@@ -789,7 +777,7 @@ def main():
             time.sleep(0.1)
             controlGripper("ON", box_name)
             time.sleep(0.2)
-            
+
         targetYaw = (
             90 if rotation_name == "Left" else -90 if rotation_name == "Right" else 0
         )
@@ -957,7 +945,7 @@ def main():
     print("Done")
     rclpy.spin(node)
     rclpy.shutdown()
-
+    exit(0)
 
 if __name__ == "__main__":
     main()
