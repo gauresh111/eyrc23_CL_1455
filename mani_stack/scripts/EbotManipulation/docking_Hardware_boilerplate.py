@@ -100,9 +100,10 @@ class MyRobotDockingController(Node):
         global robot_pose
         # Create a callback group for managing callbacks
         self.callback_group = ReentrantCallbackGroup()
-        self.reset_imu()                                    # Reset IMU data
-        self.reset_odom()       
-        self.get_logger().info("imu and odom reset done")
+        self.reset_imu()
+        for i in range(3):                                    # Reset IMU data
+            self.reset_odom()       
+        self.get_logger().warn("imu and odom reset done")
         # Subscribe to odometry data for robot pose information
         
 
@@ -373,9 +374,13 @@ class MyRobotDockingController(Node):
                     dockingNode.get_logger().warn(dockingNode.future.result().message)
                 
             def rackAttach():
-                switch_eletromagent(True)
-                # self.UltraOrientation()
+                switch_eletromagent(False)
                 stopBot(0.1)
+                for i in range(10):
+                    switch_eletromagent(True)
+                    stopBot(0.1)
+                # self.UltraOrientation()
+                
                 self.UltraOrientationLinear()
                 stopBot(0.1)
                 stopBot(0.5,-0.1,0.0)
@@ -410,7 +415,7 @@ class MyRobotDockingController(Node):
                 # stopBot(0.4) 
                 switch_eletromagent(False)
                 #moving ebot back from rack
-                stopBot(0.8,1.0,0.0)
+                stopBot(0.4,0.8,0.0)
                 stopBot(0.1)
             
             self.is_docking = False

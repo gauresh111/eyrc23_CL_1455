@@ -29,8 +29,8 @@ def main():
     
     global positionToGO
     positionToGO = {
-      'ap1':{'xyz': [4.63, -0.1,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [1.5,0.0], 'Yaw': 0.0},
-      'ap2':{'xyz': [6.2, -1.9,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,0.4] , 'Yaw': 90}
+      'ap1':{'xyz': [4.63, -0.1,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [1.0,0.0], 'Yaw': 0.0},
+      'ap2':{'xyz': [6.2, -1.9,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,1.1] , 'Yaw': 90}
     }
     
     withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
@@ -107,16 +107,16 @@ def main():
         while not navigator.isTaskComplete():
             if not israck:
                 print("moving to ",positionName," ",ultrasonic_value)
-                if (ultrasonic_value[0]+ultrasonic_value[1])/2 >=16.0:
-                    navigator.cancelTask()
-                    UltraSoniceForNAv2.dockingClient = UltraSoniceForNAv2.create_client(DockSw, '/dock_control')
-                    UltraSoniceForNAv2.dockingRequest = DockSw.Request()
-                    UltraSoniceForNAv2.dockingRequest.rack_no = rack_no
-                    UltraSoniceForNAv2.dockingRequest.is_rack_detached = True
-                    future = UltraSoniceForNAv2.dockingClient.call_async(UltraSoniceForNAv2.dockingRequest)
-                    rclpy.spin_until_future_complete(UltraSoniceForNAv2, future)
-                    navigator.goToPose(goalPose)
-                rclpy.spin_once(UltraSoniceForNAv2, timeout_sec=0.1)
+                # if (ultrasonic_value[0]+ultrasonic_value[1])/2 >=18.0:
+                #     # navigator.cancelTask()
+                #     # UltraSoniceForNAv2.dockingClient = UltraSoniceForNAv2.create_client(DockSw, '/dock_control')
+                #     # UltraSoniceForNAv2.dockingRequest = DockSw.Request()
+                #     # UltraSoniceForNAv2.dockingRequest.rack_no = rack_no
+                #     # UltraSoniceForNAv2.dockingRequest.is_rack_detached = True
+                #     # # future = UltraSoniceForNAv2.dockingClient.call_async(UltraSoniceForNAv2.dockingRequest)
+                #     # # rclpy.spin_until_future_complete(UltraSoniceForNAv2, future)
+                #     # navigator.goToPose(goalPose)
+                # rclpy.spin_once(UltraSoniceForNAv2, timeout_sec=0.1)
 
         
         UltraSoniceForNAv2.destroy_node()
