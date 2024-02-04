@@ -233,12 +233,12 @@ class MyRobotDockingController(Node):
         while (reachedExtra == False):
             if X1 == 0:
                 distance=self.distanceSingle(self.targetX,robot_pose[0])
-                if distance < 0.04:
+                if distance < 0.4:
                     reachedExtra = True
                 print("X: target",self.targetX,"current",robot_pose[0],"distance",distance)
             elif X1 == 1:
                 distance=self.distanceSingle(self.targetY,robot_pose[1])
-                if distance < 0.04:
+                if distance < 0.4:
                     reachedExtra = True
                 print("Y: target",self.targetY,"current",robot_pose[1],"distance",distance)
             speed=self.odomLinearDockingprocess(distance)
@@ -349,7 +349,7 @@ class MyRobotDockingController(Node):
                 
             def rackAttach():
                 
-                self.UltraOrientation()
+                # self.UltraOrientation()
                 stopBot(0.1)
                 self.UltraOrientationLinear()
                 stopBot(0.1)
