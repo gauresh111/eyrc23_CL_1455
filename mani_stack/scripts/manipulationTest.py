@@ -21,14 +21,19 @@ import transforms3d as tf3d
 import numpy as np
 from std_msgs.msg import Bool
 from ebot_docking.srv import ManipulationSw
+import yaml
+
+from tf_transformations import quaternion_from_euler, euler_from_quaternion
 
 if is_sim == True:
     from linkattacher_msgs.srv import AttachLink, DetachLink
 else:
-    from ur_msgs.srv import SetIO #type: ignore
-    from controller_manager_msgs.srv import SwitchController 
+    from ur_msgs.srv import SetIO  # type: ignore
+    from controller_manager_msgs.srv import SwitchController
 
 aruco_name_list = []
+aruco_angle_list = []
+aruco_ap_list = []
 servo_status = 5
 current_joint_states = [0, 0, 0, 0, 0, 0]
 StartBox = False
@@ -45,6 +50,18 @@ class ArucoNameCoordinate:
         self.quaternions = None
         self.eulerAngles = None
         self.rotationName = None
+
+
+class ArucoData:
+    def __init__(self):
+        self.name = None
+        self.id = None
+        self.position = None
+        self.quaternions = None
+        self.yaw = None
+        self.yaw_error = None
+        self.ap = None
+        self.rotation_name = None
 
 
 class ArucoBoxPose:
@@ -78,6 +95,16 @@ def Arm_manipulation_callback(request, response):
     response.success = True
     response.message = "Success"
     return response
+
+
+def aruco_data_updater(msg):
+    global aruco_name_list
+    global aruco_angle_list
+    global aruco_ap_list
+    data = yaml.safe_load(msg.data)
+    aruco_name_list = data.get("id")
+    aruco_angle_list = data.get("angle")
+    aruco_ap_list = data.get("ap")
 
 
 def main():
@@ -154,6 +181,8 @@ def main():
     tolerance = 0.02
 
     global aruco_name_list
+    global aruco_angle_list
+    global aruco_ap_list
     global StartBox
 
     # Create node for this example
@@ -203,13 +232,15 @@ def main():
     }
 
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
-    
+
     if is_sim == False:
-        contolMSwitch = node.create_client(SwitchController, "/controller_manager/switch_controller")
+        contolMSwitch = node.create_client(
+            SwitchController, "/controller_manager/switch_controller"
+        )
 
         while not contolMSwitch.wait_for_service(timeout_sec=5.0):
             node.get_logger().warn(f"Service control Manager is not yet available...")
-    
+
     ManipulationStart = node.create_subscription(
         Bool, "/StartArnManipulation", getBox_id, 10
     )
@@ -267,7 +298,7 @@ def main():
                 break
             else:
                 continue
-    
+
     if is_sim == True:
         while not node.create_client(AttachLink, "/GripperMagnetON").wait_for_service(
             timeout_sec=1.0
@@ -326,8 +357,9 @@ def main():
                 arucoData = []
 
                 for i in range(len(aruco_name_list)):
-                    arucoData.append(ArucoNameCoordinate())
+                    arucoData.append(ArucoData())
                     arucoData[i].name = aruco_name_list[i]
+                    arucoData[i].id = int(re.search(r"\d+", aruco_name_list[i]).group())
                     transform = tf_buffer.lookup_transform(
                         "base_link", aruco_name_list[i], rclpy.time.Time()
                     ).transform
@@ -342,30 +374,21 @@ def main():
                         transform.rotation.z,
                         transform.rotation.w,
                     ]
-                    arucoData[i].eulerAngles = tf3d.euler.quat2euler(
-                        arucoData[i].quaternions
+                    arucoData[i].yaw = aruco_angle_list[i]
+                    arucoData[i].ap = aruco_ap_list[i]
+                    arucoData[i].rotation_name = (
+                        "Front"
+                        if aruco_ap_list[i] == "ap1"
+                        else "Left" if aruco_ap_list[i] == "ap2" else "Right"
                     )
 
-                    angles = tf3d.euler.quat2euler(
-                        [
-                            arucoData[i].quaternions[3],
-                            arucoData[i].quaternions[0],
-                            arucoData[i].quaternions[1],
-                            arucoData[i].quaternions[2],
-                        ]
-                    )
-                    angles = [math.degrees(angle) for angle in angles]
-                    angles = [normalizeAngle(angle, radians=True) for angle in angles]
-                    # subtract 90 from all angles
-                    angles = [angle - 90 for angle in angles]
-                    yaw = angles[2]
-
-                    if nearestAngle(yaw) == 90.0:
-                        arucoData[i].rotationName = "Left"
-                    elif nearestAngle(yaw) == -90.0:
-                        arucoData[i].rotationName = "Right"
+                    if arucoData[i].ap == "ap1":
+                        error = arucoData[i].yaw
+                    elif arucoData[i].ap == "ap2":
+                        error = arucoData[i].yaw - 90
                     else:
-                        arucoData[i].rotationName = "Front"
+                        error = arucoData[i].yaw + 90
+                    arucoData[i].yaw_error = error
 
         print(" No. of Arucos Detected: ", len(arucoData))
         for aruco in arucoData:
@@ -374,34 +397,51 @@ def main():
                 aruco.name,
                 "\nPosition: ",
                 aruco.position,
-                "\nRotation: ",
-                aruco.rotationName,
                 "\nQuaternions: ",
                 list(np.around(np.array(aruco.quaternions), 2)),
-                "\nEuler Angles: ",
-                list(np.around(np.array(aruco.eulerAngles), 2)),
+                "\nYaw: ",
+                aruco.yaw,
+                "\nYaw Error: ",
+                aruco.yaw_error,
+                "\nap: ",
+                aruco.ap,
+                "\nRotation Name: ",
+                aruco.rotation_name,
                 "\n",
             )
         if is_sim == False:
+
             def switch_controller(useMoveit: bool):
-                contolMSwitch = node.create_client(SwitchController, "/controller_manager/switch_controller")
+                contolMSwitch = node.create_client(
+                    SwitchController, "/controller_manager/switch_controller"
+                )
                 # Parameters to switch controller
                 switchParam = SwitchController.Request()
-                if useMoveit == True :
-                    switchParam.activate_controllers = ["scaled_joint_trajectory_controller"] # for normal use of moveit
+                if useMoveit == True:
+                    switchParam.activate_controllers = [
+                        "scaled_joint_trajectory_controller"
+                    ]  # for normal use of moveit
                     switchParam.deactivate_controllers = ["forward_position_controller"]
                 else:
-                    switchParam.activate_controllers = ["forward_position_controller"] # for servoing
-                    switchParam.deactivate_controllers= ["scaled_joint_trajectory_controller"]
+                    switchParam.activate_controllers = [
+                        "forward_position_controller"
+                    ]  # for servoing
+                    switchParam.deactivate_controllers = [
+                        "scaled_joint_trajectory_controller"
+                    ]
                 switchParam.strictness = 2
                 switchParam.start_asap = False
 
                 # calling control manager service after checking its availability
                 while not contolMSwitch.wait_for_service(timeout_sec=5.0):
-                    node.get_logger().warn(f"Service control Manager is not yet available...")
+                    node.get_logger().warn(
+                        f"Service control Manager is not yet available..."
+                    )
                 contolMSwitch.call_async(switchParam)
                 time.sleep(1.0)
-                print("[CM]: Switching to","Moveit" if useMoveit else "Servo","Complete")
+                print(
+                    "[CM]: Switching to", "Moveit" if useMoveit else "Servo", "Complete"
+                )
 
         def moveWithServo(linear_speed, angular_speed):
             twist_msg = TwistStamped()
@@ -452,6 +492,10 @@ def main():
             tempQuats[2] = round(transform.transform.rotation.z, 2)
             tempQuats[3] = round(transform.transform.rotation.w, 2)
             if useEuler == True:
+                tempQuats[0] = transform.transform.rotation.w
+                tempQuats[1] = transform.transform.rotation.x
+                tempQuats[2] = transform.transform.rotation.y
+                tempQuats[3] = transform.transform.rotation.z
                 tempQuats = tf3d.euler.quat2euler(tempQuats)
             return tempPose, tempQuats
 
@@ -461,11 +505,15 @@ def main():
                     gripper_control = node.create_client(AttachLink, "/GripperMagnetON")
                     req = AttachLink.Request()
                 else:
-                    gripper_control = node.create_client(DetachLink, "/GripperMagnetOFF")
+                    gripper_control = node.create_client(
+                        DetachLink, "/GripperMagnetOFF"
+                    )
                     req = DetachLink.Request()
 
                 while not gripper_control.wait_for_service(timeout_sec=1.0):
-                    node.get_logger().info("EEF service not available, waiting again...")
+                    node.get_logger().info(
+                        "EEF service not available, waiting again..."
+                    )
 
                 req.model1_name = box_name
                 req.link1_name = "link"
@@ -476,28 +524,31 @@ def main():
 
                 print("Gripper Status: ", status, "has been requested")
             else:
-                '''
+                """
                 based on the state given as i/p the service is called to activate/deactivate
                 pin 16 of TCP in UR5
                 i/p: node, state of pin:Bool
                 o/p or return: response from service call
-                '''
+                """
                 if status == "ON":
                     state = 1
                 else:
                     state = 0
-                gripper_control = node.create_client(SetIO, '/io_and_status_controller/set_io')
+                gripper_control = node.create_client(
+                    SetIO, "/io_and_status_controller/set_io"
+                )
                 while not gripper_control.wait_for_service(timeout_sec=1.0):
-                    node.get_logger().info('EEF Tool service not available, waiting again...')
-                req         = SetIO.Request()
-                req.fun     = 1
-                req.pin     = 16
-                req.state   = float(state)
+                    node.get_logger().info(
+                        "EEF Tool service not available, waiting again..."
+                    )
+                req = SetIO.Request()
+                req.fun = 1
+                req.pin = 16
+                req.state = float(state)
                 gripper_control.call_async(req)
                 print("Gripper Hardware Status: ", status, "has been requested")
                 time.sleep(1.0)
                 return state
-
 
         def checkSphericalTolerance(currentPose, targetPose, tolerance):
             currentTolerance = math.sqrt(
@@ -508,7 +559,12 @@ def main():
             return True if currentTolerance <= tolerance else False, currentTolerance
 
         def moveToPoseWithServo(
-            TargetPose, TargetQuats, QuatsOnly=False, PoseOnly=False, TargetYaw=0
+            TargetPose,
+            TargetQuats,
+            QuatsOnly=False,
+            PoseOnly=False,
+            TargetYaw=0,
+            YawError=0,
         ):
             if is_sim == False:
                 switch_controller(useMoveit=False)
@@ -524,17 +580,25 @@ def main():
                 (TargetPose[1] - currentPose[1]) / magnitude,
                 (TargetPose[2] - currentPose[2]) / magnitude,
             )
-            TargetEuler = tf3d.euler.quat2euler(
+            distance = magnitude
+            totalTime = (
+                distance
+                / checkSphericalTolerance([0.0, 0.0, 0.0], [vx, vy, vz], tolerance)[1]
+            )
+            print("TargetQuats:", TargetQuats, "CurrentQuats:", currentQuats)
+            TargetEuler = euler_from_quaternion(
                 [TargetQuats[3], TargetQuats[0], TargetQuats[1], TargetQuats[2]]
             )
-            currentEuler = tf3d.euler.quat2euler(
+            currentEuler = euler_from_quaternion(
                 [currentQuats[3], currentQuats[0], currentQuats[1], currentQuats[2]]
             )
             ax, ay, az = (
                 (TargetEuler[0] - currentEuler[0]) / magnitude,
-                (TargetEuler[1] - currentEuler[1]) / magnitude,
                 (TargetEuler[2] - currentEuler[2]) / magnitude,
+                (TargetEuler[1] - currentEuler[1]) / magnitude,
             )
+            print("yawError_d: ", YawError, "yawError_r: ", math.radians(YawError))
+            az = (math.radians(YawError) / totalTime) * 3
             print("TargetPose:", TargetPose, "CurrentPose:", currentPose)
             print("TargetEuler:", TargetEuler, "CurrentEuler:", currentEuler)
 
@@ -543,19 +607,29 @@ def main():
 
             if QuatsOnly == True:
                 print("Servoing Quats Only")
-                TargetYaw = math.radians(TargetYaw)
-                if currentEuler[0] >= TargetYaw:
-                    az *= -1
-                else:
-                    az *= 1
-                yawError = TargetYaw - currentEuler[0]
+                yawError = math.radians(YawError)
+                az = -0.5 if yawError > 0.0 else 0.5
                 print("Yaw Error: ", yawError)
                 while abs(yawError) > 0.02:
                     moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
                     # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
                     currentEuler = getCurrentPose(useEuler=True)[1]
-                    yawError = TargetYaw - currentEuler[0]
-                    print("Yaw Error: ", yawError)
+                    if TargetYaw == 0:
+                        yawError = -(currentEuler[2] - math.pi / 2)
+                    elif TargetYaw == 90:
+                        yawError = currentEuler[2] - math.pi
+                    else:
+                        yawError = currentEuler[
+                            2
+                        ]  # math.radians(TargetYaw) - (currentEuler[2])
+                    print(
+                        "Yaw Error: ",
+                        yawError,
+                        "current: ",
+                        currentEuler[2],
+                        "Target: ",
+                        math.radians(TargetYaw),
+                    )
                     time.sleep(0.01)
                     if servo_status > 0:
                         mission_status = False
@@ -585,6 +659,8 @@ def main():
 
             else:
                 print("Servoing Pose and Quats")
+                print("Estimated Time: ", totalTime, " seconds")
+                currentTime = node.get_clock().now().nanoseconds * 1e-9
                 while sphericalToleranceAchieved == False:
                     moveWithServo([vx, vy, vz], [0.0, 0.0, az])
                     # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
@@ -592,21 +668,36 @@ def main():
                     sphericalToleranceAchieved, _ = checkSphericalTolerance(
                         currentPose, TargetPose, tolerance
                     )
-                    if (
-                        checkSphericalTolerance(currentQuats, TargetQuats, tolerance)
-                        == True
-                    ):
-                        ax, ay, az = 0.0, 0.0, 0.0
+                    # if (
+                    #     checkSphericalTolerance(currentQuats, TargetQuats, tolerance)
+                    #     == True
+                    # ):
+                    #     ax, ay, az = 0.0, 0.0, 0.0
                     time.sleep(0.01)
                     if servo_status > 0:
                         mission_status = False
                         print("Exited While Loop due to Servo Error", servo_status)
                         break
+                print(
+                    "Time taken: ",
+                    node.get_clock().now().nanoseconds * 1e-9 - currentTime,
+                    " seconds",
+                )
                 if is_sim == False:
                     switch_controller(useMoveit=True)
                 return mission_status
 
-        def moveToPose(position, quaternions, position_name, rotation_name, dropData):
+        def moveToPose(aruco_data, drop_angles):
+            aruco_name = aruco_data.name
+            aruco_id = aruco_data.id
+            aruco_position = aruco_data.position
+            aruco_quaternions = aruco_data.quaternions
+            yaw = aruco_data.yaw
+            yaw_error = aruco_data.yaw_error
+            aruco_ap = aruco_data.ap
+            rotation_name = aruco_data.rotation_name
+            box_name = "box" + str(aruco_id)
+
             def servo_status_updater(msg):
                 global servo_status
                 servo_status = msg.data
@@ -615,7 +706,7 @@ def main():
             def joint_states_updater(msg):
                 global current_joint_states
                 current_joint_states = list([states for states in msg.position])
-                # print("Joint States: ", joint_states)
+                # print("Joint States: ", current_joint_states)
 
             servoNode = Node("ServoNode")
             callback_group = ReentrantCallbackGroup()
@@ -630,54 +721,85 @@ def main():
             )
             servoNode.odom_sub
 
-            # jointStatesNode = Node("JointStatesNode")
-            # callback_group = ReentrantCallbackGroup()
-            # jointStates_executor = rclpy.executors.MultiThreadedExecutor(2)
-            # jointStates_executor.add_node(jointStatesNode)
-            # jointStates_executor_thread = Thread(
-            #     target=jointStates_executor.spin, daemon=True, args=()
-            # )
-            # jointStates_executor_thread.start()
-            # jointStatesNode.odom_sub = jointStatesNode.create_subscription(
-            #     JointState, "/joint_states", joint_states_updater, 10
-            # )
-            # jointStatesNode.odom_sub
+            jointStatesNode = Node("JointStatesNode")
+            callback_group = ReentrantCallbackGroup()
+            jointStates_executor = rclpy.executors.MultiThreadedExecutor(2)
+            jointStates_executor.add_node(jointStatesNode)
+            jointStates_executor_thread = Thread(
+                target=jointStates_executor.spin, daemon=True, args=()
+            )
+            jointStates_executor_thread.start()
+            jointStatesNode.odom_sub = jointStatesNode.create_subscription(
+                JointState, "/joint_states", joint_states_updater, 10
+            )
+            jointStatesNode.odom_sub
 
             time.sleep(0.2)
 
             global servo_status
 
             counter = 1
-            position = [
-                round(position[0], 2),
-                round(position[1], 2),
-                round(position[2], 2),
+            aruco_position = [
+                round(aruco_position[0], 2),
+                round(aruco_position[1], 2),
+                round(aruco_position[2], 2),
             ]
             if rotation_name == "Left":
-                midPosition = [position[0], position[1] - 0.23, position[2]]
+                midPosition = [
+                    aruco_position[0],
+                    aruco_position[1] - 0.23,
+                    aruco_position[2],
+                ]
             elif rotation_name == "Right":
-                midPosition = [position[0], position[1] + 0.23, position[2]]
+                midPosition = [
+                    aruco_position[0],
+                    aruco_position[1] + 0.23,
+                    aruco_position[2],
+                ]
             else:
-                midPosition = [position[0] - 0.23, position[1], position[2]]
-            quaternions = [
-                round(quaternions[0], 4),
-                round(quaternions[1], 4),
-                round(quaternions[2], 4),
-                round(quaternions[3], 4),
+                midPosition = [
+                    aruco_position[0] - 0.23,
+                    aruco_position[1],
+                    aruco_position[2],
+                ]
+            aruco_quaternions = [
+                round(aruco_quaternions[0], 4),
+                round(aruco_quaternions[1], 4),
+                round(aruco_quaternions[2], 4),
+                round(aruco_quaternions[3], 4),
             ]
-            box_name = "box" + str(int(re.search(r"\d+", position_name).group()))
+
+            if rotation_name == "Left":
+                moveToJointStates(
+                    Pickup_Joints_Left.joint_states, Pickup_Joints_Left.name
+                )
+            elif rotation_name == "Right":
+                moveToJointStates(
+                    Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name
+                )
+            else:
+                moveToJointStates(
+                    Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name
+                )
+
+            if is_sim == False:
+                time.sleep(0.1)
+                controlGripper("ON", box_name)
+                time.sleep(0.2)
 
             temp_result = moveToPoseWithServo(
-                TargetPose=position, TargetQuats=quaternions
+                TargetPose=aruco_position,
+                TargetQuats=aruco_quaternions,
+                YawError=yaw_error,
             )
             print("Servo Result: ", temp_result)
             global_counter = 0
             while global_counter < 5:
                 if temp_result == False:
-                    while True:
+                    while counter < 5:
                         print(
                             "Moving to ",
-                            position_name,
+                            aruco_name,
                             "    [Attempt: ",
                             counter,
                             "Global Attempt: ",
@@ -686,7 +808,7 @@ def main():
                         )
                         moveit2.move_to_pose(
                             position=midPosition,
-                            quat_xyzw=quaternions,
+                            quat_xyzw=aruco_quaternions,
                             tolerance_position=0.01,
                             tolerance_orientation=0.01,
                         )
@@ -697,12 +819,12 @@ def main():
                         else:
                             break
                     temp_result = moveToPoseWithServo(
-                        TargetPose=position, TargetQuats=quaternions
+                        TargetPose=aruco_position, TargetQuats=aruco_quaternions
                     )
-                    if global_counter > 4:
+                    if global_counter > 4 or counter > 4:
                         print(
                             "[ERROR !!!] Failed to reach",
-                            position_name,
+                            aruco_name,
                             "after 5 attempts, skipping to next box",
                         )
                         return
@@ -718,10 +840,35 @@ def main():
                 global_counter += 1
 
             print("Tolerance Achieved: Reached Box")
-            time.sleep(0.1)
 
-            controlGripper("ON", box_name)
-            time.sleep(0.2)
+            # print("## Pushing Box by 5cm")
+
+            # if rotation_name == "Left":
+            #     aruco_position[1] += 0.10
+            # elif rotation_name == "Right":
+            #     aruco_position[1] -= 0.10
+            # else:
+            #     aruco_position[0] += 0.10
+
+            # temp_result = moveToPoseWithServo(TargetPose=aruco_position, TargetQuats=aruco_quaternions)
+            if is_sim == True:
+                time.sleep(0.1)
+                controlGripper("ON", box_name)
+                time.sleep(0.2)
+
+            targetYaw = (
+                90
+                if rotation_name == "Left"
+                else -90 if rotation_name == "Right" else 0
+            )
+
+            temp_result = moveToPoseWithServo(
+                TargetPose=aruco_position,
+                TargetQuats=aruco_quaternions,
+                TargetYaw=targetYaw,
+                YawError=yaw_error,
+                QuatsOnly=True,
+            )
 
             for i in range(3):
                 moveit2.add_collision_mesh(
@@ -756,17 +903,29 @@ def main():
             #         TargetYaw=0,
             #     )
 
-            position, quaternions = getCurrentPose()
+            current_position, current_quaternions = getCurrentPose()
             if rotation_name == "Left":
-                midPosition = [position[0], position[1] - 0.23, position[2]]
+                midPosition = [
+                    current_position[0],
+                    current_position[1] - 0.23,
+                    current_position[2],
+                ]
             elif rotation_name == "Right":
-                midPosition = [position[0], position[1] + 0.23, position[2]]
+                midPosition = [
+                    current_position[0],
+                    current_position[1] + 0.23,
+                    current_position[2],
+                ]
             else:
-                midPosition = [position[0] - 0.23, position[1], position[2]]
+                midPosition = [
+                    current_position[0] - 0.23,
+                    current_position[1],
+                    current_position[2],
+                ]
 
             print("### Pulling Box Out")
             moveToPoseWithServo(
-                TargetPose=midPosition, TargetQuats=quaternions, PoseOnly=True
+                TargetPose=midPosition, TargetQuats=current_quaternions, PoseOnly=True
             )
 
             print("Tolerance Achieved: Came out")
@@ -777,7 +936,7 @@ def main():
             print("Reached Pre-Drop")
 
             # Move to Drop Pose
-            moveToJointStates(dropData.joint_states, dropData.name)
+            moveToJointStates(drop_angles.joint_states, drop_angles.name)
             print("Reached Drop")
 
             controlGripper("OFF", box_name)
@@ -793,29 +952,17 @@ def main():
             print("Reached Initial Pose")
 
             servoNode.destroy_node()
-            # jointStatesNode.destroy_node()
+            jointStatesNode.destroy_node()
 
         collisionObjectDistances = {"left": 0.0, "front": 0.0, "right": 0.0}
         left_flag, front_flag, right_flag = False, False, False
         for aruco in arucoData:
-            angles = tf3d.euler.quat2euler(
-                [
-                    aruco.quaternions[3],
-                    aruco.quaternions[0],
-                    aruco.quaternions[1],
-                    aruco.quaternions[2],
-                ]
-            )
-            angles = [math.degrees(angle) for angle in angles]
-            angles = [normalizeAngle(angle, radians=True) for angle in angles]
-            # subtract 90 from all angles
-            angles = [angle - 90 for angle in angles]
-            yaw = angles[2]
-            print(aruco.name + ":", angles)
+
+            ap = aruco.ap
+            print(aruco.name + ":", ap)
 
             if left_flag == False:
-                print("Left Nearest:", nearestAngle(yaw))
-                if nearestAngle(yaw) == 90.0:
+                if ap == "ap2":
                     left_flag = True
                     collisionObjectDistances["left"] = (
                         round(aruco.position[1], 2) + 0.16
@@ -824,8 +971,7 @@ def main():
 
                 # print("Left Flag: ", left_flag)
             if front_flag == False:
-                print("Front Nearest:", nearestAngle(yaw))
-                if nearestAngle(yaw) == 0.0:
+                if ap == "ap1":
                     front_flag = True
                     collisionObjectDistances["front"] = (
                         round(aruco.position[0], 2) + 0.16
@@ -833,8 +979,7 @@ def main():
                     print(aruco.name + ":", "Left")
                 # print("Front Flag: ", front_flag)
             if right_flag == False:
-                print("Right Nearest:", nearestAngle(yaw))
-                if nearestAngle(yaw) == -90.0:
+                if ap == "ap3":
                     right_flag = True
                     collisionObjectDistances["right"] = (
                         round(aruco.position[2], 2) + 0.0
@@ -893,10 +1038,7 @@ def main():
 
         for aruco in arucoTargets:
             moveToPose(
-                aruco.position,
-                aruco.quaternions,
-                aruco.name,
-                aruco.rotationName,
+                aruco,
                 Drop_Joints_List[dropAngleIterator],
             )
             BoxId.pop(0)
