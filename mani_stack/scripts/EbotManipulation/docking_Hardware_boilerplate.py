@@ -298,6 +298,19 @@ class MyRobotDockingController(Node):
             self.moveBot(0.0,angle)
             yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
             self.GlobalStopTime(0.1)
+    def checkRackAttach(self):
+        global ultrasonic_value
+        left=[]
+        right=[]
+        for i in range(10):
+            left[i]=ultrasonic_value[0]
+            right[i]=ultrasonic_value[1]
+        left.sort()
+        right.sort()
+        if left[0] < 16.0 and right[0] < 16.0:
+            return True
+        return False
+                
     def controller_loop(self):
 
         # The controller loop manages the robot's linear and angular motion 
@@ -378,13 +391,15 @@ class MyRobotDockingController(Node):
                 stopBot(0.1)
                 for i in range(10):
                     switch_eletromagent(True)
-                    stopBot(0.1)
+                    stopBot(0.5)
                 # self.UltraOrientation()
                 
                 self.UltraOrientationLinear()
                 stopBot(0.1)
                 stopBot(0.5,-0.1,0.0)
                 stopBot(0.1)
+                
+                self.AngularDocking()
                 
             for i in range(2):
                 self.moveBot(0.0,0.0)   
@@ -408,6 +423,9 @@ class MyRobotDockingController(Node):
             # #orientation done
             if self.isAttach:
                 rackAttach()
+                stopBot(0.4,0.8,0.0)
+                stopBot(0.1)
+                self.checkRackAttach()
             else:
                 self.odomLinearDocking()
                 stopBot(0.1) 

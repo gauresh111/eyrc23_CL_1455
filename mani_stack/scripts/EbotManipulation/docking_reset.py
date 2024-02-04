@@ -18,7 +18,9 @@ def main():
     req = RelaySw.Request()
     req.relaychannel = 1
     req.relaystate = True
-    ResetNode.MagentCli.call_async(req)
+    future = ResetNode.MagentCli.call_async(req)
+    while(future.result() is  None):
+        time.sleep(0.2)
     time.sleep(2.0)
     req = RelaySw.Request()
     req.relaychannel = 1
