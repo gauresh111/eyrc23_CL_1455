@@ -34,9 +34,10 @@ def main():
     global positionToGO
     positionToGO = {
       'initalPose':{'xyz': [0.0, 0.0, 0.0], 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0],'Yaw':180},
-       'ap1':{'xyz': [4.63, -0.1,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [1.0,0.0], 'Yaw': 0.0},
-      'ap2':{'xyz': [6.2, -1.9,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,1.1] , 'Yaw': 90}
-     }
+       'ap1': {'xyz': [-0.2, -2.45, 0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [1.0, 0.0], 'Yaw': 3.14},
+      'ap2': {'xyz': [1.5,-4.3, 0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, 1.0], 'Yaw': -1.57}, 
+      'ap3': {'xyz': [1.5,-0.42, 0.0], 'quaternions': [0.0, 0.0, 0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, -1.0], 'Yaw': 1.57}
+       }
     # positionToGO = {
     #   'Pre_docking_pose':{'xyz' : [1.30, 2.04,0.0] , 'quaternions': [0.0, 0.0, 0.0, 1.0], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}, 
     #   'Arm_pose':{'xyz': [4.6, -0.5 ,0.0], 'quaternions': [0.0, 0.0, 1.0, 0.0], 'XYoffsets': [0.0, 0.0] , 'XYoffsets': [0.0, 0.0], 'Yaw': 1.57}
