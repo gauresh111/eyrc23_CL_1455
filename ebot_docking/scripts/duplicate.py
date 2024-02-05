@@ -29,11 +29,13 @@ from linkattacher_msgs.srv import AttachLink , DetachLink
 from std_msgs.msg import Bool
 from sensor_msgs.msg import Range
 from tf_transformations import euler_from_quaternion
+import random
 rclpy.init()
 global heading
 global ultrasonic_value
 ultrasonic_value = [0.0, 0.0]
 heading = 0.0
+counter = random.randint(0, 100)
 def main():
     duplicateNode = Node('duplicate_node')
     executor = rclpy.executors.MultiThreadedExecutor(3)
@@ -91,7 +93,7 @@ def main():
     
     duplicateNode.ultrasonic_rl_sub = duplicateNode.create_subscription(Range, '/ultrasonic_rl/scan', ultrasonic_rl_callback, 10)
     duplicateNode.ultrasonic_rr_sub = duplicateNode.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10)
-    duplicateNode.ultrasonic_pub = duplicateNode.create_publisher(Float32MultiArray, '/ultrasonic_sensor_std_float', 10)
+    duplicateNode.ultrasonic_pub = duplicateNode.create_publisher(Float32MultiArray, '/ultrasonic_sensor_std_float', 1)
     duplicateNode.imu_sub = duplicateNode.create_subscription(Imu, '/imu', imu_callback, 10)
     duplicateNode.imu_pub = duplicateNode.create_publisher(Float32, '/orientation', 10)
     duplicateNode.srv = duplicateNode.create_service(RelaySw, 'usb_relay_sw', usb_relay_sw_callback)
@@ -100,14 +102,25 @@ def main():
     def ultrasonic_publisher():
         global ultrasonic_value
         global heading
+        global counter
         msg = Float32MultiArray()
+        if counter%(10)== 0:
+            valueleft = random.randint(0, 100)
+            valueright = random.randint(0, 100)
+            ultrasonic_value[0] = valueleft.__float__()
+            ultrasonic_value[1] = valueright.__float__()
+         
         msg.data = [0.0,0.0,0.0,0.0,ultrasonic_value[0],ultrasonic_value[1]]
         duplicateNode.ultrasonic_pub.publish(msg)
+        counter=counter+1
+        
         msg = Float32()
         msg.data = heading
         duplicateNode.imu_pub.publish(msg)
+    rate = duplicateNode.create_rate(2, duplicateNode.get_clock())
     while True:
         ultrasonic_publisher()
+        rate.sleep()
         # rclpy.spin_(duplicateNode)
     duplicateNode.destroy_node()
     rclpy.shutdown()
