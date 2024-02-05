@@ -27,13 +27,22 @@ colcon build --packages-select ebot_docking && source install/setup.bash
 
 ###Run command
 ```sh
-ros2 launch ebot_real_nav2 ebot_nav2_brinup.launch.py
+source install/setup.bash && ros2 launch ebot_real_nav2 ebot_nav2_brinup.launch.py
 ```
 ```sh
-ros2 run mani_stack docking_Hardware_boilerplate.py
+source install/setup.bash && ros2 run mani_stack docking_Hardware_boilerplate.py
 ```
 ```sh
-ros2 run mani_stack EbotTask4A.py
+source install/setup.bash && ros2 run mani_stack EbotTask4A.py
+```
+```sh
+source install/setup.bash && ros2 run mani_stack ebot_yaml.py
+```
+```sh
+source install/setup.bash && ros2 run mani_stack simpleManipulation.py
+```
+```sh
+source install/setup.bash && ros2 run mani_stack perception.py
 ```
 ###service reset command
 ```sh
