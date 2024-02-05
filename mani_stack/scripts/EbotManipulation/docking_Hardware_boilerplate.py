@@ -425,7 +425,6 @@ class MyRobotDockingController(Node):
                 rackAttach()
                 stopBot(0.4,0.8,0.0)
                 stopBot(0.1)
-                self.checkRackAttach()
             else:
                 self.odomLinearDocking()
                 stopBot(0.1) 
