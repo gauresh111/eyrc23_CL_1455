@@ -51,21 +51,14 @@ install(
     share/${PROJECT_NAME}/
 )
 
-install(
-  PROGRAMS
-  config.yaml
-  DESTINATION lib/${PROJECT_NAME}
-)
+
 file(GLOB MY_PROGRAMS "scripts/*")
 install(
   PROGRAMS ${MY_PROGRAMS}
   DESTINATION lib/${PROJECT_NAME}/scripts
 )
 
-install(
-  PROGRAMS
-  DESTINATION share/${PROJECT_NAME}
-)
+
 install(
   PROGRAMS
   config.yaml
