@@ -101,7 +101,8 @@ class MyRobotDockingController(Node):
         # Create a callback group for managing callbacks
         self.callback_group = ReentrantCallbackGroup()
         self.reset_imu()
-        for i in range(3):                                    # Reset IMU data
+        self.reset_imu()
+        for i in range(6):                                    # Reset IMU data
             self.reset_odom()       
         self.get_logger().warn("imu and odom reset done")
         # Subscribe to odometry data for robot pose information
@@ -281,7 +282,7 @@ class MyRobotDockingController(Node):
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
-        linearValue = -0.08
+        linearValue = -0.09
         while (reached == False):
             m = (ultrasonic_value[1] - ultrasonic_value[0])
             angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
@@ -389,14 +390,14 @@ class MyRobotDockingController(Node):
             def rackAttach():
                 switch_eletromagent(False)
                 stopBot(0.1)
-                for i in range(10):
-                    switch_eletromagent(True)
-                    stopBot(0.5)
+            
+                switch_eletromagent(True)
+                stopBot(0.1)
                 # self.UltraOrientation()
                 
                 self.UltraOrientationLinear()
                 stopBot(0.1)
-                stopBot(0.5,-0.1,0.0)
+                stopBot(0.5,-0.05,0.0)
                 stopBot(0.1)
                 
                 self.AngularDocking()
