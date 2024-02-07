@@ -14,7 +14,7 @@ from std_msgs.msg import String,Bool
 global dockingPosition
 dockingPosition = {
        'ap1':{'xyz': [4.63, -0.21,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [1.2,0.0], 'Yaw': 0.0},
-      'ap2':{'xyz': [6.25, -1.9,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,1.1] , 'Yaw': 90}
+      'ap2':{'xyz': [6.25, -1.9,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,1.0] , 'Yaw': 90}
     }   
 def load_yaml(file_path):
     """Load a yaml file into a dictionary"""

@@ -243,7 +243,7 @@ class MyRobotDockingController(Node):
     def distanceSingle(self,x1, x2):
         return math.sqrt((x1 - x2) ** 2)*1.0
     def Whichaxistomove(self):
-        absolute_yaw = abs(self.target_yaw)
+        absolute_yaw = abs(self.targetYaw)
         return 1 if absolute_yaw > 200.0 else 0 if absolute_yaw > 150.0 else 1 if absolute_yaw > 80.0 else 0
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
@@ -282,7 +282,7 @@ class MyRobotDockingController(Node):
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
-        linearValue = -0.09
+        linearValue = -0.05
         while (reached == False):
             m = (ultrasonic_value[1] - ultrasonic_value[0])
             angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
@@ -397,7 +397,7 @@ class MyRobotDockingController(Node):
                 
                 self.UltraOrientationLinear()
                 stopBot(0.1)
-                stopBot(0.8,-0.05,0.0)
+                stopBot(1.0,-0.05,0.0)
                 stopBot(0.1)
                 
                 self.AngularDocking()
@@ -424,7 +424,7 @@ class MyRobotDockingController(Node):
             # #orientation done
             if self.isAttach:
                 rackAttach()
-                stopBot(0.4,0.8,0.0)
+                stopBot(0.6,0.05,0.0)
                 stopBot(0.1)
             else:
                 self.odomLinearDocking()
