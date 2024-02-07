@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-is_sim = True
+is_sim = False
 
 from os import path
 from threading import Thread
@@ -775,16 +775,17 @@ def main():
 
         print("Tolerance Achieved: Reached Box")
 
-        # print("## Pushing Box by 5cm")
+        print("## Pushing Box by 5cm")
 
-        # if rotation_name == "Left":
-        #     aruco_position[1] += 0.10
-        # elif rotation_name == "Right":
-        #     aruco_position[1] -= 0.10
-        # else:
-        #     aruco_position[0] += 0.10
+        if rotation_name == "Left":
+            aruco_position[1] += 0.05
+        elif rotation_name == "Right":
+            aruco_position[1] -= 0.05
+        else:
+            aruco_position[0] += 0.05
 
-        # temp_result = moveToPoseWithServo(TargetPose=aruco_position, TargetQuats=aruco_quaternions)
+        temp_result = moveToPoseWithServo(TargetPose=aruco_position, TargetQuats=aruco_quaternions)
+
         if is_sim == True:
             time.sleep(0.1)
             controlGripper("ON", box_name)
@@ -811,29 +812,6 @@ def main():
                 frame_id="tool0",
             )
             time.sleep(0.2)
-
-        # print("### Box in-place Yaw Correction")
-        # if rotation_name == "Left":
-        #     moveToPoseWithServo(
-        #         TargetPose=position,
-        #         TargetQuats=quaternions,
-        #         QuatsOnly=True,
-        #         TargetYaw=90,
-        #     )
-        # elif rotation_name == "Right":
-        #     moveToPoseWithServo(
-        #         TargetPose=position,
-        #         TargetQuats=quaternions,
-        #         QuatsOnly=True,
-        #         TargetYaw=-90,
-        #     )
-        # else:
-        #     moveToPoseWithServo(
-        #         TargetPose=position,
-        #         TargetQuats=quaternions,
-        #         QuatsOnly=True,
-        #         TargetYaw=0,
-        #     )
 
         current_position, current_quaternions = getCurrentPose()
         if rotation_name == "Left":
