@@ -595,6 +595,7 @@ class aruco_tf(Node):
             self.Ap_name_publisher.publish(rack_string)
             print("Rack_string:",rack_string)
             print("Aruco_List:", aruco_string)
+            print("Verify_Angle:", arucoAngle)
             print(aruco_name_list)
             print(aruco_angle_list)
             self.aruco_name_publisher.publish(aruco_string)
