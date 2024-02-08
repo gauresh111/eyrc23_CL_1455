@@ -595,6 +595,7 @@ class aruco_tf(Node):
             self.Ap_name_publisher.publish(rack_string)
             print("Rack_string:",rack_string)
             print("Aruco_List:", aruco_string)
+            print("Verify_Angle:", arucoAngle)
             print(aruco_name_list)
             print(aruco_angle_list)
             self.aruco_name_publisher.publish(aruco_string)
@@ -603,7 +604,7 @@ class aruco_tf(Node):
             aruco_data_yaml["ap"] = ap_list
             aruco_data_string.data = yaml.dump(aruco_data_yaml)
             self.aruco_data_publisher.publish(aruco_data_string)
-
+            
         except:
             pass
         #   ->  NOTE:   The Z axis of TF should be pointing inside the box (Purpose of this will be known in task 1B)
