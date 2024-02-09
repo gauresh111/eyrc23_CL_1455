@@ -299,6 +299,8 @@ class MyRobotDockingController(Node):
             self.moveBot(0.0,angle)
             yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
             self.GlobalStopTime(0.1)
+        self.moveBot(0.0,0.0)
+        self.moveBot(0.0,0.0)
     def checkRackAttach(self):
         global ultrasonic_value
         left=[]
@@ -311,7 +313,38 @@ class MyRobotDockingController(Node):
         if left[0] < 16.0 and right[0] < 16.0:
             return True
         return False
-                
+    def cameraYawConversion(self,yaw):
+        if self.targetYaw >= 178.0 and self.targetYaw <= 182.0:
+            return 180 - yaw
+
+        if yaw>0:
+            yaw =  360 - yaw
+        return int(yaw)
+    def is_yaw_within_tolerance(self,current_yaw, target_yaw, tolerance=5):
+        # Calculate the difference between the yaw angles
+        yaw_diff = abs(current_yaw - target_yaw)
+
+        # Check if the difference is within the tolerance
+        return yaw_diff <= tolerance
+    def cameraOrientation(self):
+        global aruco_name_list,aruco_angle_list,aruco_ap_list
+        botPid = pid()
+        target_rack = "ap"+self.rackName[-1]
+        rackIndex = self.find_string_in_list(target_rack,aruco_ap_list)
+        while rackIndex == -1:
+            rackIndex = self.find_string_in_list(target_rack,aruco_ap_list)
+            self.GlobalStopTime(0.1)
+        yaw = False
+        while yaw == False:
+            rackIndex = self.find_string_in_list(target_rack,aruco_ap_list)
+            cameraYaw = self.cameraYawConversion(aruco_angle_list[rackIndex])
+            print("rackIndex",rackIndex)
+            print("cameraYaw",cameraYaw)
+            print("targetYaw",int(self.normalize_angle(self.targetYaw)))
+            angle=botPid.computeAngle(int(self.normalize_angle(self.targetYaw)),cameraYaw,robot_pose[0],robot_pose[1])
+            self.moveBot(0.0,-angle)
+            yaw = self.is_yaw_within_tolerance(cameraYaw,self.targetYaw)
+            self.GlobalStopTime(0.1)
     def controller_loop(self):
 
         # The controller loop manages the robot's linear and angular motion 
@@ -428,9 +461,11 @@ class MyRobotDockingController(Node):
                 stopBot(0.1)
             else:
                 self.odomLinearDocking()
-                stopBot(0.1) 
+                stopBot(0.6) 
                 # stopBot(0.5,-0.1,0.0) #implement odom docking and camera docking
                 # stopBot(0.4) 
+                self.cameraOrientation() 
+                stopBot(0.3)
                 switch_eletromagent(False)
                 #moving ebot back from rack
                 stopBot(0.4,0.8,0.0)
