@@ -30,6 +30,12 @@ rclpy.init()
 global robot_pose
 global ultrasonic_value
 from tf_transformations import euler_from_quaternion,quaternion_from_euler
+global aruco_name_list
+global aruco_angle_list
+global aruco_ap_list
+aruco_name_list = []
+aruco_angle_list = []
+aruco_ap_list = []
 ultrasonic_value = [0.0, 0.0]
 robot_pose = [0.0, 0.0, 0.0,0.0]
 
@@ -313,6 +319,11 @@ class MyRobotDockingController(Node):
         if left[0] < 16.0 and right[0] < 16.0:
             return True
         return False
+    def find_string_in_list(self,string, list):
+        for index, item in enumerate(list):
+            if item == string:
+                return index
+        return -1
     def cameraYawConversion(self,yaw):
         if self.targetYaw >= 178.0 and self.targetYaw <= 182.0:
             return 180 - yaw
@@ -329,22 +340,31 @@ class MyRobotDockingController(Node):
     def cameraOrientation(self):
         global aruco_name_list,aruco_angle_list,aruco_ap_list
         botPid = pid()
-        target_rack = "ap"+self.rackName[-1]
-        rackIndex = self.find_string_in_list(target_rack,aruco_ap_list)
+        target_rack = "obj_"+self.rackName[-1]
+        rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
+        targetYAw = int(self.normalize_angle(self.targetYaw))
         while rackIndex == -1:
-            rackIndex = self.find_string_in_list(target_rack,aruco_ap_list)
+            rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
+            print("rackIndex",rackIndex)
+            print("target_rack",target_rack)
+            print("aruco_ap_list",aruco_ap_list)
+            # print("cameraYaw",cameraYaw)
             self.GlobalStopTime(0.1)
         yaw = False
         while yaw == False:
-            rackIndex = self.find_string_in_list(target_rack,aruco_ap_list)
+            rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
             cameraYaw = self.cameraYawConversion(aruco_angle_list[rackIndex])
             print("rackIndex",rackIndex)
             print("cameraYaw",cameraYaw)
-            print("targetYaw",int(self.normalize_angle(self.targetYaw)))
-            angle=botPid.computeAngle(int(self.normalize_angle(self.targetYaw)),cameraYaw,robot_pose[0],robot_pose[1])
+            print("targetYaw",targetYAw)
+            print("yaw Checker",yaw)
+            angle=botPid.computeAngle(targetYAw,cameraYaw,robot_pose[0],robot_pose[1])
             self.moveBot(0.0,-angle)
-            yaw = self.is_yaw_within_tolerance(cameraYaw,self.targetYaw)
+            yaw = self.is_yaw_within_tolerance((cameraYaw),targetYAw)
+            print("yaw Checker",yaw)
             self.GlobalStopTime(0.1)
+        for i in range(5):
+            self.moveBot(0.0,0.0)
     def controller_loop(self):
 
         # The controller loop manages the robot's linear and angular motion 
@@ -461,7 +481,7 @@ class MyRobotDockingController(Node):
                 stopBot(0.1)
             else:
                 self.odomLinearDocking()
-                stopBot(0.6) 
+                stopBot(0.1) 
                 # stopBot(0.5,-0.1,0.0) #implement odom docking and camera docking
                 # stopBot(0.4) 
                 self.cameraOrientation() 
