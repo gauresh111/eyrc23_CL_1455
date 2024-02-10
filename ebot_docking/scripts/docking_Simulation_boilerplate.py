@@ -10,6 +10,8 @@
 
 # Import necessary ROS2 packages and message types
 import os
+
+import yaml
 import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry
@@ -25,10 +27,16 @@ from linkattacher_msgs.srv import AttachLink , DetachLink
 from sensor_msgs.msg import Imu
 from rclpy.time import Time
 from std_msgs.msg import Bool
-
+from std_msgs.msg import String
 rclpy.init()
 global robot_pose
 global ultrasonic_value
+global aruco_name_list
+global aruco_angle_list
+global aruco_ap_list
+aruco_name_list = []
+aruco_angle_list = []
+aruco_ap_list = []
 ultrasonic_value = [0.0, 0.0]
 robot_pose = [0.0, 0.0, 0.0,0.0]
 
@@ -230,6 +238,20 @@ class MyRobotDockingController(Node):
             return 1
         else:
             return 0 
+    def cameraYawConversion(self,yaw):
+        if self.targetYaw >= 178.0 and self.targetYaw <= 182.0:
+            return 180 - yaw
+
+        if yaw>0:
+            yaw =  360 - yaw
+        return int(yaw)
+    def is_yaw_within_tolerance(self,current_yaw, target_yaw, tolerance=5):
+        # Calculate the difference between the yaw angles
+        yaw_diff = abs(current_yaw - target_yaw)
+
+        # Check if the difference is within the tolerance
+        print("inside yaw ",yaw_diff)
+        return yaw_diff <= tolerance
     def odomLinearDocking(self):
         global robot_pose
         reachedExtra = False    
@@ -284,6 +306,41 @@ class MyRobotDockingController(Node):
             self.moveBot(0.0,angle)
             yaw = True if(int(self.normalize_angle(self.targetYaw)) == int(self.normalize_angle(robot_pose[2]))) else False
             self.GlobalStopTime(0.1)
+    def find_string_in_list(self,string, list):
+        for index, item in enumerate(list):
+            if item == string:
+                return index
+        return -1
+    def cameraOrientation(self):
+        global aruco_name_list,aruco_angle_list,aruco_ap_list
+        botPid = pid()
+        target_rack = "obj_"+self.rackName[-1]
+        rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
+        targetYAw = int(self.normalize_angle(self.targetYaw))
+        while rackIndex == -1:
+            rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
+            print("rackIndex",rackIndex)
+            print("target_rack",target_rack)
+            print("aruco_ap_list",aruco_ap_list)
+            # print("cameraYaw",cameraYaw)
+            self.GlobalStopTime(0.1)
+        yaw = False
+        while yaw == False:
+            rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
+            cameraYaw = self.cameraYawConversion(aruco_angle_list[rackIndex])
+            print("rackIndex",rackIndex)
+            print("cameraYaw",cameraYaw)
+            print("targetYaw",targetYAw)
+            print("yaw Checker",yaw)
+            angle=botPid.computeAngle(targetYAw,cameraYaw,robot_pose[0],robot_pose[1])
+            self.moveBot(0.0,-angle)
+            yaw = self.is_yaw_within_tolerance((cameraYaw),targetYAw)
+            print("yaw Checker",yaw)
+            self.GlobalStopTime(0.1)
+        
+        for i in range(5):
+            self.moveBot(0.0,0.0)
+        
     def controller_loop(self):
 
         # The controller loop manages the robot's linear and angular motion 
@@ -314,6 +371,14 @@ class MyRobotDockingController(Node):
             ultrasonic_value[1] = round(msg.range,3)
             ultrasonic_value[1] = ultrasonic_value[1]*100
             # print("ultrasonic_value",ultrasonic_value)
+        def aruco_data_updater(msg):
+            global aruco_name_list
+            global aruco_angle_list
+            global aruco_ap_list
+            data = yaml.safe_load(msg.data)
+            aruco_name_list = data.get("id")
+            aruco_angle_list = data.get("angle")
+            aruco_ap_list = data.get("ap")
         if self.is_docking:
             # ...
             # Implement control logic here for linear and angular motion
@@ -322,15 +387,16 @@ class MyRobotDockingController(Node):
             global robot_pose
             global ultrasonic_value
             dockingNode = Node("GlobalNodeDocking")
-            
+            callback_group = ReentrantCallbackGroup()
             docking_executor = MultiThreadedExecutor(1)
             docking_executor.add_node(dockingNode)
             executor_thread = Thread(target=docking_executor.spin, daemon=True, args=())
             executor_thread.start()
-            dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
-            dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10)
-            dockingNode.ultrasonic_rl_sub = dockingNode.create_subscription(Range, '/ultrasonic_rl/scan', ultrasonic_rl_callback, 10)
-            dockingNode.ultrasonic_rr_sub = dockingNode.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10)
+            dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10, callback_group=callback_group)
+            dockingNode.imu_sub = dockingNode.create_subscription(Imu, '/imu', imu_callback, 10, callback_group=callback_group)
+            dockingNode.ultrasonic_rl_sub = dockingNode.create_subscription(Range, '/ultrasonic_rl/scan', ultrasonic_rl_callback, 10, callback_group=callback_group)
+            dockingNode.ultrasonic_rr_sub = dockingNode.create_subscription(Range, '/ultrasonic_rr/scan', ultrasonic_rr_callback, 10, callback_group=callback_group)
+            dockingNode.aruco_data_subscriber = dockingNode.create_subscription(String, "/aruco_data", aruco_data_updater, 10, callback_group=callback_group)
             dockingNodeClock = dockingNode.get_clock()
             dockingNode.link_attach_cli = dockingNode.create_client(AttachLink, '/ATTACH_LINK')
             dockingNode.lind_detached_cli = dockingNode.create_client(DetachLink, '/DETACH_LINK')
@@ -399,9 +465,10 @@ class MyRobotDockingController(Node):
             else:
                 self.odomLinearDocking()
                 # stopBot(0.8,-0.2,0.0) 
-                stopBot(0.4) 
+                stopBot(0.4)
+                self.cameraOrientation() 
                 detachRack(self.rackName)
-                
+                stopBot(0.1)
             #     #linear done
             #     self.AngularDocking()
             #     stopBot(0.1)

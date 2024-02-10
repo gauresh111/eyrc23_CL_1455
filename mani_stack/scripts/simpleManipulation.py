@@ -167,7 +167,7 @@ def main():
 
     # Create node for this example
     node = Node("pick_aruco")
-
+    
     # Create callback group that allows execution of callbacks in parallel without restrictions
     callback_group = ReentrantCallbackGroup()
 
