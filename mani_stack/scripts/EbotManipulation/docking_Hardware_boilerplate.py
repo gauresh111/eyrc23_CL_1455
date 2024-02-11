@@ -18,7 +18,7 @@ from geometry_msgs.msg import Twist
 from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.executors import MultiThreadedExecutor
 from mani_stack.srv import DockSw  # Import custom service message
-
+from sensor_msgs.msg import Imu
 from usb_relay.srv import RelaySw # type: ignore
 from std_srvs.srv import Trigger
 import math
@@ -47,7 +47,7 @@ class pid():
         self.error = 0
         self.lastError = 0
         self.odomLinear = 0.5
-        self.ultraKp=0.01
+        self.ultraKp=0.008
     def computeAngle(self ,setPoint, Input,X,Y):
         error = Input - setPoint                                         
         output = self.angleKp * error
@@ -81,10 +81,10 @@ class pid():
         output = self.ultraKp * error
         output = round(output,3)
         result = False
-        if output > 0.1:
-            output = 0.1
-        elif output < -0.1:
-            output = -0.1
+        if output > 0.08:
+            output = 0.08
+        elif output < -0.08:
+            output = -0.08
         if abs(round(error,3))<=5.0:
             result = True 
         mode = "Linear" if isLinear else "Angular"
@@ -307,18 +307,7 @@ class MyRobotDockingController(Node):
             self.GlobalStopTime(0.1)
         self.moveBot(0.0,0.0)
         self.moveBot(0.0,0.0)
-    def checkRackAttach(self):
-        global ultrasonic_value
-        left=[]
-        right=[]
-        for i in range(10):
-            left[i]=ultrasonic_value[0]
-            right[i]=ultrasonic_value[1]
-        left.sort()
-        right.sort()
-        if left[0] < 16.0 and right[0] < 16.0:
-            return True
-        return False
+    
     def find_string_in_list(self,string, list):
         for index, item in enumerate(list):
             if item == string:
@@ -380,15 +369,15 @@ class MyRobotDockingController(Node):
         
         def imu_callback(msg):
             global robot_pose
-            # quaternion_array = msg.orientation
-            # orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
-            # _, _, yaw = euler_from_quaternion(orientation_list)
-            yaw = msg.data
-            if yaw > 3.14:
-                yaw_new = (6.28 - yaw) * 1
-            else:
-                yaw_new = yaw * -1
-            # print(yaw_new)
+            quaternion_array = msg.orientation
+            orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
+            _, _, yaw_new = euler_from_quaternion(orientation_list)
+            # yaw = msg.data
+            # if yaw > 3.14:
+            #     yaw_new = (6.28 - yaw) * 1
+            # else:
+            #     yaw_new = yaw * -1
+            # # print(yaw_new)
             yaw = math.degrees(yaw_new)
             robot_pose[2] = round(yaw,2)
         def ultrasonic_callback(msg):
@@ -410,7 +399,7 @@ class MyRobotDockingController(Node):
             executor_thread = Thread(target=docking_executor.spin, daemon=True, args=())
             executor_thread.start()
             dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
-            dockingNode.imu_sub = dockingNode.create_subscription(Float32, '/orientation', imu_callback, 10)
+            dockingNode.imu_sub = dockingNode.create_subscription(Imu, 'sensors/imu1', 10)
             dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
             dockingNodeClock = dockingNode.get_clock()
             dockingNode.trigger_usb_relay = dockingNode.create_client(RelaySw, 'usb_relay_sw')
@@ -449,6 +438,7 @@ class MyRobotDockingController(Node):
                 # self.UltraOrientation()
                 
                 self.UltraOrientationLinear()
+                self.UltraOrientation()
                 stopBot(0.1)
                 stopBot(1.0,-0.05,0.0)
                 stopBot(0.1)
