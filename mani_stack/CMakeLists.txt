@@ -69,10 +69,12 @@ install(
 file(GLOB ArmSCripts "scripts/armManipulation/*")
 file(GLOB EbotScripts "scripts/EbotManipulation/*")
 file(GLOB task5Ascript "scripts/task5A/*")
+file(GLOB extra "scripts/extra/*")
 install(
   PROGRAMS ${ArmSCripts}
   PROGRAMS ${EbotScripts}
   PROGRAMS ${task5Ascript}
+  PROGRAMS ${extra}
   DESTINATION lib/${PROJECT_NAME}/scripts
 )
 
