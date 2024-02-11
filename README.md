@@ -25,6 +25,12 @@ colcon build --packages-select usb_relay && source install/setup.bash
 colcon build --packages-select ebot_docking && source install/setup.bash
 ```
 
+###Launch command
+```sh
+source install/setup.bash && ros2 launch mani_stack sensor_filter.py
+```
+
+
 ###Run command
 ```sh
 source install/setup.bash && ros2 launch ebot_real_nav2 ebot_nav2_brinup.launch.py
@@ -33,17 +39,31 @@ source install/setup.bash && ros2 launch ebot_real_nav2 ebot_nav2_brinup.launch.
 source install/setup.bash && ros2 run mani_stack docking_Hardware_boilerplate.py
 ```
 ```sh
-source install/setup.bash && ros2 run mani_stack EbotTask4A.py
+source install/setup.bash && ros2 run mani_stack EbotTask5A.py
 ```
 ```sh
 source install/setup.bash && ros2 run mani_stack ebot_yaml.py
 ```
+```sh
+source install/setup.bash && ros2 run mani_stack ebot_yaml.py
+```
+
+###Arm command
 ```sh
 source install/setup.bash && ros2 run mani_stack simpleManipulation.py
 ```
 ```sh
 source install/setup.bash && ros2 run mani_stack perception.py
 ```
+###topic filter command
+
+```sh
+source install/setup.bash && ros2 run mani_stack duplicateImu.py
+```
+```sh
+source install/setup.bash && ros2 run mani_stack ultraFilter.py
+```
+
 ###service reset command
 ```sh
 ros2 service call /reset_odom std_srvs/srv/Trigger
@@ -51,4 +71,11 @@ ros2 service call /reset_odom std_srvs/srv/Trigger
 
 ```sh
 ros2 service call /reset_imu std_srvs/srv/Trigger
+```
+###topic echo command
+```sh
+ros2 topic echo /ultrasonic_filter
+```
+```sh
+ros2 topic echo /aruco_data
 ```
