@@ -294,7 +294,7 @@ class MyRobotDockingController(Node):
             angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
             self.moveBot(linearValue,0.0)
             avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
-            if avgUltraSonic <19.0:
+            if avgUltraSonic <16.0:
                 reached = True
             self.GlobalStopTime(0.1)    
     def AngularDocking(self):   
@@ -440,10 +440,10 @@ class MyRobotDockingController(Node):
                 self.UltraOrientationLinear()
                 self.UltraOrientation()
                 stopBot(0.1)
-                stopBot(1.0,-0.05,0.0)
+                stopBot(1.2,-0.05,0.0)
                 stopBot(0.1)
                 
-                self.AngularDocking()
+                # self.AngularDocking()
                 
             for i in range(2):
                 self.moveBot(0.0,0.0)   
@@ -467,7 +467,7 @@ class MyRobotDockingController(Node):
             # #orientation done
             if self.isAttach:
                 rackAttach()
-                stopBot(0.6,0.05,0.0)
+                stopBot(1.2,0.05,0.0)
                 stopBot(0.1)
             else:
                 self.odomLinearDocking()
