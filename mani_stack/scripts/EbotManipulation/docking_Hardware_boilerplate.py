@@ -85,7 +85,7 @@ class pid():
             output = 0.08
         elif output < -0.08:
             output = -0.08
-        if abs(round(error,3))<=5.0:
+        if abs(round(error,3))<=3.0:
             result = True 
         mode = "Linear" if isLinear else "Angular"
         print(f"mode {mode} usrleft_value Left: {round(ultrasonic_value[0], 1)} usrright_value Right: {round(ultrasonic_value[1], 1)} error: {error} output: {output}")
@@ -284,7 +284,7 @@ class MyRobotDockingController(Node):
             print("m:",m)
             self.moveBot(0.0,angularValue)
             self.GlobalStopTime(0.1)
-    def UltraOrientationLinear(self):
+    def UltraOrientationLinear(self,Setpoint):
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
@@ -294,7 +294,7 @@ class MyRobotDockingController(Node):
             angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
             self.moveBot(linearValue,0.0)
             avgUltraSonic = (ultrasonic_value[0]+ultrasonic_value[1])/2
-            if avgUltraSonic <16.0:
+            if avgUltraSonic <Setpoint:
                 reached = True
             self.GlobalStopTime(0.1)    
     def AngularDocking(self):   
@@ -399,8 +399,8 @@ class MyRobotDockingController(Node):
             executor_thread = Thread(target=docking_executor.spin, daemon=True, args=())
             executor_thread.start()
             dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
-            dockingNode.imu_sub = dockingNode.create_subscription(Imu, 'sensors/imu1', 10)
-            dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
+            dockingNode.imu_sub = dockingNode.create_subscription(Imu, 'sensors/imu1',imu_callback, 10)
+            dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, '/ultrasonic_filter', ultrasonic_callback, 10)
             dockingNodeClock = dockingNode.get_clock()
             dockingNode.trigger_usb_relay = dockingNode.create_client(RelaySw, 'usb_relay_sw')
             while not dockingNode.trigger_usb_relay.wait_for_service(timeout_sec=1.0):
@@ -474,7 +474,7 @@ class MyRobotDockingController(Node):
                 stopBot(0.1) 
                 # stopBot(0.5,-0.1,0.0) #implement odom docking and camera docking
                 # stopBot(0.4) 
-                self.cameraOrientation() 
+                # self.cameraOrientation() 
                 stopBot(0.3)
                 switch_eletromagent(False)
                 #moving ebot back from rack

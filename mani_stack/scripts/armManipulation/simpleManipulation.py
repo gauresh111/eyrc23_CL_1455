@@ -529,6 +529,9 @@ def main():
             (TargetPose[1] - currentPose[1]) / magnitude,
             (TargetPose[2] - currentPose[2]) / magnitude,
         )
+        vx*=5
+        vy*=5
+        vz*=5
         distance = magnitude
         totalTime = (
             distance
@@ -546,6 +549,7 @@ def main():
             (TargetEuler[2] - currentEuler[2]) / magnitude,
             (TargetEuler[1] - currentEuler[1]) / magnitude,
         )
+        totalTime/=5
         print("yawError_d: ", YawError, "yawError_r: ", math.radians(YawError))
         az = (math.radians(YawError) / totalTime) * 3
         print("TargetPose:", TargetPose, "CurrentPose:", currentPose)
