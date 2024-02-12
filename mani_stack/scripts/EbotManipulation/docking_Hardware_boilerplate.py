@@ -24,7 +24,8 @@ from std_srvs.srv import Trigger
 import math
 from threading import Thread
 from rclpy.time import Time
-from std_msgs.msg import Bool,Float32MultiArray,Float32
+from std_msgs.msg import Bool,Float32MultiArray,String
+import yaml
 
 rclpy.init()
 global robot_pose
@@ -88,7 +89,12 @@ class pid():
         if abs(round(error,3))<=3.0:
             result = True 
         mode = "Linear" if isLinear else "Angular"
+        if error > abs(20.0):
+            print(f" NOt MOving Bot Error is to Large mode {mode} error: {error} output: {output}")
+            return 0.0,result
         print(f"mode {mode} usrleft_value Left: {round(ultrasonic_value[0], 1)} usrright_value Right: {round(ultrasonic_value[1], 1)} error: {error} output: {output}")
+        
+        
         return output*-1.0,result
     # def computeLinear(self, Input ,setPoint):
     #     error = Input - setPoint                                          
@@ -332,13 +338,19 @@ class MyRobotDockingController(Node):
         target_rack = "obj_"+self.rackName[-1]
         rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
         targetYAw = int(self.normalize_angle(self.targetYaw))
+        counter = 1
         while rackIndex == -1:
+            counter += 1
             rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
             print("rackIndex",rackIndex)
             print("target_rack",target_rack)
             print("aruco_ap_list",aruco_ap_list)
+            print("counter",counter)
             # print("cameraYaw",cameraYaw)
             self.GlobalStopTime(0.1)
+            if counter >1000:
+                return None
+                
         yaw = False
         while yaw == False:
             rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
@@ -385,6 +397,14 @@ class MyRobotDockingController(Node):
             ultrasonic_value[0] = round(msg.data[4],4)
             ultrasonic_value[1] = round(msg.data[5],4)  
             # print("ultrasonic_value",ultrasonic_value)
+        def aruco_data_updater(msg):
+            global aruco_name_list
+            global aruco_angle_list
+            global aruco_ap_list
+            data = yaml.safe_load(msg.data)
+            aruco_name_list = data.get("id")
+            aruco_angle_list = data.get("angle")
+            aruco_ap_list = data.get("ap")
         if self.is_docking:
             # ...
             # Implement control logic here for linear and angular motion
@@ -393,14 +413,16 @@ class MyRobotDockingController(Node):
             global robot_pose
             global ultrasonic_value
             dockingNode = Node("GlobalNodeDocking")
-            
+            callback_group = ReentrantCallbackGroup()
             docking_executor = MultiThreadedExecutor(1)
             docking_executor.add_node(dockingNode)
             executor_thread = Thread(target=docking_executor.spin, daemon=True, args=())
             executor_thread.start()
-            dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10)
-            dockingNode.imu_sub = dockingNode.create_subscription(Imu, 'sensors/imu1',imu_callback, 10)
-            dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, '/ultrasonic_filter', ultrasonic_callback, 10)
+            dockingNode.odom_sub = dockingNode.create_subscription(Odometry, '/odom', odometry_callback, 10,callback_group=callback_group)
+            dockingNode.imu_sub = dockingNode.create_subscription(Imu, 'sensors/imu1',imu_callback, 10,callback_group=callback_group)
+            dockingNode.ultra_sub = dockingNode.create_subscription(Float32MultiArray, '/ultrasonic_filter', ultrasonic_callback, 10,callback_group=callback_group)
+            dockingNode.aruco_data_subscriber = dockingNode.create_subscription(String, "/aruco_data", aruco_data_updater, 10, callback_group=callback_group)
+
             dockingNodeClock = dockingNode.get_clock()
             dockingNode.trigger_usb_relay = dockingNode.create_client(RelaySw, 'usb_relay_sw')
             while not dockingNode.trigger_usb_relay.wait_for_service(timeout_sec=1.0):
@@ -437,8 +459,20 @@ class MyRobotDockingController(Node):
                 stopBot(0.1)
                 # self.UltraOrientation()
                 
-                self.UltraOrientationLinear()
+                self.UltraOrientationLinear(Setpoint=40.0)
+                stopBot(0.1)
                 self.UltraOrientation()
+                stopBot(0.1)
+                self.UltraOrientationLinear(Setpoint=30.0)
+                stopBot(0.1)
+                self.UltraOrientation()
+                stopBot(0.1)
+                self.UltraOrientationLinear(Setpoint=20.0)
+                stopBot(0.1)
+                self.UltraOrientation()
+                stopBot(0.1)
+                self.UltraOrientationLinear(Setpoint=16.0)
+                
                 stopBot(0.1)
                 stopBot(1.2,-0.05,0.0)
                 stopBot(0.1)
