@@ -175,12 +175,12 @@ def generate_launch_description():
         robot_state_publisher_arm,
         TimerAction(period=1.0, 
                     actions=[
-                        spawn_controllers_manipulator,
-                            spawn_controllers_state,
+                        
                         ros2_control_node,
                             move_group_node,
                             servo_node,
-                            
+                            spawn_controllers_manipulator,
+                            spawn_controllers_state,
                             rviz,
                             ]),
         
