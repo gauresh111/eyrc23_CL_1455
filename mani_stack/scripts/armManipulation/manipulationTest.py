@@ -580,6 +580,7 @@ def main():
                 (TargetPose[1] - currentPose[1]) / magnitude,
                 (TargetPose[2] - currentPose[2]) / magnitude,
             )
+            
             distance = magnitude
             totalTime = (
                 distance
