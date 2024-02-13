@@ -90,8 +90,8 @@ def main():
     node.getpresentRacksSub
     while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
         print(' Nav2 Client service not available, waiting again...')
-    # while not node.ArmManipulationClient.wait_for_service(timeout_sec=1.0):
-    #     print(' ArmManipulation Client service not available, waiting again...')
+    while not node.ArmManipulationClient.wait_for_service(timeout_sec=1.0):
+        print(' ArmManipulation Client service not available, waiting again...')
     node.nav2RackRequest = RackSw.Request()
     node.ArmManipulationRequest = ManipulationSw.Request()
     global dockingPosition
@@ -118,21 +118,24 @@ def main():
         add_docking_position(rackName,xyz,quaternions,offsetXY,yaw)
     print(dockingPosition)
     rackPresentSub=[-1]
-    # while(-1 in rackPresentSub):
-    #         time.sleep(0.1)
-    #         print("waiting for ap list Node")
-    #         print("rackPresentSub",rackPresentSub)
-            # print("Key found:",rackName, value)
-    # if "Box" not in rackPresentSub:
-    #     for boxPresent in rackPresentSub:
-    #         node.ArmManipulationRequest.ap_name = boxPresent
-    #         node.ArmManipulationRequest.box_id = int(boxPresent[-1])
-    #         node.ArmManipulationRequest.total_racks = totalRacks
-    #         node.ArmManipulationRequest.starting = True
-    #         print("going to racks",node.ArmManipulationRequest)
-    #         del dockingPosition[boxPresent] 
-    #         package_id.remove(int(boxPresent[-1]))
-    #         futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
+    while(-1 in rackPresentSub):
+            time.sleep(0.1)
+            print("waiting for ap list Node")
+            print("rackPresentSub",rackPresentSub)
+            
+    if "Box" not in rackPresentSub:
+        for boxPresent in rackPresentSub:
+            node.ArmManipulationRequest.ap_name = boxPresent
+            node.ArmManipulationRequest.box_id = int(boxPresent[-1])
+            node.ArmManipulationRequest.total_racks = totalRacks
+            node.ArmManipulationRequest.starting = True
+            print("going to racks",node.ArmManipulationRequest)
+            try: 
+                del dockingPosition[boxPresent] 
+            except:
+                print("Rack not found")
+            package_id.remove(int(boxPresent[-1]))
+            # futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
     def distance(p1, p2):
         return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
     def findNearestAp(X,Y):

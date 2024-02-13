@@ -398,11 +398,11 @@ class aruco_tf(Node):
 
         return nearest
     def get_rack_name(self,angle):
-        if angle == 0:
+        if angle>=0 and angle<=45:
             rack_name = "ap1"
-        elif angle == 90:
+        elif angle>45 and angle<=90:
             rack_name = "ap2"
-        elif angle == -90:
+        elif angle<-45 and angle>=-90:
             rack_name = "ap3"
         return rack_name
     def process_image(self):

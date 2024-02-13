@@ -44,13 +44,13 @@ source install/setup.bash && ros2 run mani_stack EbotTask5A.py
 ```sh
 source install/setup.bash && ros2 run mani_stack ebot_yaml.py
 ```
-```sh
-source install/setup.bash && ros2 run mani_stack ebot_yaml.py
-```
 
+```sh
+source install/setup.bash && ros2 run mani_stack monitor.py
+```
 ###Arm command
 ```sh
-source install/setup.bash && ros2 run mani_stack simpleManipulation.py
+source install/setup.bash && ros2 run mani_stack manipulationTest.py
 ```
 ```sh
 source install/setup.bash && ros2 run mani_stack perception.py
