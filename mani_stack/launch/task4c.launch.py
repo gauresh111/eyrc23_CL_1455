@@ -5,7 +5,7 @@ def generate_launch_description():
 
     start_docking = ExecuteProcess(
         cmd=[[
-            'ros2 run ebot_docking docking_Simulation_boilerplate.py',
+            'ros2 run ebot_docking docking_Hardware_boilerplate.py',
         ]],
         shell=True
     )
@@ -39,10 +39,17 @@ def generate_launch_description():
     #     ]],
     #     shell=True
     # )
+    Start_duplication = ExecuteProcess(
+        cmd=[[
+            'ros2 run ebot_docking duplicate.py',
+        ]],
+        shell=True
+    )
     return LaunchDescription([
-    start_docking,
+    # start_docking,
     start_yaml_controller,
     start_nav2,
     Start_perceiption,
+    Start_duplication
     # Start_arm_manipulation
     ])
