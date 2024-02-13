@@ -192,11 +192,11 @@ def generate_launch_description():
         ],
     )
 
-    fanuc_controller_spawner = Node(
+    joint_trajectory_controller_spawner = Node(
         package="controller_manager",
         executable="spawner",
         arguments=[
-            "fanuc_controller",
+            "joint_trajectory_controller",
             "--controller-manager",
             "/controller_manager",
         ],
@@ -226,6 +226,6 @@ def generate_launch_description():
             ros2_control_node,
             mongodb_server_node,
             joint_state_broadcaster_spawner,
-            fanuc_controller_spawner,
+            joint_trajectory_controller_spawner,
         ]
     )
