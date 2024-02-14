@@ -11,9 +11,16 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 config_folder_name = 'ebot_docking'
 from std_msgs.msg import String,Bool
+global aruco_name_list
+global aruco_angle_list
+global aruco_ap_list
+aruco_name_list = []
+aruco_angle_list = []
+aruco_ap_list = []
+
 global dockingPosition
 dockingPosition = {
-       'ap1':{'xyz': [4.63, -0.21,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [1.2,0.0], 'Yaw': 0.0},
+      'ap1':{'xyz': [4.63, -0.21,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [1.2,0.0], 'Yaw': 0.0},
       'ap2':{'xyz': [6.25, -1.8,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,1.0] , 'Yaw': 90}
     }   
 def load_yaml(file_path):
@@ -82,11 +89,21 @@ def main():
         global rackPresentSub     
         rackPresentSub=data.data.split()
         rackPresentSub=set(rackPresentSub)
-    node.racksApsPub=node.create_publisher(Bool, '/StartArnManipulation', 10)
+    def aruco_data_updater(msg):
+        global aruco_name_list
+        global aruco_angle_list
+        global aruco_ap_list
+        data = yaml.safe_load(msg.data)
+        aruco_name_list = data.get("id")
+        aruco_angle_list = data.get("angle")
+        aruco_ap_list = data.get("ap")
+    node.racksApsPub=node.create_publisher(Bool, '/StartArnManipulation', 10 ,callback_group=callback_group)
     node.nav2RackClient = node.create_client(RackSw, '/RackNav2Sw')
     node.ArmManipulationClient = node.create_client(ManipulationSw, '/ArmManipulationSw')
     node.ExitNavPub=node.create_publisher(Bool, '/ExitNav', 30)
-    node.getpresentRacksSub = node.create_subscription(String, '/ap_list',getRackFromCamera, 10)
+    node.getpresentRacksSub = node.create_subscription(String, '/ap_list',getRackFromCamera, 10 ,callback_group=callback_group)
+    node.aruco_data_subscriber = node.create_subscription(String, "/aruco_data", aruco_data_updater, 10 ,callback_group=callback_group)
+            
     node.getpresentRacksSub
     while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
         print(' Nav2 Client service not available, waiting again...')
@@ -126,6 +143,12 @@ def main():
             
     if "Box" not in rackPresentSub:
         for boxPresent in rackPresentSub:
+            global aruco_name_list
+            global aruco_angle_list
+            global aruco_ap_list
+            rackIndex = find_string_in_list(boxPresent,aruco_ap_list)
+            getName = aruco_name_list[rackIndex]
+            
             node.ArmManipulationRequest.ap_name = boxPresent
             node.ArmManipulationRequest.box_id = int(boxPresent[-1])
             node.ArmManipulationRequest.total_racks = totalRacks
@@ -135,7 +158,7 @@ def main():
                 del dockingPosition[boxPresent] 
             except:
                 print("Rack not found")
-            package_id.remove(int(boxPresent[-1]))
+            package_id.remove(int(getName[-1]))
             futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
     print(dockingPosition)
     print("package_id",package_id)
@@ -148,8 +171,8 @@ def main():
         for ap in dockingPosition.keys():
             #get distance
             
-            search_rack = ap.find("r",)
-            if search_rack == -1:
+            search_rack = ap.find("ap",)
+            if search_rack != -1:
                 x1=dockingPosition[ap]["xyz"][0]
                 y1=dockingPosition[ap]["xyz"][1]
                 latestDistance = distance([x, y], [x1, y1])
