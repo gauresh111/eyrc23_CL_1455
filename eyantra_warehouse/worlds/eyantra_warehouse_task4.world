@@ -135,8 +135,8 @@
 	</include>
 
   <include>
-      <uri>model://boxes/box_1</uri>
-      <name>box1</name>
+      <uri>model://boxes/box_3</uri>
+      <name>box3</name>
       <pose>1.33 4.35 1.35 0 -0 0</pose>
 	</include>
 
@@ -150,8 +150,8 @@
 	</include>
 
   <include>
-      <uri>model://boxes/box_2</uri>
-      <name>box2</name>
+      <uri>model://boxes/box_1</uri>
+      <name>box1</name>
       <pose>2.03 3.40 1.35 0 -0 1.57</pose>
 	</include>
 
@@ -167,8 +167,8 @@
 	</include>
 
    <include>
-      <uri>model://boxes/box_3</uri>
-      <name>box3</name>
+      <uri>model://boxes/box_2</uri>
+      <name>box2</name>
       <!-- <pose>1.6 -1.318 1.30 0 -0 -1.57</pose> -->
       <pose>1.61065 -1.840503 1.23 0 0 -1.57</pose>
 	</include>
