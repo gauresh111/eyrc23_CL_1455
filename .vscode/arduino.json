@@ -1,7 +1,4 @@
 {
     "port": "/dev/ttyS9",
-    "board": "esp32:esp32:esp32doit-devkit-v1",
-    "programmer": "avrispmkii",
-    "sketch": "src.ino",
-    "configuration": "FlashFreq=80,UploadSpeed=921600,DebugLevel=none,EraseFlash=all"
+    "board": "esp32:esp32:esp32doit-devkit-v1"
 }
