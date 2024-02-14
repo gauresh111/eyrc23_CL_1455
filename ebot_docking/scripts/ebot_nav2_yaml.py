@@ -151,7 +151,7 @@ def main():
             getName = aruco_name_list[rackIndex]
             
             node.ArmManipulationRequest.ap_name = boxPresent
-            node.ArmManipulationRequest.box_id = int(boxPresent[-1])
+            node.ArmManipulationRequest.box_id = int(getName[-1])
             node.ArmManipulationRequest.total_racks = totalRacks
             node.ArmManipulationRequest.starting = True
             print("going to racks",node.ArmManipulationRequest)
