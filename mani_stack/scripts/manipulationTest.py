@@ -213,8 +213,8 @@ def main():
     tf_listener = tf2_ros.TransformListener(tf_buffer, node)
     aruco_name_subscriber = node.create_subscription(
         String,
-        "/aruco_list",
-        aruco_name_list_updater,
+        "/aruco_data",
+        aruco_data_updater,
         10,
         callback_group=callback_group,
     )
