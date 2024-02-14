@@ -135,7 +135,7 @@ def main():
             except:
                 print("Rack not found")
             package_id.remove(int(boxPresent[-1]))
-            # futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
+            futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
     def distance(p1, p2):
         return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
     def findNearestAp(X,Y):
@@ -173,29 +173,29 @@ def main():
         node.nav2RackRequest.yaw = yaw
         node.nav2RackRequest.offset_x = x_offset
         node.nav2RackRequest.offset_y = y_offset
-        # node.ArmManipulationRequest.ap_name = ap
-        # node.ArmManipulationRequest.box_id = package_id[data]
-        # node.ArmManipulationRequest.total_racks = totalRacks
-        # node.ArmManipulationRequest.starting = False
+        node.ArmManipulationRequest.ap_name = ap
+        node.ArmManipulationRequest.box_id = package_id[data]
+        node.ArmManipulationRequest.total_racks = totalRacks
+        node.ArmManipulationRequest.starting = False
         print("going to racks",node.nav2RackRequest)
-        # futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
+        futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
         counter=0
         for i in range(2):
             msg = Bool()
             msg.data = False
             node.racksApsPub.publish(msg)
             time.sleep(0.1)
-        # while(futureArm.result() is  None and counter<10):
-        #     try:
-        #         # node.aruco_name_publisher.publish(box_string)
-        #         print(futureArm.result())
-        #         time.sleep(1)
-        #     except KeyboardInterrupt:
-        #         rclpy.spin(node)
-        #         rclpy.shutdown()
-        #         exit(0)
-        #     counter+=1
-        # print("Arm Manipulation Response: ",futureArm.result())
+        while(futureArm.result() is  None and counter<10):
+            try:
+                # node.aruco_name_publisher.publish(box_string)
+                print(futureArm.result())
+                time.sleep(1)
+            except KeyboardInterrupt:
+                rclpy.spin(node)
+                rclpy.shutdown()
+                exit(0)
+            counter+=1
+        print("Arm Manipulation Response: ",futureArm.result())
         futureNav2 = node.nav2RackClient.call_async(node.nav2RackRequest)
         while(futureNav2.result() is  None):
             try:
