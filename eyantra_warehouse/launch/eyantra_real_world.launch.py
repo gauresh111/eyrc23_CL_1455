@@ -61,7 +61,7 @@ def generate_launch_description():
         package='tf2_ros',
         executable='static_transform_publisher',
         name='static_transform_publisher',
-        arguments = ["6.3", "-0.05", "0.58", "3.14", "0", "0", "world", "odom"],
+        arguments = ["6.9", "-0.05", "0.58", "3.14", "0", "0", "world", "odom"],
         output='screen')
     
     spawn_ebot = launch_ros.actions.Node(

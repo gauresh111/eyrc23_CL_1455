@@ -142,46 +142,39 @@ def generate_launch_description():
     ros2_control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
-        # name="ros2_control_node",
+        name="control_node_ros2",
         parameters= [
             {'robot_description': robot_description_arm},
             ros_controllers_file
         ],
-        output="both",
+        output="screen",
     )
 
     spawn_controllers_manipulator = Node(
             package="controller_manager", 
             executable="spawner",
             name="spawner_mani",
-            arguments=["joint_state_broadcaster","--controller-manager",
-            "/controller_manager",],
-            output="both")
+            arguments=['joint_trajectory_controller'],
+            output="screen")
     
 
     spawn_controllers_state = Node(
             package="controller_manager", 
             executable="spawner",
-            arguments=['joint_trajectory_controller'
-                      , "--controller-manager",
-            "/controller_manager",],
-            output="both")
-
-  
+            arguments=['joint_state_broadcaster'],
+            output="screen")
 
 
 
     return LaunchDescription([
         robot_state_publisher_arm,
         TimerAction(period=1.0, 
-                    actions=[
-                        
-                        ros2_control_node,
-                            move_group_node,
-                            servo_node,
-                            spawn_controllers_manipulator,
+                    actions=[spawn_controllers_manipulator,
                             spawn_controllers_state,
                             # rviz,
+                            ros2_control_node,
+                            move_group_node,
+                            servo_node
                             ]),
         
         ]

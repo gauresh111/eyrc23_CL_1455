@@ -11,11 +11,19 @@ import yaml
 from ament_index_python.packages import get_package_share_directory
 config_folder_name = 'ebot_docking'
 from std_msgs.msg import String,Bool
+global aruco_name_list
+global aruco_angle_list
+global aruco_ap_list
+aruco_name_list = []
+aruco_angle_list = []
+aruco_ap_list = []
+
 global dockingPosition
 dockingPosition = {
-       'ap1':{'xyz': [4.63, -0.21,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [1.2,0.0], 'Yaw': 0.0},
-      'ap2':{'xyz': [6.25, -1.8,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,1.0] , 'Yaw': 90}
-     }   
+      'ap1': {'xyz': [-0.2, -2.45, 0.0], 'quaternions': [0.0, 0.0, 0.9999996829318346, 0.0007963267107332633], 'XYoffsets': [1.0, 0.0], 'Yaw': 3.14},
+      'ap2': {'xyz': [1.45,-4.50, 0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, 1.0], 'Yaw': -1.57},
+      'ap3': {'xyz': [1.45,-0.42, 0.0], 'quaternions': [0.0, 0.0, 0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0, -1.0], 'Yaw': 1.57}
+    }   
 def load_yaml(file_path):
     """Load a yaml file into a dictionary"""
     try:
@@ -82,16 +90,26 @@ def main():
         global rackPresentSub     
         rackPresentSub=data.data.split()
         rackPresentSub=set(rackPresentSub)
-    node.racksApsPub=node.create_publisher(Bool, '/StartArnManipulation', 10)
+    def aruco_data_updater(msg):
+        global aruco_name_list
+        global aruco_angle_list
+        global aruco_ap_list
+        data = yaml.safe_load(msg.data)
+        aruco_name_list = data.get("id")
+        aruco_angle_list = data.get("angle")
+        aruco_ap_list = data.get("ap")
+    node.racksApsPub=node.create_publisher(Bool, '/StartArnManipulation', 10 ,callback_group=callback_group)
     node.nav2RackClient = node.create_client(RackSw, '/RackNav2Sw')
     node.ArmManipulationClient = node.create_client(ManipulationSw, '/ArmManipulationSw')
     node.ExitNavPub=node.create_publisher(Bool, '/ExitNav', 30)
-    node.getpresentRacksSub = node.create_subscription(String, '/ap_list',getRackFromCamera, 10)
+    node.getpresentRacksSub = node.create_subscription(String, '/ap_list',getRackFromCamera, 10 ,callback_group=callback_group)
+    node.aruco_data_subscriber = node.create_subscription(String, "/aruco_data", aruco_data_updater, 10 ,callback_group=callback_group)
+            
     node.getpresentRacksSub
     while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
         print(' Nav2 Client service not available, waiting again...')
-    # while not node.ArmManipulationClient.wait_for_service(timeout_sec=1.0):
-    #     print(' ArmManipulation Client service not available, waiting again...')
+    while not node.ArmManipulationClient.wait_for_service(timeout_sec=1.0):
+        print(' ArmManipulation Client service not available, waiting again...')
     node.nav2RackRequest = RackSw.Request()
     node.ArmManipulationRequest = ManipulationSw.Request()
     global dockingPosition
@@ -117,22 +135,34 @@ def main():
         xyz=[x,y,0.0]
         add_docking_position(rackName,xyz,quaternions,offsetXY,yaw)
     print(dockingPosition)
+    print("package_id",package_id)
     rackPresentSub=[-1]
-    # while(-1 in rackPresentSub):
-    #         time.sleep(0.1)
-    #         print("waiting for ap list Node")
-    #         print("rackPresentSub",rackPresentSub)
+    while(-1 in rackPresentSub):
+            time.sleep(0.1)
+            print("waiting for ap list Node")
+            print("rackPresentSub",rackPresentSub)
             
-    # if "Box" not in rackPresentSub:
-    #     for boxPresent in rackPresentSub:
-    #         node.ArmManipulationRequest.ap_name = boxPresent
-    #         node.ArmManipulationRequest.box_id = int(boxPresent[-1])
-    #         node.ArmManipulationRequest.total_racks = totalRacks
-    #         node.ArmManipulationRequest.starting = True
-    #         print("going to racks",node.ArmManipulationRequest)
-    #        
-    #         package_id.remove(int(boxPresent[-1]))
-            # futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
+    if "Box" not in rackPresentSub:
+        for boxPresent in rackPresentSub:
+            global aruco_name_list
+            global aruco_angle_list
+            global aruco_ap_list
+            rackIndex = find_string_in_list(boxPresent,aruco_ap_list)
+            getName = aruco_name_list[rackIndex]
+            
+            node.ArmManipulationRequest.ap_name = boxPresent
+            node.ArmManipulationRequest.box_id = int(boxPresent[-1])
+            node.ArmManipulationRequest.total_racks = totalRacks
+            node.ArmManipulationRequest.starting = True
+            print("going to racks",node.ArmManipulationRequest)
+            try: 
+                del dockingPosition[boxPresent] 
+            except:
+                print("Rack not found")
+            package_id.remove(int(getName[-1]))
+            futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
+    print(dockingPosition)
+    print("package_id",package_id)
     def distance(p1, p2):
         return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
     def findNearestAp(X,Y):
@@ -142,8 +172,8 @@ def main():
         for ap in dockingPosition.keys():
             #get distance
             
-            search_rack = ap.find("r",)
-            if search_rack == -1:
+            search_rack = ap.find("ap",)
+            if search_rack != -1:
                 x1=dockingPosition[ap]["xyz"][0]
                 y1=dockingPosition[ap]["xyz"][1]
                 latestDistance = distance([x, y], [x1, y1])
@@ -170,29 +200,29 @@ def main():
         node.nav2RackRequest.yaw = yaw
         node.nav2RackRequest.offset_x = x_offset
         node.nav2RackRequest.offset_y = y_offset
-        # node.ArmManipulationRequest.ap_name = ap
-        # node.ArmManipulationRequest.box_id = package_id[data]
-        # node.ArmManipulationRequest.total_racks = totalRacks
-        # node.ArmManipulationRequest.starting = False
+        node.ArmManipulationRequest.ap_name = ap
+        node.ArmManipulationRequest.box_id = package_id[data]
+        node.ArmManipulationRequest.total_racks = totalRacks
+        node.ArmManipulationRequest.starting = False
         print("going to racks",node.nav2RackRequest)
-        # futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
+        futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
         counter=0
         for i in range(2):
             msg = Bool()
             msg.data = False
             node.racksApsPub.publish(msg)
             time.sleep(0.1)
-        # while(futureArm.result() is  None and counter<10):
-        #     try:
-        #         # node.aruco_name_publisher.publish(box_string)
-        #         print(futureArm.result())
-        #         time.sleep(1)
-        #     except KeyboardInterrupt:
-        #         rclpy.spin(node)
-        #         rclpy.shutdown()
-        #         exit(0)
-        #     counter+=1
-        # print("Arm Manipulation Response: ",futureArm.result())
+        while(futureArm.result() is  None and counter<10):
+            try:
+                # node.aruco_name_publisher.publish(box_string)
+                print(futureArm.result())
+                time.sleep(1)
+            except KeyboardInterrupt:
+                rclpy.spin(node)
+                rclpy.shutdown()
+                exit(0)
+            counter+=1
+        print("Arm Manipulation Response: ",futureArm.result())
         futureNav2 = node.nav2RackClient.call_async(node.nav2RackRequest)
         while(futureNav2.result() is  None):
             try:
@@ -202,7 +232,7 @@ def main():
                 rclpy.spin(node)
                 rclpy.shutdown()
                 exit(0)
-        # print("Start Arn Manipulation")
+        print("Start Arn Manipulation")
         print("Rack Client Response: ",futureNav2.result())
         for i in range(2):
             msg = Bool()
