@@ -222,6 +222,4 @@ def generate_launch_description():
     # ld.add_action(start_3bLaunch)
     # ld.add_action(declare_mapper_online_async_param_cmd)
     # ld.add_action(mapper_online_async_param_launch)
-    # ld.add_action(declare_mapper_online_async_param_cmd)
-    # ld.add_action(mapper_online_async_param_launch)
     return ld
