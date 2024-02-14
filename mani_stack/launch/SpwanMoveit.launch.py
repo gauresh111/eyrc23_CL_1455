@@ -181,7 +181,7 @@ def generate_launch_description():
                             servo_node,
                             spawn_controllers_manipulator,
                             spawn_controllers_state,
-                            rviz,
+                            # rviz,
                             ]),
         
         ]

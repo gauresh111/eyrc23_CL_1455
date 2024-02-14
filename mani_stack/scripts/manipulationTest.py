@@ -23,7 +23,7 @@ from std_msgs.msg import Bool
 from ebot_docking.srv import ManipulationSw
 import yaml
 
-from tf_transformations import quaternion_from_euler, euler_from_quaternion
+from tf_transformations import euler_from_quaternion
 
 if is_sim == True:
     from linkattacher_msgs.srv import AttachLink, DetachLink
@@ -41,16 +41,6 @@ ApQueue = []
 BoxId = []
 isStarting = []
 totalRacks = 0
-
-
-class ArucoNameCoordinate:
-    def __init__(self):
-        self.name = None
-        self.position = None
-        self.quaternions = None
-        self.eulerAngles = None
-        self.rotationName = None
-
 
 class ArucoData:
     def __init__(self):
@@ -117,18 +107,6 @@ def main():
     Initial_Pose = ArucoBoxPose()
     Initial_Pose.position = [0.18, 0.10, 0.46]
     Initial_Pose.quaternions = [0.50479, 0.495985, 0.499407, 0.499795]
-
-    P1 = ArucoBoxPose()
-    P1.position = [0.35, 0.1, 0.68]
-    P1.quaternions = [0.50479, 0.495985, 0.499407, 0.499795]
-
-    P2 = ArucoBoxPose()
-    P2.position = [0.194, -0.43, 0.701]
-    P2.quaternions = [0.7657689, 0.0, 0.0, 0.6431158]
-
-    Drop = ArucoBoxPose()
-    Drop.position = [-0.37, 0.12, 0.397]
-    Drop.quaternions = [0.5414804, -0.4547516, -0.5414804, 0.4547516]
 
     Initial_Joints = PredefinedJointStates()
     Initial_Joints.joint_states = [0.0, -2.39, 2.4, -3.15, -1.58, 3.15]
@@ -213,8 +191,8 @@ def main():
     tf_listener = tf2_ros.TransformListener(tf_buffer, node)
     aruco_name_subscriber = node.create_subscription(
         String,
-        "/aruco_list",
-        aruco_name_list_updater,
+        "/aruco_data",
+        aruco_data_updater,
         10,
         callback_group=callback_group,
     )
@@ -224,12 +202,6 @@ def main():
         Arm_manipulation_callback,
         callback_group=callback_group,
     )
-
-    arucoPossibleAngles = {
-        "left": [0.0, 0.7, 0.7, 0.0],
-        "front": [0.5, 0.5, 0.5, 0.5],
-        "right": [0.7, 0.0, 0.0, 0.7],
-    }
 
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
 
@@ -245,37 +217,6 @@ def main():
         Bool, "/StartArnManipulation", getBox_id, 10
     )
     time.sleep(5)
-
-    def normalizeAngle(angle, radians=False):
-        if radians == True:
-            if angle < -math.pi:
-                angle += 2 * math.pi
-            elif angle > math.pi:
-                angle -= 2 * math.pi
-        else:
-            if angle < -180:
-                angle += 180
-            elif angle > 180:
-                angle -= 180
-
-        return angle
-
-    def nearestAngle(angle, radians=False):
-        if radians == True:
-            if abs(angle) < math.pi / 4:
-                nearest = 0
-            elif abs(angle) < 3 * math.pi / 4:
-                nearest = math.pi / 2 if angle > 0 else -math.pi / 2
-            else:
-                nearest = math.pi if angle > 0 else -math.pi
-        else:
-            if abs(angle) < 45:
-                nearest = 0
-            elif abs(angle) < 135:
-                nearest = 90 if angle > 0 else -90
-            else:
-                nearest = 180 if angle > 0 else -180
-        return nearest
 
     def moveToJointStates(joint_states, position_name):
         counter = 1
@@ -879,29 +820,6 @@ def main():
                     frame_id="tool0",
                 )
                 time.sleep(0.2)
-
-            # print("### Box in-place Yaw Correction")
-            # if rotation_name == "Left":
-            #     moveToPoseWithServo(
-            #         TargetPose=position,
-            #         TargetQuats=quaternions,
-            #         QuatsOnly=True,
-            #         TargetYaw=90,
-            #     )
-            # elif rotation_name == "Right":
-            #     moveToPoseWithServo(
-            #         TargetPose=position,
-            #         TargetQuats=quaternions,
-            #         QuatsOnly=True,
-            #         TargetYaw=-90,
-            #     )
-            # else:
-            #     moveToPoseWithServo(
-            #         TargetPose=position,
-            #         TargetQuats=quaternions,
-            #         QuatsOnly=True,
-            #         TargetYaw=0,
-            #     )
 
             current_position, current_quaternions = getCurrentPose()
             if rotation_name == "Left":

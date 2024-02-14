@@ -375,13 +375,6 @@ class aruco_tf(Node):
             self.cv_image = image.copy()
         except:
             pass
-
-    def normalizeAngle(self,angle: int):
-        if angle < -180:
-            angle += 360
-        elif angle > 180:
-            angle -= 360
-        return angle
     
     def nearest_angle(self,angle):
         if angle < -180:
@@ -404,12 +397,7 @@ class aruco_tf(Node):
             rack_name = "ap2"
         elif angle<-45 and angle>=-90:
             rack_name = "ap3"
-        # if angle == 0:
-        #     rack_name = "ap1"
-        # elif angle == 90:
-        #     rack_name = "ap2"
-        # elif angle == -90:
-        #     rack_name = "ap3"
+
         return rack_name
     def process_image(self):
         """
@@ -466,9 +454,6 @@ class aruco_tf(Node):
             elif tempAp == "ap2":
                 arucoAngle = verify_angle
 
-            # if id  == 3:
-            #     print(angle[1])
-
             #   ->  Then calculate quaternions from roll pitch yaw (where, roll and pitch are 0 while yaw is corrected aruco_angle)
             newMarkerAngle = [0 + np.pi / 2 - self.offsetEuler[1], 0, 0 + np.pi / 2]
 
@@ -516,7 +501,6 @@ class aruco_tf(Node):
                 trans = self.tf_buffer.lookup_transform(
                     "base_link", "camera_link", rclpy.time.Time()
                 )
-                # qX, qY, qZ, qW = trans.transform.rotation.geometry_msgs.msg.Quaternion
                 self.offsetQuaternions = [
                     trans.transform.rotation.w,
                     trans.transform.rotation.x,
