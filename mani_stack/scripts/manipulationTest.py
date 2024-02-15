@@ -872,7 +872,11 @@ def main():
             servoNode.destroy_node()
             jointStatesNode.destroy_node()
 
-        collisionObjectDistances = {"left": 0.0, "front": 0.0, "right": 0.0}
+        rackCollisionObjectDistances = {
+        "left": {"x": 0.0, "y": 0.0},
+        "front": {"x": 0.0, "y": 0.0},
+        "right": {"x": 0.0, "y": 0.0},
+    }
         left_flag, front_flag, right_flag = False, False, False
         for aruco in arucoData:
 
@@ -882,26 +886,20 @@ def main():
             if left_flag == False:
                 if ap == "ap2":
                     left_flag = True
-                    collisionObjectDistances["left"] = (
-                        round(aruco.position[1], 2) + 0.16
-                    )
+                    rackCollisionObjectDistances["left"] = {"x" : round(aruco.position[0],2) , "y" : round(aruco.position[1],2)+0.16}
                     print(aruco.name + ":", "Left")
 
                 # print("Left Flag: ", left_flag)
             if front_flag == False:
                 if ap == "ap1":
                     front_flag = True
-                    collisionObjectDistances["front"] = (
-                        round(aruco.position[0], 2) + 0.16
-                    )
+                    rackCollisionObjectDistances["front"] = {"x" : round(aruco.position[0],2) + 0.16, "y" : round(aruco.position[1],2)}
                     print(aruco.name + ":", "Left")
                 # print("Front Flag: ", front_flag)
             if right_flag == False:
                 if ap == "ap3":
                     right_flag = True
-                    collisionObjectDistances["right"] = (
-                        round(aruco.position[2], 2) + 0.0
-                    )
+                    rackCollisionObjectDistances["right"] = {"x" : round(aruco.position[0],2) , "y" : round(aruco.position[1],2)-0.16}
                     print(aruco.name + ":", "Left")
                 # print("Right Flag: ", right_flag)
         print(
@@ -917,7 +915,7 @@ def main():
             addCollisionObject(
                 "floor",
                 "left_Rack",
-                [0.25, collisionObjectDistances["left"], 0.16],
+                [rackCollisionObjectDistances["left"]["x"], rackCollisionObjectDistances["left"]["y"], 0.16],
                 "Left",
                 "base_link",
             )
@@ -926,7 +924,7 @@ def main():
             addCollisionObject(
                 "floor",
                 "front_Rack",
-                [collisionObjectDistances["front"], 0.07, 0.16],
+               [rackCollisionObjectDistances["front"]["x"], rackCollisionObjectDistances["front"]["y"], 0.16],
                 "Front",
                 "base_link",
             )
@@ -935,7 +933,7 @@ def main():
             addCollisionObject(
                 "floor",
                 "right_Rack",
-                [0.25, -1 * collisionObjectDistances["right"], 0.16],
+               [rackCollisionObjectDistances["right"]["x"], rackCollisionObjectDistances["right"]["y"], 0.16],
                 "Right",
                 "base_link",
             )
