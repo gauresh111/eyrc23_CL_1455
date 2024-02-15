@@ -496,8 +496,7 @@ class MyRobotDockingController(Node):
                 self.UltraOrientationLinear(Setpoint=16.0)
                 
                 stopBot(0.1)
-                self.UltraOrientation()
-                stopBot(0.1)
+                
                 stopBot(1.2,-0.05,0.0)
                 stopBot(0.1)
                 
@@ -528,6 +527,7 @@ class MyRobotDockingController(Node):
                 stopBot(1.2,0.05,0.0)
                 stopBot(0.1)
             else:
+                self.manualMoveBot()
                 self.odomLinearDocking()
                 stopBot(0.1) 
                 # stopBot(0.5,-0.1,0.0) #implement odom docking and camera docking

@@ -12,6 +12,13 @@ from ament_index_python.packages import get_package_share_directory
 config_folder_name = 'mani_stack'
 from std_msgs.msg import String,Bool
 global dockingPosition
+global aruco_name_list
+global aruco_angle_list
+global aruco_ap_list
+aruco_name_list = []
+aruco_angle_list = []
+aruco_ap_list = []
+
 dockingPosition = {
        'ap1':{'xyz': [4.63, -0.21,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [1.2,0.0], 'Yaw': 0.0},
       'ap2':{'xyz': [6.25, -1.8,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,1.0] , 'Yaw': 90}
@@ -82,10 +89,20 @@ def main():
         global rackPresentSub     
         rackPresentSub=data.data.split()
         rackPresentSub=set(rackPresentSub)
+    def aruco_data_updater(msg):
+        global aruco_name_list
+        global aruco_angle_list
+        global aruco_ap_list
+        data = yaml.safe_load(msg.data)
+        aruco_name_list = data.get("id")
+        aruco_angle_list = data.get("angle")
+        aruco_ap_list = data.get("ap")
     node.racksApsPub=node.create_publisher(Bool, '/StartArnManipulation', 10)
     node.nav2RackClient = node.create_client(RackSw, '/RackNav2Sw')
     node.ArmManipulationClient = node.create_client(ManipulationSw, '/ArmManipulationSw')
     node.ExitNavPub=node.create_publisher(Bool, '/ExitNav', 30)
+    node.aruco_data_subscriber = node.create_subscription(String, "/aruco_data", aruco_data_updater, 10 ,callback_group=callback_group)
+     
     node.getpresentRacksSub = node.create_subscription(String, '/ap_list',getRackFromCamera, 10)
     node.getpresentRacksSub
     while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
@@ -125,16 +142,26 @@ def main():
             
     if "Box" not in rackPresentSub:
         for boxPresent in rackPresentSub:
+            global aruco_name_list
+            global aruco_angle_list
+            global aruco_ap_list
+            rackIndex = find_string_in_list(boxPresent,aruco_ap_list)
+            getName = aruco_name_list[rackIndex]
+            
             node.ArmManipulationRequest.ap_name = boxPresent
-            node.ArmManipulationRequest.box_id = int(boxPresent[-1])
+            node.ArmManipulationRequest.box_id = int(getName[-1])
             node.ArmManipulationRequest.total_racks = totalRacks
             node.ArmManipulationRequest.starting = True
             print("going to racks",node.ArmManipulationRequest)
             try: 
                 del dockingPosition[boxPresent] 
             except:
+                print("Rack not found")       
+            try:
+                del dockingPosition["rack"+str(int(getName[-1]))]
+            except:
                 print("Rack not found")
-            package_id.remove(int(boxPresent[-1]))
+            package_id.remove(int(getName[-1]))
             futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
     def distance(p1, p2):
         return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
