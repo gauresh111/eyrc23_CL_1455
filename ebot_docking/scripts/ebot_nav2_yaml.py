@@ -8,6 +8,7 @@ from rclpy.node import Node
 from scipy.spatial.transform import Rotation as R
 from ebot_docking.srv import RackSw ,ManipulationSw # Import custom service message
 import yaml
+import re
 from ament_index_python.packages import get_package_share_directory
 config_folder_name = 'ebot_docking'
 from std_msgs.msg import String,Bool
@@ -149,9 +150,9 @@ def main():
             global aruco_ap_list
             rackIndex = find_string_in_list(boxPresent,aruco_ap_list)
             getName = aruco_name_list[rackIndex]
-            
+            BoxNumber = int(re.search(r"\d+", getName).group())
             node.ArmManipulationRequest.ap_name = boxPresent
-            node.ArmManipulationRequest.box_id = int(getName[-1])
+            node.ArmManipulationRequest.box_id = int(BoxNumber)
             node.ArmManipulationRequest.total_racks = totalRacks
             node.ArmManipulationRequest.starting = True
             print("going to racks",node.ArmManipulationRequest)
