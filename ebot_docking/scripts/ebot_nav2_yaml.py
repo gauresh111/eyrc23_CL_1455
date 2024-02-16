@@ -159,10 +159,10 @@ def main():
                 del dockingPosition[boxPresent] 
             except:
                 print("Rack not found")
+                            
             try:
                 del dockingPosition["rack"+str(int(getName[-1]))]
             except:
-                
                 print("Rack not found")
             package_id.remove(int(getName[-1]))
             futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)

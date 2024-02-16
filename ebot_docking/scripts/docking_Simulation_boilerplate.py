@@ -308,24 +308,31 @@ class MyRobotDockingController(Node):
             self.GlobalStopTime(0.1)
     def manualMoveBot(self):
         global robot_pose,aruco_name_list,aruco_angle_list,aruco_ap_list
-        value = input("Move Bot")
+        # value = input("Move Bot")
         target_rack = "obj_"+self.rackName[-1]
+        self.GlobalStopTime(1.0)
         rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
-        if value == "y":
-            while rackIndex == -1:
-                rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
-                print("running manual mode")
-                print("rackIndex",rackIndex)
-                print("target_rack",target_rack)
-                print("aruco_ap_list",aruco_ap_list)
-                print("aruco_name_list",aruco_name_list)
-                print("x",robot_pose[0],"y",robot_pose[1])
-                # print("cameraYaw",cameraYaw)
-                self.GlobalStopTime(0.1)
-                self.moveBot(-0.08,0.0)
-            self.moveBot(0.0,0.0)
-            self.moveBot(0.0,0.0)
-        return None
+        counter = 1
+        
+        # if value == "y":
+        while rackIndex == -1:
+            counter = counter + 1
+            if counter > 100:
+                self.moveBot(0.0,0.0)
+                self.moveBot(0.0,0.0)
+                return None
+            rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
+            print("running manual mode")
+            print("rackIndex",rackIndex)
+            print("target_rack",target_rack)
+            print("aruco_ap_list",aruco_ap_list)
+            print("aruco_name_list",aruco_name_list)
+            print("x",robot_pose[0],"y",robot_pose[1])
+            # print("cameraYaw",cameraYaw)
+            self.GlobalStopTime(0.1)
+            self.moveBot(-0.05,0.0)
+        self.moveBot(0.0,0.0)
+        self.moveBot(0.0,0.0)
     def find_string_in_list(self,string, list):
         for index, item in enumerate(list):
             if item == string:
@@ -338,15 +345,19 @@ class MyRobotDockingController(Node):
         target_rack = "obj_"+self.rackName[-1]
         rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
         targetYAw = int(self.normalize_angle(self.targetYaw))
-        
+        counter = 1
         while rackIndex == -1:
+            counter = counter + 1
             rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
             print("rackIndex",rackIndex)
             print("target_rack",target_rack)
             print("aruco_ap_list",aruco_ap_list)
-            print("aruco_name_list",aruco_name_list)
+            print("counter",counter)
             # print("cameraYaw",cameraYaw)
             self.GlobalStopTime(0.1)
+            if counter >100:
+                return None
+                
         yaw = False
         while yaw == False:
             rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
@@ -360,7 +371,6 @@ class MyRobotDockingController(Node):
             yaw = self.is_yaw_within_tolerance((cameraYaw),targetYAw)
             print("yaw Checker",yaw)
             self.GlobalStopTime(0.1)
-        
         for i in range(5):
             self.moveBot(0.0,0.0)
         

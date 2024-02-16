@@ -20,7 +20,7 @@ from std_msgs.msg import Int8
 import transforms3d as tf3d
 import numpy as np
 from std_msgs.msg import Bool
-from ebot_docking.srv import ManipulationSw
+from mani_stack.srv import ManipulationSw
 import yaml
 
 from tf_transformations import euler_from_quaternion
@@ -521,11 +521,15 @@ def main():
                 (TargetPose[1] - currentPose[1]) / magnitude,
                 (TargetPose[2] - currentPose[2]) / magnitude,
             )
+            vx *= 5
+            vy *= 5
+            vz *= 5
             distance = magnitude
             totalTime = (
                 distance
                 / checkSphericalTolerance([0.0, 0.0, 0.0], [vx, vy, vz], tolerance)[1]
             )
+            totalTime /=5
             print("TargetQuats:", TargetQuats, "CurrentQuats:", currentQuats)
             TargetEuler = euler_from_quaternion(
                 [TargetQuats[3], TargetQuats[0], TargetQuats[1], TargetQuats[2]]
