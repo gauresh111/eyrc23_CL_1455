@@ -536,9 +536,7 @@ class MyRobotDockingController(Node):
                 
                 self.odomLinearDocking()
                 stopBot(0.1) 
-                # self.manualMoveBot()
-                # stopBot(0.5,-0.1,0.0) #implement odom docking and camera docking
-                # stopBot(0.4) 
+                
                 self.cameraOrientation() 
                 stopBot(0.3)
                 switch_eletromagent(False)
