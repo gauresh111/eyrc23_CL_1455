@@ -38,15 +38,6 @@ servo_status = 5
 current_joint_states = [0, 0, 0, 0, 0, 0]
 
 
-class ArucoNameCoordinate:
-    def __init__(self):
-        self.name = None
-        self.position = None
-        self.quaternions = None
-        self.eulerAngles = None
-        self.rotationName = None
-
-
 class ArucoData:
     def __init__(self):
         self.name = None
@@ -98,18 +89,6 @@ def main():
     Initial_Pose.position = [0.18, 0.10, 0.46]
     Initial_Pose.quaternions = [0.50479, 0.495985, 0.499407, 0.499795]
 
-    P1 = ArucoBoxPose()
-    P1.position = [0.35, 0.1, 0.68]
-    P1.quaternions = [0.50479, 0.495985, 0.499407, 0.499795]
-
-    P2 = ArucoBoxPose()
-    P2.position = [0.194, -0.43, 0.701]
-    P2.quaternions = [0.7657689, 0.0, 0.0, 0.6431158]
-
-    Drop = ArucoBoxPose()
-    Drop.position = [-0.37, 0.12, 0.397]
-    Drop.quaternions = [0.5414804, -0.4547516, -0.5414804, 0.4547516]
-
     Initial_Joints = PredefinedJointStates()
     Initial_Joints.joint_states = [0.0, -2.39, 2.4, -3.15, -1.58, 3.15]
     Initial_Joints.name = "Initial_Joints"
@@ -117,10 +96,6 @@ def main():
     Pre_Drop_Joints = PredefinedJointStates()
     Pre_Drop_Joints.joint_states = [0.00, -2.94, 1.291, -1.491, -1.570, -3.14]
     Pre_Drop_Joints.name = "Pre_Drop_Joints"
-
-    Drop_Joints = PredefinedJointStates()
-    Drop_Joints.joint_states = [0.0, -1.918, -1.213, -3.143, -1.574, 3.149]
-    Drop_Joints.name = "Drop_Joints"
 
     Drop_Joints_Left = PredefinedJointStates()
     Drop_Joints_Left.joint_states = [-0.403, -1.970, -1.145, -3.156, -1.978, 3.152]
@@ -167,7 +142,7 @@ def main():
 
     # Create node for this example
     node = Node("pick_aruco")
-    
+
     # Create callback group that allows execution of callbacks in parallel without restrictions
     callback_group = ReentrantCallbackGroup()
 
@@ -191,21 +166,9 @@ def main():
     executor_thread.start()
     tf_buffer = tf2_ros.buffer.Buffer()
     tf_listener = tf2_ros.TransformListener(tf_buffer, node)
-    aruco_name_subscriber = node.create_subscription(
-        String,
-        "/aruco_list",
-        aruco_name_list_updater,
-        10,
-        callback_group=callback_group,
-    )
     aruco_data_subscriber = node.create_subscription(
         String, "/aruco_data", aruco_data_updater, 10, callback_group=callback_group
     )
-    arucoPossibleAngles = {
-        "left": [0.0, 0.7, 0.7, 0.0],
-        "front": [0.5, 0.5, 0.5, 0.5],
-        "right": [0.7, 0.0, 0.0, 0.7],
-    }
 
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
 
@@ -218,37 +181,6 @@ def main():
             node.get_logger().warn(f"Service control Manager is not yet available...")
 
     time.sleep(5)
-
-    def normalizeAngle(angle, radians=False):
-        if radians == True:
-            if angle < -math.pi:
-                angle += 2 * math.pi
-            elif angle > math.pi:
-                angle -= 2 * math.pi
-        else:
-            if angle < -180:
-                angle += 180
-            elif angle > 180:
-                angle -= 180
-
-        return angle
-
-    def nearestAngle(angle, radians=False):
-        if radians == True:
-            if abs(angle) < math.pi / 4:
-                nearest = 0
-            elif abs(angle) < 3 * math.pi / 4:
-                nearest = math.pi / 2 if angle > 0 else -math.pi / 2
-            else:
-                nearest = math.pi if angle > 0 else -math.pi
-        else:
-            if abs(angle) < 45:
-                nearest = 0
-            elif abs(angle) < 135:
-                nearest = 90 if angle > 0 else -90
-            else:
-                nearest = 180 if angle > 0 else -180
-        return nearest
 
     def moveToJointStates(joint_states, position_name):
         counter = 1
@@ -800,29 +732,6 @@ def main():
             )
             time.sleep(0.2)
 
-        # print("### Box in-place Yaw Correction")
-        # if rotation_name == "Left":
-        #     moveToPoseWithServo(
-        #         TargetPose=position,
-        #         TargetQuats=quaternions,
-        #         QuatsOnly=True,
-        #         TargetYaw=90,
-        #     )
-        # elif rotation_name == "Right":
-        #     moveToPoseWithServo(
-        #         TargetPose=position,
-        #         TargetQuats=quaternions,
-        #         QuatsOnly=True,
-        #         TargetYaw=-90,
-        #     )
-        # else:
-        #     moveToPoseWithServo(
-        #         TargetPose=position,
-        #         TargetQuats=quaternions,
-        #         QuatsOnly=True,
-        #         TargetYaw=0,
-        #     )
-
         current_position, current_quaternions = getCurrentPose()
         if rotation_name == "Left":
             midPosition = [
@@ -874,7 +783,11 @@ def main():
         servoNode.destroy_node()
         jointStatesNode.destroy_node()
 
-    collisionObjectDistances = {"left": 0.0, "front": 0.0, "right": 0.0}
+    rackCollisionObjectDistances = {
+        "left": {"x": 0.0, "y": 0.0},
+        "front": {"x": 0.0, "y": 0.0},
+        "right": {"x": 0.0, "y": 0.0},
+    }
     left_flag, front_flag, right_flag = False, False, False
     for aruco in arucoData:
 
@@ -884,20 +797,20 @@ def main():
         if left_flag == False:
             if ap == "ap2":
                 left_flag = True
-                collisionObjectDistances["left"] = round(aruco.position[1], 2) + 0.16
+                rackCollisionObjectDistances["left"] = {"x" : round(aruco.position[0],2) , "y" : round(aruco.position[1],2)+0.16}
                 print(aruco.name + ":", "Left")
 
             # print("Left Flag: ", left_flag)
         if front_flag == False:
             if ap == "ap1":
                 front_flag = True
-                collisionObjectDistances["front"] = round(aruco.position[0], 2) + 0.16
+                rackCollisionObjectDistances["front"] = {"x" : round(aruco.position[0],2) + 0.16, "y" : round(aruco.position[1],2)}
                 print(aruco.name + ":", "Left")
             # print("Front Flag: ", front_flag)
         if right_flag == False:
             if ap == "ap3":
                 right_flag = True
-                collisionObjectDistances["right"] = round(aruco.position[2], 2) + 0.0
+                rackCollisionObjectDistances["right"] = {"x" : round(aruco.position[0],2) , "y" : round(aruco.position[1],2)-0.16}
                 print(aruco.name + ":", "Left")
             # print("Right Flag: ", right_flag)
     print(
@@ -908,7 +821,7 @@ def main():
         addCollisionObject(
             "floor",
             "left_Rack",
-            [0.25, collisionObjectDistances["left"], 0.16],
+            [rackCollisionObjectDistances["left"]["x"], rackCollisionObjectDistances["left"]["y"], 0.16],
             "Left",
             "base_link",
         )
@@ -917,7 +830,7 @@ def main():
         addCollisionObject(
             "floor",
             "front_Rack",
-            [collisionObjectDistances["front"], 0.07, 0.16],
+            [rackCollisionObjectDistances["front"]["x"], rackCollisionObjectDistances["front"]["y"], 0.16],
             "Front",
             "base_link",
         )
@@ -926,7 +839,7 @@ def main():
         addCollisionObject(
             "floor",
             "right_Rack",
-            [0.25, -1 * collisionObjectDistances["right"], 0.16],
+            [rackCollisionObjectDistances["right"]["x"], rackCollisionObjectDistances["right"]["y"], 0.16],
             "Right",
             "base_link",
         )
@@ -946,6 +859,7 @@ def main():
     rclpy.spin(node)
     rclpy.shutdown()
     exit(0)
+
 
 if __name__ == "__main__":
     main()
