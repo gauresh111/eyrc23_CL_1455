@@ -20,7 +20,10 @@ from std_msgs.msg import Int8
 import transforms3d as tf3d
 import numpy as np
 from std_msgs.msg import Bool
-from mani_stack.srv import ManipulationSw
+if is_sim == True:
+    from ebot_docking.srv import ManipulationSw
+else:
+    from mani_stack.srv import ManipulationSw
 import yaml
 
 from tf_transformations import euler_from_quaternion
