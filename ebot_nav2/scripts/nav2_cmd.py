@@ -37,7 +37,7 @@ def main():
     
     withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
-    def add_docking_position(name, xyz, quaternions, xy_offsets,yaw,boxid):
+    def add_docking_position(name, xyz, quaternions, xy_offsets,yaw,boxid,ap_name):
         global positionToGO
         positionToGO[name] = {
             'xyz': xyz,
@@ -46,6 +46,7 @@ def main():
             'Yaw':yaw,
             'BoxID':boxid
         }
+        positionToGO[ap_name]["BoxID"] = boxid
     def change_footprint(new_footprint,msg):
     # Initialize ROS node
         nodeFootprint = rclpy.create_node('change_footprint_node')
@@ -162,7 +163,7 @@ def main():
         quaternions = R.from_euler('xyz', euler).as_quat().tolist()
         offsetXY=[x_offset,y_offset]
         boxid = Request.box_id
-        add_docking_position(RackRequest,xyz,quaternions,offsetXY,yaw,boxid)
+        add_docking_position(RackRequest,xyz,quaternions,offsetXY,yaw,boxid,ApRequest)
         #goes to rack
         node.get_logger().info("Going to Rack")
         moveToGoal(getGoalPoseStamped(RackRequest),RackRequest,True,RackRequest)
