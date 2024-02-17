@@ -330,29 +330,31 @@ class MyRobotDockingController(Node):
         target_rack = "obj_"+self.BoxId#"rack3"
         #targetrack = "obj_3"
         self.GlobalStopTime(1.0)
-        rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
-        counter = 1
         
         # if value == "y":
-        while rackIndex == -1:
-            counter = counter + 1
-            if counter > 100:
-                self.moveBot(0.0,0.0)
-                self.moveBot(0.0,0.0)
-                return None
+        for i in range(3):
             rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
-            print("running manual mode")
-            print("rackIndex",rackIndex)
-            print("target_rack",target_rack)
-            print("aruco_ap_list",aruco_ap_list)
-            print("aruco_name_list",aruco_name_list)
-            print("x",robot_pose[0],"y",robot_pose[1])
-            # print("cameraYaw",cameraYaw)
-            self.GlobalStopTime(0.1)
-            self.moveBot(-0.05,0.0)
-        self.moveBot(0.0,0.0)
-        self.moveBot(0.0,0.0)
-        # return None
+            counter = 1
+            while rackIndex == -1:
+                counter = counter + 1
+                if counter > 100:
+                    self.moveBot(0.0,0.0)
+                    self.moveBot(0.0,0.0)
+                    return None
+                rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
+                print("running manual mode")
+                print("rackIndex",rackIndex)
+                print("target_rack",target_rack)
+                print("aruco_ap_list",aruco_ap_list)
+                print("aruco_name_list",aruco_name_list)
+                print("x",robot_pose[0],"y",robot_pose[1])
+                # print("cameraYaw",cameraYaw)
+                self.GlobalStopTime(0.1)
+                self.moveBot(-0.05,0.0)
+                
+            self.moveBot(0.0,0.0)
+            self.moveBot(0.0,0.0)
+        return None
     
     def is_yaw_within_tolerance(self,current_yaw, target_yaw, tolerance=5):
         # Calculate the difference between the yaw angles
