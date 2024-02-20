@@ -351,7 +351,7 @@ class MyRobotDockingController(Node):
                 # print("cameraYaw",cameraYaw)
                 self.GlobalStopTime(0.1)
                 self.moveBot(-0.05,0.0)
-                
+            self.GlobalStopTime(1.0)
             self.moveBot(0.0,0.0)
             self.moveBot(0.0,0.0)
         return None
@@ -490,21 +490,21 @@ class MyRobotDockingController(Node):
                 stopBot(0.1)
                 # self.UltraOrientation()
                 
-                # self.UltraOrientationLinear(Setpoint=40.0)
-                # stopBot(0.1)
-                # self.UltraOrientation()
-                # stopBot(0.1)
-                # self.UltraOrientationLinear(Setpoint=30.0)
-                # stopBot(0.1)
-                # self.UltraOrientation()
-                # stopBot(0.1)
-                # self.UltraOrientationLinear(Setpoint=20.0)
-                # stopBot(0.1)
-                # self.UltraOrientation()
-                # stopBot(0.1)
-                # self.UltraOrientationLinear(Setpoint=16.0)
-                
+                self.UltraOrientationLinear(Setpoint=40.0)
+                stopBot(0.5)
+                self.UltraOrientation()
+                stopBot(0.5)
+                self.UltraOrientationLinear(Setpoint=30.0)
+                stopBot(0.5)
+                self.UltraOrientation()
+                stopBot(0.5)
+                self.UltraOrientationLinear(Setpoint=20.0)
+                stopBot(0.5)
+                self.UltraOrientation()
+                stopBot(0.5)
                 self.UltraOrientationLinear(Setpoint=16.0)
+                
+                # self.UltraOrientationLinear(Setpoint=16.0)
                 
                 stopBot(0.1)
                 
