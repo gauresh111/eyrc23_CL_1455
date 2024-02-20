@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-is_sim = False
+is_sim = True
 
 from os import path
 from threading import Thread
@@ -20,7 +20,10 @@ from std_msgs.msg import Int8
 import transforms3d as tf3d
 import numpy as np
 from std_msgs.msg import Bool
-from mani_stack.srv import ManipulationSw
+if is_sim == True:
+    from ebot_docking.srv import ManipulationSw
+else:
+    from mani_stack.srv import ManipulationSw
 import yaml
 
 from tf_transformations import euler_from_quaternion
@@ -213,6 +216,40 @@ def main():
         while not contolMSwitch.wait_for_service(timeout_sec=5.0):
             node.get_logger().warn(f"Service control Manager is not yet available...")
 
+        def switch_controller(useMoveit: bool):
+            contolMSwitch = node.create_client(
+                SwitchController, "/controller_manager/switch_controller"
+            )
+            # Parameters to switch controller
+            switchParam = SwitchController.Request()
+            if useMoveit == True:
+                switchParam.activate_controllers = [
+                    "scaled_joint_trajectory_controller"
+                ]  # for normal use of moveit
+                switchParam.deactivate_controllers = ["forward_position_controller"]
+            else:
+                switchParam.activate_controllers = [
+                    "forward_position_controller"
+                ]  # for servoing
+                switchParam.deactivate_controllers = [
+                    "scaled_joint_trajectory_controller"
+                ]
+            switchParam.strictness = 2
+            switchParam.start_asap = False
+
+            # calling control manager service after checking its availability
+            while not contolMSwitch.wait_for_service(timeout_sec=5.0):
+                node.get_logger().warn(
+                    f"Service control Manager is not yet available..."
+                )
+            contolMSwitch.call_async(switchParam)
+            time.sleep(1.0)
+            print(
+                "[CM]: Switching to", "Moveit" if useMoveit else "Servo", "Complete"
+            )
+
+        switch_controller(useMoveit=True)
+
     ManipulationStart = node.create_subscription(
         Bool, "/StartArnManipulation", getBox_id, 10
     )
@@ -253,6 +290,9 @@ def main():
         time.sleep(0.1)
 
     dropAngleIterator = 0
+
+    moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
+    print("Reached Initial Pose")
 
     while rackCounter < totalRacks:
         rackCounter += 1
@@ -340,7 +380,7 @@ def main():
                 aruco.position,
                 "\nQuaternions: ",
                 list(np.around(np.array(aruco.quaternions), 2)),
-                "\nYaw: ",
+                "\Angle: ",
                 aruco.yaw,
                 "\nYaw Error: ",
                 aruco.yaw_error,
@@ -350,39 +390,6 @@ def main():
                 aruco.rotation_name,
                 "\n",
             )
-        if is_sim == False:
-
-            def switch_controller(useMoveit: bool):
-                contolMSwitch = node.create_client(
-                    SwitchController, "/controller_manager/switch_controller"
-                )
-                # Parameters to switch controller
-                switchParam = SwitchController.Request()
-                if useMoveit == True:
-                    switchParam.activate_controllers = [
-                        "scaled_joint_trajectory_controller"
-                    ]  # for normal use of moveit
-                    switchParam.deactivate_controllers = ["forward_position_controller"]
-                else:
-                    switchParam.activate_controllers = [
-                        "forward_position_controller"
-                    ]  # for servoing
-                    switchParam.deactivate_controllers = [
-                        "scaled_joint_trajectory_controller"
-                    ]
-                switchParam.strictness = 2
-                switchParam.start_asap = False
-
-                # calling control manager service after checking its availability
-                while not contolMSwitch.wait_for_service(timeout_sec=5.0):
-                    node.get_logger().warn(
-                        f"Service control Manager is not yet available..."
-                    )
-                contolMSwitch.call_async(switchParam)
-                time.sleep(1.0)
-                print(
-                    "[CM]: Switching to", "Moveit" if useMoveit else "Servo", "Complete"
-                )
 
         def moveWithServo(linear_speed, angular_speed):
             twist_msg = TwistStamped()
@@ -414,7 +421,8 @@ def main():
                 moveit2.add_collision_mesh(
                     filepath=path,
                     id=id,
-                    position=position,
+                    position=position,# moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
+            # print("Reached Initial Pose")
                     quat_xyzw=quat_xyzw,
                     frame_id=frame_id,
                 )
@@ -553,7 +561,8 @@ def main():
             if QuatsOnly == True:
                 print("Servoing Quats Only")
                 yawError = math.radians(YawError)
-                az = -0.5 if yawError > 0.0 else 0.5
+                az = -1.0 if yawError > 0.0 else 1.0
+
                 print("Yaw Error: ", yawError)
                 while abs(yawError) > 0.02:
                     moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
@@ -714,18 +723,18 @@ def main():
                 round(aruco_quaternions[3], 4),
             ]
 
-            if rotation_name == "Left":
-                moveToJointStates(
-                    Pickup_Joints_Left.joint_states, Pickup_Joints_Left.name
-                )
-            elif rotation_name == "Right":
-                moveToJointStates(
-                    Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name
-                )
-            else:
-                moveToJointStates(
-                    Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name
-                )
+            # if rotation_name == "Left":
+            #     moveToJointStates(
+            #         Pickup_Joints_Left.joint_states, Pickup_Joints_Left.name
+            #     )
+            # elif rotation_name == "Right":
+            #     moveToJointStates(
+            #         Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name
+            #     )
+            # else:
+            #     moveToJointStates(
+            #         Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name
+            #     )
 
             if is_sim == False:
                 time.sleep(0.1)
@@ -739,9 +748,9 @@ def main():
             )
             print("Servo Result: ", temp_result)
             global_counter = 0
-            while global_counter < 5:
+            while global_counter < 10:
                 if temp_result == False:
-                    while counter < 5:
+                    while counter < 10:
                         print(
                             "Moving to ",
                             aruco_name,
@@ -766,11 +775,11 @@ def main():
                     temp_result = moveToPoseWithServo(
                         TargetPose=aruco_position, TargetQuats=aruco_quaternions
                     )
-                    if global_counter > 4 or counter > 4:
+                    if global_counter > 10 or counter > 10:
                         print(
                             "[ERROR !!!] Failed to reach",
                             aruco_name,
-                            "after 5 attempts, skipping to next box",
+                            "after 10 attempts, skipping to next box",
                         )
                         return
                     if servo_status > 0:
@@ -870,8 +879,8 @@ def main():
 
             # Move to Pre Drop Pose
 
-            moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
-            print("Reached Initial Pose")
+            # moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
+            # print("Reached Initial Pose")
 
             servoNode.destroy_node()
             jointStatesNode.destroy_node()
