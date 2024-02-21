@@ -248,7 +248,7 @@ def main():
                 "[CM]: Switching to", "Moveit" if useMoveit else "Servo", "Complete"
             )
 
-        switch_controller(useMoveit=True)
+        # switch_controller(useMoveit=True)
 
     ManipulationStart = node.create_subscription(
         Bool, "/StartArnManipulation", getBox_id, 10
