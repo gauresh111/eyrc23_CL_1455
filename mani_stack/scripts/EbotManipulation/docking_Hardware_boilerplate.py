@@ -491,15 +491,10 @@ class MyRobotDockingController(Node):
                 # self.UltraOrientation()
                 
                 self.UltraOrientationLinear(Setpoint=40.0)
-                stopBot(0.5)
-                self.UltraOrientation()
-                stopBot(0.5)
+                
+                
                 self.UltraOrientationLinear(Setpoint=30.0)
-                stopBot(0.5)
-                self.UltraOrientation()
-                stopBot(0.5)
-                self.UltraOrientationLinear(Setpoint=20.0)
-                stopBot(0.5)
+                stopBot(1.0)
                 self.UltraOrientation()
                 stopBot(0.5)
                 self.UltraOrientationLinear(Setpoint=16.0)
