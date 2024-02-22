@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# ros2 run mani_stack switchController.py --ros-args -p useMoveit:="True"
+
 from controller_manager_msgs.srv import SwitchController
 import time
 import rclpy
