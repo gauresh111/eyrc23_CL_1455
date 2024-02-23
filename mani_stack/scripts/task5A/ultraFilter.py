@@ -70,7 +70,7 @@ def main():
         
         
         
-    rate = duplicateNode.create_rate(20, duplicateNode.get_clock())
+    rate = duplicateNode.create_rate(5, duplicateNode.get_clock())
     while True:
         ultrasonic_publisher()
         rate.sleep()

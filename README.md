@@ -63,6 +63,9 @@ source install/setup.bash && ros2 run mani_stack ultraFilter.py
 ```sh
 ros2 service call /reset_odom std_srvs/srv/Trigger
 ```
+```sh
+ros2 run mani_stack switchController.py --ros-args -p useMoveit:="True"
+```
 
 ```sh
 ros2 service call /reset_imu std_srvs/srv/Trigger
