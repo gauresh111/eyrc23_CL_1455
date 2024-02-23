@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-is_sim = True
+is_sim = False
 
 from os import path
 from threading import Thread
@@ -147,7 +147,7 @@ def main():
     Pickup_Joints_Right.joint_states = [-1.57, -2.43, 2.10, -2.81, -1.56, 3.15]
     Pickup_Joints_Right.name = "Pickup_Joints_Right"
 
-    Drop_Joints_List = [Drop_Joints_Left, Drop_Joints_Right, Drop_Joints_Back]
+    Drop_Joints_List = [Drop_Joints_Back, Drop_Joints_Back, Drop_Joints_Back]
 
     box_file_path = path.join(
         path.dirname(path.realpath(__file__)), "..", "assets", "box.stl"
@@ -980,4 +980,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try: 
+        main()
+    except:
+        rclpy.shutdown()

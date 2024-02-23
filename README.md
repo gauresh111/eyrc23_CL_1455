@@ -23,12 +23,7 @@ colcon build --packages-select usb_relay && source install/setup.bash
 ```
 ```sh
 colcon build --packages-select ebot_docking && source install/setup.bash
-```
-
-###Launch command
-```sh
-source install/setup.bash && ros2 launch mani_stack sensor_filter.py
-```
+```sensor_filter
 
 
 ###Run command
