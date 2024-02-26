@@ -65,7 +65,8 @@ def main():
         
         left,right = movingAverage()
         msg = Float32MultiArray()
-        msg.data = [0.0,0.0,0.0,0.0,left,right]
+        minValue = min(left,right)
+        msg.data = [0.0,0.0,0.0,0.0,minValue,minValue]
         duplicateNode.ultrasonic_pub.publish(msg)
         
         
