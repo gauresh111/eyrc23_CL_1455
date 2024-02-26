@@ -68,6 +68,12 @@ ros2 run mani_stack switchController.py --ros-args -p useMoveit:="True"
 ```sh
 ros2 service call /reset_imu std_srvs/srv/Trigger
 ```
+```sh
+ros2 service call /usb_relay_sw usb_relay/srv/RelaySw "{relaychannel: 1, relaystate: false}"
+```
+```sh
+ros2 service call /usb_relay_sw usb_relay/srv/RelaySw "{relaychannel: 1, relaystate: true}"
+```
 ###topic echo command
 ```sh
 ros2 topic echo /ultrasonic_filter
