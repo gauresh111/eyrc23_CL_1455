@@ -23,9 +23,7 @@ colcon build --packages-select usb_relay && source install/setup.bash
 ```
 ```sh
 colcon build --packages-select ebot_docking && source install/setup.bash
-```sensor_filter
-
-
+```
 ###Run command
 ```sh
 source install/setup.bash && ros2 launch ebot_real_nav2 ebot_nav2_brinup.launch.py
