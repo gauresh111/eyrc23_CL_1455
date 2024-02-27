@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-is_sim = False
+is_sim = False # Change this to True if you are using simulation
 
 from os import path
 from threading import Thread
@@ -265,6 +265,11 @@ def main():
 
         Returns:
         ---
+        None
+
+        Example Call:
+        ---
+        `moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)`
 
         '''
         counter = 1
@@ -409,6 +414,10 @@ def main():
         Returns:
         ---
         None
+
+        Example Call:
+        ---
+        `moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, 0.0])`
         '''
         twist_msg = TwistStamped()
         twist_msg.header.frame_id = ur5.base_link_name()
@@ -447,6 +456,10 @@ def main():
         Returns:
         ---
         None
+
+        Example Call:
+        ---
+        `addCollisionObject("box", "box1", [0.5, 0.5, 0.5], [0.0, 0.0, 0.0, 1.0], "base_link")`
         '''
         if objectType == "box":
             path = box_file_path
@@ -489,6 +502,10 @@ def main():
         `tempQuats` :  [ list ]
             List of Current orientation in x, y, z axes
 
+        Example Call:
+        ---
+        `getCurrentPose()`
+
         '''
         tempPose = [0, 0, 0]
         tempQuats = [0, 0, 0, 0]
@@ -525,6 +542,10 @@ def main():
         Returns:
         ---
         None
+
+        Example Call:
+        ---
+        `controlGripper("ON", "box1")`
         '''
         if is_sim == True:
             if status == "ON":
@@ -598,6 +619,10 @@ def main():
         `currentTolerance` :  [ float ]
             Current Tolerance Value
 
+        Example Call:
+        ---
+        `checkSphericalTolerance([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], 0.02)`
+
         '''
         currentTolerance = math.sqrt(
             (currentPose[0] - targetPose[0]) ** 2
@@ -645,6 +670,9 @@ def main():
         `mission_status` :  [ Bool ]
             Flag to check if the mission is successful
 
+        Example Call:
+        ---
+        `moveToPoseWithServo([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], QuatsOnly=True)`
 
         '''
         if is_sim == False:
@@ -789,6 +817,10 @@ def main():
         Returns:
         ---
         None
+
+        Example Call:
+        ---
+        `moveToPose(arucoData[0], [0, 90, -90])`
         '''
         aruco_name = aruco_data.name
         aruco_id = aruco_data.id

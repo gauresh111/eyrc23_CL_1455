@@ -407,6 +407,11 @@ def main():
 
         Returns:
         ---
+        None
+
+        Example call:
+        ---
+        `moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)`
 
         '''
         counter = 1
@@ -565,6 +570,10 @@ def main():
             Returns:
             ---
             None
+
+            Example call:
+            ---
+            `moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, 0.0])`
             '''
             twist_msg = TwistStamped()
             twist_msg.header.frame_id = ur5.base_link_name()
@@ -603,6 +612,10 @@ def main():
             Returns:
             ---
             None
+
+            Example call:
+            ---
+            `addCollisionObject("box", "box1", [0.5, 0.5, 0.5], "Front", "base_link")`
             '''
             if objectType == "box":
                 path = box_file_path
@@ -646,6 +659,9 @@ def main():
             `tempQuats` :  [ list ]
                 List of Current orientation in x, y, z axes
 
+            Example call:
+            ---
+            `getCurrentPose()`
             '''
             tempPose = [0, 0, 0]
             tempQuats = [0, 0, 0, 0]
@@ -684,6 +700,10 @@ def main():
             Returns:
             ---
             None
+
+            Example call:
+            ---
+            `controlGripper("ON", "box1")`
             '''
             if is_sim == True:
                 if status == "ON":
@@ -760,6 +780,10 @@ def main():
             `currentTolerance` :  [ float ]
                 Current Tolerance Value
 
+            Example call:
+            ---
+            `checkSphericalTolerance([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], 0.02)`
+
             '''
             currentTolerance = math.sqrt(
                 (currentPose[0] - targetPose[0]) ** 2
@@ -807,6 +831,9 @@ def main():
             `mission_status` :  [ Bool ]
                 Flag to check if the mission is successful
 
+            Example call:
+            ---
+            `moveToPoseWithServo([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], False, False, 0, 0)`
 
             '''
             if is_sim == False:
@@ -952,6 +979,10 @@ def main():
             Returns:
             ---
             None
+
+            Example call:
+            ---
+            `moveToPose(aruco_data, drop_angles)`
             '''
             aruco_name = aruco_data.name
             aruco_id = aruco_data.id
