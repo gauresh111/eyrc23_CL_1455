@@ -39,6 +39,41 @@ current_joint_states = [0, 0, 0, 0, 0, 0]
 
 
 class ArucoData:
+    '''
+    Purpose:
+    ---
+    Class to store the data of the Aruco Marker
+
+    Members:
+    ---
+    `name` :  [ string ]
+        Name of the Aruco Marker
+    
+    `id` :  [ int ]
+        Id of the Aruco Marker
+
+    `position` :  [ list ]
+        Position of the Aruco Marker
+    
+    `quaternions` :  [ list ]
+        Quaternions of the Aruco Marker
+
+    `yaw` :  [ float ]
+        Yaw of the Aruco Marker
+
+    `yaw_error` :  [ float ]
+        Yaw Error of the Aruco Marker
+
+    `ap` :  [ string ]
+        Arm Position Name for Aruco Marker
+
+    `rotation_name` :  [ string ]
+        Rotation Name of the Aruco Marker
+
+    Example Creation of Object:
+    --- 
+    `arucoData = ArucoData()`
+    '''
     def __init__(self):
         self.name = None
         self.id = None
@@ -50,24 +85,46 @@ class ArucoData:
         self.rotation_name = None
 
 
-class ArucoBoxPose:
-    def __init__(self):
-        self.position = None
-        self.quaternions = None
-
-
 class PredefinedJointStates:
+    '''
+    Purpose:
+    ---
+
+    Class to store the Predefined Joint States
+
+    Members:
+    ---
+
+    `joint_states` :  [ list ]
+        List of Joint States
+
+    `name` :  [ string ]
+        Name of the Joint States
+
+    Example Creation of Object:
+    ---
+    `Initial_Joints = PredefinedJointStates()`
+    '''
     def __init__(self):
         self.joint_states = None
         self.name = None
 
 
-def aruco_name_list_updater(msg):
-    global aruco_name_list
-    # aruco_name_list = msg.data.split()
-
-
 def aruco_data_updater(msg):
+    '''
+    Purpose:
+    ---
+    Callback function to get the aruco data
+
+    Input Arguments:
+    ---
+    `msg` :  [ String ]
+        Aruco Data
+
+    Returns:
+    ---
+    None
+    '''
     global aruco_name_list
     global aruco_angle_list
     global aruco_ap_list
@@ -78,16 +135,26 @@ def aruco_data_updater(msg):
 
 
 def main():
+    '''
+    Purpose:
+    ---
+    Main Function to control the arm manipulation
+
+    Input Arguments:
+    ---
+    None
+
+    Returns:
+    ---
+    None
+
+    '''
     rclpy.init()
 
     if is_sim == True:
         print("Starting Simulation Manipulation Script")
     else:
         print("Starting Real Robot Manipulation Script")
-
-    Initial_Pose = ArucoBoxPose()
-    Initial_Pose.position = [0.18, 0.10, 0.46]
-    Initial_Pose.quaternions = [0.50479, 0.495985, 0.499407, 0.499795]
 
     Initial_Joints = PredefinedJointStates()
     Initial_Joints.joint_states = [0.0, -2.39, 2.4, -3.15, -1.58, 3.15]
@@ -183,6 +250,23 @@ def main():
     time.sleep(5)
 
     def moveToJointStates(joint_states, position_name):
+        '''
+        Purpose:
+        ---
+        Function to move the arm to the predefined joint states
+
+        Input Arguments:
+        ---
+        `joint_states` :  [ list ]
+            List of Joint States
+
+        `position_name` :  [ string ]
+            Name of the Joint States
+
+        Returns:
+        ---
+
+        '''
         counter = 1
         while True:
             print("Moving to ", position_name, "    [Attempt: ", counter, "]")
@@ -309,6 +393,23 @@ def main():
             print("[CM]: Switching to", "Moveit" if useMoveit else "Servo", "Complete")
 
     def moveWithServo(linear_speed, angular_speed):
+        '''
+        Purpose:
+        ---
+        Function to move the arm with servo
+
+        Input Arguments:
+        ---
+        `linear_speed` :  [ list ]
+            List of Linear Speeds
+
+        `angular_speed` :  [ list ]
+            List of Angular Speeds
+
+        Returns:
+        ---
+        None
+        '''
         twist_msg = TwistStamped()
         twist_msg.header.frame_id = ur5.base_link_name()
         twist_msg.header.stamp = node.get_clock().now().to_msg()
@@ -321,6 +422,32 @@ def main():
         twist_pub.publish(twist_msg)
 
     def addCollisionObject(objectType, id, position, orientation, frame_id):
+        '''
+        Purpose
+        ---
+        Function to add the collision object to planning scene
+
+        Input Arguments:
+        ---
+        `objectType` :  [ string ]
+            Type of the Object
+
+        `id` :  [ string ]
+            Id of the Object
+
+        `position` :  [ list ]
+            Position of the Object
+
+        `orientation` :  [ list ]
+            Orientation of the Object
+
+        `frame_id` :  [ string ]
+            Frame Id of the Object
+
+        Returns:
+        ---
+        None
+        '''
         if objectType == "box":
             path = box_file_path
         else:
@@ -344,6 +471,25 @@ def main():
             )
 
     def getCurrentPose(useEuler=False):
+        '''
+        Purpose:
+        ---
+        Function to get the current pose of the arm
+
+        Input Arguments:
+        ---
+        `useEuler` :  [ Bool ] (Optional, Default=False)
+            Flag to use Euler Angles
+
+        Returns:
+        ---
+        `tempPose` :  [ list ]
+            List of Current Positions in x, y, z axes
+
+        `tempQuats` :  [ list ]
+            List of Current orientation in x, y, z axes
+
+        '''
         tempPose = [0, 0, 0]
         tempQuats = [0, 0, 0, 0]
         transform = tf_buffer.lookup_transform("base_link", "tool0", rclpy.time.Time())
@@ -363,6 +509,23 @@ def main():
         return tempPose, tempQuats
 
     def controlGripper(status, box_name):
+        '''
+        Purpose:
+        ---
+        Function to control the gripper
+
+        Input Arguments:
+        ---
+        `status` :  [ string ] ("ON" or "OFF")
+            Status of the Gripper
+
+        `box_name` :  [ string ]
+            Name of the Box
+
+        Returns:
+        ---
+        None
+        '''
         if is_sim == True:
             if status == "ON":
                 gripper_control = node.create_client(AttachLink, "/GripperMagnetON")
@@ -411,12 +574,38 @@ def main():
             return state
 
     def checkSphericalTolerance(currentPose, targetPose, tolerance):
+        '''
+        Purpose:
+        ---
+        Function to check the spherical tolerance of EEF towards the target pose
+
+        Input Arguments:
+        ---
+        `currentPose` :  [ list ]
+            List of Current Positions in x, y, z axes
+
+        `targetPose` :  [ list ]
+            List of Target Positions in x, y, z axes
+
+        `tolerance` :  [ float ]
+            Tolerance Value
+
+        Returns:
+        ---
+        `hasToleranceAchieved` :  [ Bool ]
+            Flag to check if the tolerance is achieved
+
+        `currentTolerance` :  [ float ]
+            Current Tolerance Value
+
+        '''
         currentTolerance = math.sqrt(
             (currentPose[0] - targetPose[0]) ** 2
             + (currentPose[1] - targetPose[1]) ** 2
             + (currentPose[2] - targetPose[2]) ** 2
         )
-        return True if currentTolerance <= tolerance else False, currentTolerance
+        hasToleranceAchieved = True if currentTolerance <= tolerance else False
+        return hasToleranceAchieved, currentTolerance
 
     def moveToPoseWithServo(
         TargetPose,
@@ -426,6 +615,38 @@ def main():
         TargetYaw=0,
         YawError=0,
     ):
+        '''
+        Purpose:
+        ---
+        Function to move the arm to the target pose with servo  
+
+        Input Arguments:
+        ---
+        `TargetPose` :  [ list ]
+            List of Target Positions in x, y, z axes
+
+        `TargetQuats` :  [ list ]
+            List of Target Quaternions
+
+        `QuatsOnly` :  [ Bool ] (Optional, Default=False)
+            Flag to Servo Orientation Only
+
+        `PoseOnly` :  [ Bool ] (Optional, Default=False)
+            Flag to Servo Position Only
+
+        `TargetYaw` :  [ int ] (Optional, Default=0)
+            Target Yaw
+
+        `YawError` :  [ int ] (Optional, Default=0)
+            Yaw Error
+
+        Returns:
+        ---
+        `mission_status` :  [ Bool ]
+            Flag to check if the mission is successful
+
+
+        '''
         if is_sim == False:
             switch_controller(useMoveit=False)
         global servo_status
@@ -552,6 +773,23 @@ def main():
             return mission_status
 
     def moveToPose(aruco_data, drop_angles):
+        '''
+        Purpose:
+        ---
+        Function to move the arm to the target pose
+
+        Input Arguments:
+        ---
+        `aruco_data` :  [ ArucoData ]
+            Aruco Data
+
+        `drop_angles` :  [ list ]
+            List of Drop Angles
+
+        Returns:
+        ---
+        None
+        '''
         aruco_name = aruco_data.name
         aruco_id = aruco_data.id
         aruco_position = aruco_data.position

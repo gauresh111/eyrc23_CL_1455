@@ -20,13 +20,12 @@
 
 # Team ID:          [ CL#1455 ]
 # Author List:		[ Joel Devasia, Gauresh Wadekar ]
-# Filename:		    task1a.py
+# Filename:		    perception.py
 # Functions:
-# 			        [ Comma separated list of functions in this file ]
+# 			        [ calculate_rectangle_area, detect_aruco, aruco_tf, depthimagecb, colorimagecb, nearest_angle, get_ap_name, process_image, main]
 # Nodes:		    Add your publishing and subscribing node
-#                   Example:
-# 			        Publishing Topics  - [ /tf ]
-#                   Subscribing Topics - [ /camera/aligned_depth_to_color/image_raw, /etc... ]
+# 			        Publishing Topics  - [ /aruco_list, /aruco_data, /ap_list]
+#                   Subscribing Topics - [ /camera/color/image_raw, /camera/aligned_depth_to_color/image_raw]
 
 
 ################### IMPORT MODULES #######################
@@ -48,6 +47,52 @@ import yaml
 
 from tf_transformations import quaternion_from_euler, euler_from_quaternion
 
+#Format for creating a function
+'''
+Purpose:
+---
+< Short-text describing the purpose of this function >
+
+Input Arguments:
+---
+`< name of 1st input argument >` :  [ < type of 1st input argument > ]
+    < one-line description of 1st input argument >
+
+`< name of 2nd input argument >` :  [ < type of 2nd input argument > ]
+    < one-line description of 2nd input argument >
+
+Returns:
+---
+`< name of 1st return argument >` :  [ < type of 1st return argument > ]
+    < one-line description of 1st return argument >
+
+`< name of 2nd return argument >` :  [ < type of 2nd return argument > ]
+    < one-line description of 2nd return argument >
+
+Example call:
+---
+< Example of how to call this function >
+'''
+
+#Format for creating a Class
+'''
+Purpose:
+---
+< Short-text describing the purpose of this function >
+
+Members
+---
+`< name of 1st member >` :  [ < type of 1st member > ]
+    < one-line description of 1st member >
+
+`< name of 2nd member >` :  [ < type of 2nd member > ]
+    < one-line description of 2nd member >
+
+Example call:
+---
+< Example of how to call this function >
+'''
+
 ################### GLOBAL VARIABLES #######################
 
 
@@ -58,16 +103,40 @@ arucoImageWindow = None
 
 
 def calculate_rectangle_area(topLeft, topRight, bottomRight, bottomLeft):
-    """
-    Description:    Function to calculate area or detected aruco
+    '''
+    Purpose:
+    ---
+    Function to calculate area and width of aruco detected.
 
-    Args:
-        coordinates (list):     coordinates of detected aruco (4 set of (x,y) coordinates)
+    Input Arguments:
+    ---
+    `topLeft` :  [ tuple ]
+        Top left corner of aruco marker
+
+    `topRight` :  [ tuple ]
+        Top right corner of aruco marker
+
+    `bottomRight` :  [ tuple ]
+        Bottom right corner of aruco marker
+
+    `bottomLeft` :  [ tuple ]
+        Bottom left corner of aruco marker
 
     Returns:
-        area        (float):    area of detected aruco
-        width       (float):    width of detected aruco
-    """
+    ---
+    `area` :  [ float ]
+        Area of aruco marker
+
+    `length` :  [ float ]
+        Length of aruco marker
+
+    `width` :  [ float ]
+        Width of aruco marker
+
+    Example call:
+    ---
+    area, length, width = calculate_rectangle_area((0, 0), (0, 1), (1, 1), (1, 0))
+    '''
 
     ############ Function VARIABLES ############
 
@@ -97,20 +166,38 @@ def calculate_rectangle_area(topLeft, topRight, bottomRight, bottomLeft):
 
 
 def detect_aruco(image):
-    """
-    Description:    Function to perform aruco detection and return each detail of aruco detected
-                    such as marker ID, distance, angle, width, center point location, etc.
+    '''
+    Purpose:
+    ---
+    Function to detect aruco markers and calculate their center, distance from RGB, angle, width and ids list.
 
-    Args:
-        image                   (Image):    Input image frame received from respective camera topic
+    Input Arguments:
+    ---
+    `image` :  [ numpy array ]
+        Input BGR image frame received from camera topic
 
     Returns:
-        center_aruco_list       (list):     Center points of all aruco markers detected
-        distance_from_rgb_list  (list):     Distance value of each aruco markers detected from RGB camera
-        angle_aruco_list        (list):     Angle of all pose estimated for aruco marker
-        width_aruco_list        (list):     Width of all detected aruco markers
-        ids                     (list):     List of all aruco marker IDs detected in a single frame
-    """
+    ---
+    `center_aruco_list` :  [ list ]
+        List of center points of aruco markers
+
+    `distance_from_rgb_list` :  [ list ]
+        List of distance of aruco markers from RGB camera
+
+    `angle_aruco_list` :  [ list ]
+        List of angles of aruco markers
+
+    `width_aruco_list` :  [ list ]
+        List of width of aruco markers
+
+    `ids` :  [ list ]
+        List of ids of aruco markers
+
+    Example call:
+    ---
+    center_aruco_list, distance_from_rgb_list, angle_aruco_list, width_aruco_list, ids = detect_aruco(image)
+
+    '''
 
     ############ Function VARIABLES ############
     # How to use global variables in functions
@@ -164,7 +251,7 @@ def detect_aruco(image):
             angle_aruco_list,
             width_aruco_list,
             ids,
-            verify_angle_list
+            verify_angle_list,
         )
 
     #   ->  Use these aruco parameters-
@@ -197,21 +284,17 @@ def detect_aruco(image):
             angle_aruco_list,
             width_aruco_list,
             ids,
-            verify_angle_list
+            verify_angle_list,
         )
     # for corner, id, markerCorner in zip(corners, markerIds, markerCorners):
     for corner, id in zip(corners, markerIds):
-        area, length, width = calculate_rectangle_area(
-            corner[0], corner[1], corner[2], corner[3]
-        )
+        area = calculate_rectangle_area(corner[0], corner[1], corner[2], corner[3])[0]
 
         #   ->  Remove tags which are far away from arm's reach positon based on some threshold defined
         if area < aruco_area_threshold:
             continue
 
         ids.append(id[0])
-
-        width_aruco_list.append(width)
 
         #   ->  Calculate center points aruco list using math and distance from RGB camera using pose estimation of aruco marker
         #       ->  HINT: You may use numpy for center points and 'estimatePoseSingleMarkers' from cv2 aruco library for pose estimation
@@ -235,7 +318,7 @@ def detect_aruco(image):
             [corner], size_of_aruco_m, cam_mat, dist_mat
         )
 
-        #Angles we get in "angles" dont go beyond 90 degrees and sign stays the same. Hence this is used.
+        # Angles we get in "angles" dont go beyond 90 degrees and sign stays the same. Hence this is used.
         rmat = cv2.Rodrigues(rvec)[0]
         verify_angle = math.degrees(math.acos(rmat[0][0]))
 
@@ -261,9 +344,8 @@ def detect_aruco(image):
         center_aruco_list,
         distance_from_rgb_list,
         angle_aruco_list,
-        width_aruco_list,
         ids,
-        verify_angle_list
+        verify_angle_list,
     )
     ############################################
 
@@ -298,12 +380,8 @@ class aruco_tf(Node):
             Image, "/camera/aligned_depth_to_color/image_raw", self.depthimagecb, 10
         )
         print("Subscribed to topics")
-        self.aruco_name_publisher = self.create_publisher(
-            String, "/aruco_list", 10
-        )
-        self.aruco_data_publisher = self.create_publisher(
-            String, "/aruco_data", 10
-        )
+        self.aruco_name_publisher = self.create_publisher(String, "/aruco_list", 10)
+        self.aruco_data_publisher = self.create_publisher(String, "/aruco_data", 10)
         self.Ap_name_publisher = self.create_publisher(String, "/ap_list", 10)
         ############ Constructor VARIABLES/OBJECTS ############
 
@@ -337,18 +415,13 @@ class aruco_tf(Node):
 
         ############ ADD YOUR CODE HERE ############
 
-        # INSTRUCTIONS & HELP :
-
-        # 	->  Use data variable to convert ROS Image message to CV2 Image type
-
-        #   ->  HINT: You may use CvBridge to do the same
-
-        ############################################
         try:
             image = self.bridge.imgmsg_to_cv2(data, "passthrough")
             self.depth_image = image.copy()
         except:
             pass
+
+        ############################################
 
     def colorimagecb(self, data):
         """
@@ -363,27 +436,24 @@ class aruco_tf(Node):
 
         ############ ADD YOUR CODE HERE ############
 
-        # 	->  Use data variable to convert ROS Image message to CV2 Image type
-
-        #   ->  HINT:   You may use CvBridge to do the same
-        #               Check if you need any rotation or flipping image as input data maybe different than what you expect to be.
-        #               You may use cv2 functions such as 'flip' and 'rotate' to do the same
-
-        ############################################
         try:
             image = self.bridge.imgmsg_to_cv2(data, "bgr8")
             self.cv_image = image.copy()
         except:
             pass
 
-    def normalizeAngle(self,angle: int):
-        if angle < -180:
-            angle += 360
-        elif angle > 180:
-            angle -= 360
-        return angle
-    
-    def nearest_angle(self,angle):
+        ############################################
+
+    def nearest_angle(self, angle):
+        """
+        Description:    Function to find the nearest angle [-90, 0, 90] from the given angle
+
+        Args:
+            angle (float):    Input angle
+
+        Returns:
+            nearest (float):    Nearest angle
+        """
         if angle < -180:
             angle += 360
         elif angle > 180:
@@ -395,16 +465,26 @@ class aruco_tf(Node):
             nearest = 90 if angle > 0 else -90
         else:
             nearest = 180 if angle > 0 else -180
-
         return nearest
-    def get_rack_name(self,angle):
-        if angle>=0 and angle<=45:
-            rack_name = "ap1"
-        elif angle>45 and angle<=90:
-            rack_name = "ap2"
-        elif angle<-45 and angle>=-90:
-            rack_name = "ap3"
-        return rack_name
+
+    def get_ap_name(self, angle):
+        """
+        Description:    Function to find the AP (Arm Position) name from the given angle
+
+        Args:
+            angle (float):    Input angle
+
+        Returns:
+            ap_name (string):    AP name
+        """
+        if angle >= 0 and angle <= 45:
+            ap_name = "ap1"
+        elif angle > 45 and angle <= 90:
+            ap_name = "ap2"
+        elif angle < -45 and angle >= -90:
+            ap_name = "ap3"
+        return ap_name
+
     def process_image(self):
         """
         Description:    Timer function used to detect aruco markers and publish tf on estimated poses.
@@ -429,39 +509,40 @@ class aruco_tf(Node):
         aruco_name_list = []
         aruco_angle_list = []
         ap_list = []
-        aruco_data_yaml = {"id":[], "angle":[], "ap":[]}
+        aruco_data_yaml = {"id": [], "angle": [], "ap": []}
         ############ ADD YOUR CODE HERE ############
 
         # INSTRUCTIONS & HELP :
 
         # 	->  Get aruco center, distance from rgb, angle, width and ids list from 'detect_aruco_center' defined above
-        centers, distances, angles, widths, ids, verify_angles = detect_aruco(self.cv_image)
+        centers, distances, angles, ids, verify_angles = detect_aruco(self.cv_image)
 
         #   ->  Loop over detected box ids received to calculate position and orientation transform to publish TF
-        for center, distance, angle, width, id, verify_angle in zip(
-            centers, distances, angles, widths, ids, verify_angles
+        for center, distance, angle, id, verify_angle in zip(
+            centers, distances, angles, ids, verify_angles
         ):
 
-            #   ->  Use this equation to correct the input aruco angle received from cv2 aruco function 'estimatePoseSingleMarkers' here
-            #       It's a correction formula-
-            # angle[1] = (0.788*angle[1]) - ((angle[1]**2)/3160)
-            
+            # Custom Angle Correction technique
+
             angle[1] = angle[1] + (0.2 * angle[1]) - ((angle[1] ** 2) / 3160)
             angle[1] = math.degrees(angle[1])
             if angle[1] < abs(80):
-                arucoAngle = -0.208 + 0.837*angle[1] + 7.38e-05*angle[1]**2 + 1.36e-05*angle[1]**3 + -2.63e-09*angle[1]**4
+                arucoAngle = (
+                    -0.208
+                    + 0.837 * angle[1]
+                    + 7.38e-05 * angle[1] ** 2
+                    + 1.36e-05 * angle[1] ** 3
+                    + -2.63e-09 * angle[1] ** 4
+                )
             else:
                 arucoAngle = angle[1]
             arucoAngle *= -1
 
-            tempAp = self.get_rack_name(self.nearest_angle(arucoAngle))
+            tempAp = self.get_ap_name(self.nearest_angle(arucoAngle))
             if tempAp == "ap3":
                 arucoAngle = -verify_angle
             elif tempAp == "ap2":
                 arucoAngle = verify_angle
-
-            # if id  == 3:
-            #     print(angle[1])
 
             #   ->  Then calculate quaternions from roll pitch yaw (where, roll and pitch are 0 while yaw is corrected aruco_angle)
             newMarkerAngle = [0 + np.pi / 2 - self.offsetEuler[1], 0, 0 + np.pi / 2]
@@ -474,26 +555,15 @@ class aruco_tf(Node):
             depth_distance = self.depth_image[int(center[1])][int(center[0])] / 1000
 
             #   ->  Use this formula to rectify x, y, z based on focal length, center value and size of image
-            #       x = distance_from_rgb * (sizeCamX - cX - centerCamX) / focalX
-            #       y = distance_from_rgb * (sizeCamY - cY - centerCamY) / focalY
-            #       z = distance_from_rgb
-            #       where,
-            #               cX, and cY from 'center_aruco_list'
-            #               distance_from_rgb is depth of object calculated in previous step
-            #               sizeCamX, sizeCamY, centerCamX, centerCamY, focalX and focalY are defined above
             x = depth_distance * (sizeCamX - center[0] - centerCamX) / focalX
             y = depth_distance * (sizeCamY - center[1] - centerCamY) / focalY
             z = depth_distance
 
             #   ->  Now, mark the center points on image frame using cX and cY variables with help of 'cv2.cirle' function
-            cv2.circle(arucoImageWindow, (int(center[0]), int(center[1])), 5, (0, 0, 255), -1)
+            cv2.circle(
+                arucoImageWindow, (int(center[0]), int(center[1])), 5, (0, 0, 255), -1
+            )
 
-            #   ->  Here, till now you receive coordinates from camera_link to aruco marker center position.
-            #       So, publish this transform w.r.t. camera_link using Geometry Message - TransformStamped
-            #       so that we will collect it's position w.r.t base_link in next step.
-            #       Use the following frame_id-
-            #           frame_id = 'camera_link'
-            #           child_frame_id = 'cam_<marker_id>'          Ex: cam_20, where 20 is aruco marker ID
             transformStamped = TransformStamped()
             transformStamped.header.stamp = self.get_clock().now().to_msg()
             transformStamped.header.frame_id = "camera_link"
@@ -510,7 +580,6 @@ class aruco_tf(Node):
                 trans = self.tf_buffer.lookup_transform(
                     "base_link", "camera_link", rclpy.time.Time()
                 )
-                # qX, qY, qZ, qW = trans.transform.rotation.geometry_msgs.msg.Quaternion
                 self.offsetQuaternions = [
                     trans.transform.rotation.w,
                     trans.transform.rotation.x,
@@ -538,18 +607,10 @@ class aruco_tf(Node):
             transformStamped.transform.rotation.w = finalQuat[0]
             self.br.sendTransform(transformStamped)
 
-            # Get TF orientation of camera_link wrt base_link using listener
-
-            #   ->  Then finally lookup transform between base_link and obj frame to publish the TF
-            #       You may use 'lookup_transform' function to pose of obj frame w.r.t base_link
             try:
                 tranform = self.tf_buffer.lookup_transform(
                     "base_link", "cam_" + str(id), rclpy.time.Time()
                 )
-            #   ->  And now publish TF between object frame and base_link
-            #       Use the following frame_id-
-            #           frame_id = 'base_link'
-            #           child_frame_id = 'obj_<marker_id>'          Ex: obj_20, where 20 is aruco marker ID
                 transformStamped = TransformStamped()
                 transformStamped.header.stamp = self.get_clock().now().to_msg()
                 transformStamped.header.frame_id = "base_link"
@@ -569,17 +630,14 @@ class aruco_tf(Node):
                 transformStamped.transform.rotation.w = tranform.transform.rotation.w
                 self.br.sendTransform(transformStamped)
                 aruco_name_list.append("obj_" + str(id))
-                arucoAngle=round(arucoAngle)
+                arucoAngle = round(arucoAngle)
                 aruco_angle_list.append(arucoAngle)
-                ap_list.append(self.get_rack_name(self.nearest_angle(arucoAngle)))
-                
+                ap_list.append(self.get_ap_name(self.nearest_angle(arucoAngle)))
+
             except Exception as e:
                 print(e)
-                pass        
+                pass
 
-        #   ->  At last show cv2 image window having detected markers drawn and center points located using 'cv2.imshow' function.
-        #       Refer MD book on portal for sample image -> https://portal.e-yantra.org/
-        
         try:
             # cv2.imshow("aruco_image", arucoImageWindow)
             # cv2.waitKey(1)
@@ -587,13 +645,13 @@ class aruco_tf(Node):
             tempName = " "
             aruco_data_string = String()
             aruco_string = String()
-            aruco_string.data =  tempStr.join(aruco_name_list)
+            aruco_string.data = tempStr.join(aruco_name_list)
             rack_string = String()
-            rack_string.data =  tempName.join(ap_list)
+            rack_string.data = tempName.join(ap_list)
             if len(rack_string.data) == 0:
                 rack_string.data = "-2"
             self.Ap_name_publisher.publish(rack_string)
-            print("Rack_string:",rack_string)
+            print("Rack_string:", rack_string)
             print("Aruco_List:", aruco_string)
             print(aruco_name_list)
             print(aruco_angle_list)

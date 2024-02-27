@@ -2,6 +2,31 @@
 
 # ros2 run mani_stack switchController.py --ros-args -p useMoveit:="True"
 
+"""
+*****************************************************************************************
+*
+*        		===============================================
+*           		    Cosmo Logistic (CL) Theme (eYRC 2023-24)
+*        		===============================================
+*
+*  This script should be used to implement Task 1A of Cosmo Logistic (CL) Theme (eYRC 2023-24).
+*
+*  This software is made available on an "AS IS WHERE IS BASIS".
+*  Licensee/end user indemnifies and will keep e-Yantra indemnified from
+*  any and all claim(s) that emanate from the use of the Software or
+*  breach of the terms of this agreement.
+*
+*****************************************************************************************
+"""
+
+# Team ID:          [ CL#1455 ]
+# Author List:		[ Joel Devasia, Gauresh Wadekar ]
+# Filename:		    switchController.py
+# Functions:
+# 			        [ main ]
+# Services:		    Add your services here
+#                   Service   - [ /controller_manager/switch_controller ]
+
 from controller_manager_msgs.srv import SwitchController
 import time
 import rclpy
