@@ -8,6 +8,15 @@
 # The script handles both linear and angular motion to achieve docking alignment and execution.
 # ###
 
+'''
+# Team ID:          < 1455 >
+# Theme:            < Cosmo Logistic >
+# Author List:      < joel Devasia , Gauresh Wadekar >
+# Filename:         < docking_Hardware_boilerplate.py >
+# Functions:        < "moveBot", "reset_odom", "reset_imu", "normalize_angle", "calculate_distance", "GlobalStopTime", "is_robot_within_tolerance", "getWhichIsGreater", "distanceSingle", "Whichaxistomove", "odomLinearDockingprocess", "odomLinearDocking", "UltraOrientation", "UltraOrientationLinear", "AngularDocking", "find_string_in_list", "cameraYawConversion", "manualMoveBot", "is_yaw_within_tolerance", "cameraOrientation", "controller_loop", "dock_control_callback" >
+# Global variables: < "robot_pose", "ultrasonic_value", "aruco_name_list", "aruco_angle_list", "aruco_ap_list" >
+'''
+
 # Import necessary ROS2 packages and message types
 import os
 import rclpy
@@ -144,12 +153,50 @@ class MyRobotDockingController(Node):
 
     
     def moveBot(self,linearSpeedX,angularSpeed):
+        '''
+        Purpose:
+        ---
+        <  This function controls the robot's linear and angular movement by setting the linear and angular velocities. >
+
+        Input Arguments:
+        ---
+        `< linearSpeedX >` :  [ < float > ]
+            < desired linear speed of the robot along the X-axis in meters per second >
+
+        `< angularSpeed >` :  [ < float > ]
+            < desired angular speed of the robot around the Z-axis in radians per second. >
+
+        Returns:
+        ---
+        `<The function does not explicitly return any value.>`
+        
+        Example call:
+        ---
+        < moveBot(self, 0.5, -1.0) >
+        '''
         twist = Twist()
         twist.linear.x = linearSpeedX
         twist.angular.z = angularSpeed
         self.speedPub.publish(twist)
         
     def reset_odom(self):
+        '''
+        Purpose:
+        ---
+        Resets the robot's odometry data. This is typically used to set the robot's position and orientation to a known starting point.
+
+        Input Arguments:
+        ---
+        None
+
+        Returns:
+        ---
+        None
+
+        Example call:
+        ---
+        self.reset_odom()
+        '''
         self.get_logger().info('Resetting Odometry. Please wait...')
         self.reset_odom_ebot = self.create_client(Trigger, 'reset_odom')
         while not self.reset_odom_ebot.wait_for_service(timeout_sec=1.0):
@@ -165,6 +212,24 @@ class MyRobotDockingController(Node):
         else:
             self.get_logger().warn(self.odom_service_resp.result().message)
     def reset_imu(self):
+        '''
+        Purpose:
+        ---
+        Resets the robot's IMU (Inertial Measurement Unit) data. This is typically used to set the robot's orientation to a known starting point.
+
+        Input Arguments:
+        ---
+        None
+
+        Returns:
+        ---
+        None
+        
+        Example call:
+        ---
+        self.reset_imu()
+        '''
+
         self.get_logger().info('Resetting IMU. Please wait...')
         self.reset_imu_ebot = self.create_client(Trigger, 'reset_imu')
         while not self.reset_imu_ebot.wait_for_service(timeout_sec=1.0):
@@ -182,14 +247,25 @@ class MyRobotDockingController(Node):
 
     
     def normalize_angle(self,angle):
-        """Normalizes an angle to the range [-π, π].
-    
-        Args:
-            angle: A float representing the angle in radians.
+        '''
+        Purpose:
+        ---
+        Normalizes an angle to the range [0, 2π]. This is useful for calculations involving angles that may wrap around beyond the full circle.
+
+        Input Arguments:
+        ---
+        * `angle`: [float] - The angle to be normalized, in radians.
 
         Returns:
-            A float representing the normalized angle in radians.
-        """
+        ---
+        * `normalized_angle`: [float] - The normalized angle, in degrees, within the range [0, 2π].
+
+        Example call:
+        ---
+        normalized_angle = self.normalize_angle(3.14159)  # pi radians
+        print(normalized_angle)  # Output: 0.0 # degrees
+        '''
+
         global robot_pose
         if self.targetYaw == 0.0:
             return angle
@@ -201,29 +277,77 @@ class MyRobotDockingController(Node):
     # Main control loop for managing docking behavior
     
     def calculate_distance(self,x1, y1, x2, y2):
+        '''
+        Purpose:
+        ---
+        Calculates the Euclidean distance between two points in a 2D space.
+
+        Input Arguments:
+        ---
+        * `x1`: [float] - The X coordinate of the first point.
+        * `y1`: [float] - The Y coordinate of the first point.
+        * `x2`: [float] - The X coordinate of the second point.
+        * `y2`: [float] - The Y coordinate of the second point.
+
+        Returns:
+        ---
+        * `distance`: [float] - The Euclidean distance between the two points.
+
+        Example call:
+        ---
+        distance = self.calculate_distance(1.0, 2.0, 3.0, 4.0)
+        print(distance)  # Output: 2.8284271247461903
+        '''
         return math.sqrt((x2 - x1)**2 + (y2 - y1)**2)   
     def GlobalStopTime(self,StopSeconds):
+        '''
+        Purpose:
+        ---
+        Pauses the program execution for a specified number of seconds. This can be useful for waiting between actions or synchronizing with other parts of the code.
+
+        Input Arguments:
+        ---
+        * `StopSeconds`: [float] - The number of seconds to pause execution for.
+
+        Returns:
+        ---
+        None
+
+        Example call:
+        ---
+        self.GlobalStopTime(2.0)  # Pause for 2 seconds
+        '''
         future_time = Time(seconds=self.globalnodeClock.now().nanoseconds / 1e9 + StopSeconds, clock_type=self.globalnodeClock.clock_type)
         self.globalnodeClock.sleep_until(future_time)
     def is_robot_within_tolerance(self,current_x, current_y, current_orientation, goal_x, goal_y, goal_orientation,
                                 x_tolerance=0.3, y_tolerance=0.3, orientation_tolerance=10):
-        """
-        Check if the robot is within tolerance for X axis, Y axis, and Orientation.
+        '''
+        Purpose:
+        ---
+        Checks if the robot is within a specified tolerance level of the desired position and orientation. This is useful for determining when the robot has reached its goal.
 
-        Parameters:
-        - current_x: Current X axis position of the robot.
-        - current_y: Current Y axis position of the robot.
-        - current_orientation: Current orientation of the robot.
-        - goal_x: Goal X axis position for the robot.
-        - goal_y: Goal Y axis position for the robot.
-        - goal_orientation: Goal orientation for the robot.
-        - x_tolerance: Tolerance for the X axis (default is 3.0).
-        - y_tolerance: Tolerance for the Y axis (default is 3.0).
-        - orientation_tolerance: Tolerance for the orientation (default is 10).
+        Input Arguments:
+        ---
+        * `current_x`: [float] - The current X coordinate of the robot.
+        * `current_y`: [float] - The current Y coordinate of the robot.
+        * `current_orientation`: [float] - The current orientation of the robot, in radians.
+        * `goal_x`: [float] - The X coordinate of the desired goal position.
+        * `goal_y`: [float] - The Y coordinate of the desired goal position.
+        * `goal_orientation`: [float] - The desired goal orientation, in radians.
+        * `x_tolerance`: [float, optional] - The tolerance level for the X coordinate, in meters. Defaults to 0.3.
+        * `y_tolerance`: [float, optional] - The tolerance level for the Y coordinate, in meters. Defaults to 0.3.
+        * `orientation_tolerance`: [float, optional] - The tolerance level for the orientation, in degrees. Defaults to 10.
 
         Returns:
-        - True if the robot is within tolerance, False otherwise.
-        """
+        ---
+        * `is_within_tolerance`: [bool] - True if the robot is within the specified tolerances, False otherwise.
+
+        Example call:
+        ---
+        # Check if the robot is within 0.2 meters in X and Y, and 5 degrees in orientation from the goal
+        is_within_tolerance = self.is_robot_within_tolerance(1.0, 2.0, 1.57, 1.1, 2.1, 1.57, 0.2, 0.2, 5)
+        print(is_within_tolerance)
+        '''
         x_difference = abs(goal_x)-abs(current_x)
         y_difference = abs(goal_y)-abs(current_y)
         orientation_difference = abs(goal_orientation) - abs(current_orientation)
@@ -235,6 +359,25 @@ class MyRobotDockingController(Node):
         return x_within_tolerance and y_within_tolerance and orientation_within_tolerance
     
     def getWhichIsGreater(self,currentX,currentY):
+        '''
+        Purpose:
+        ---
+        Determines which axis (X or Y) has a greater difference between the current and target positions. This is useful for deciding which axis the robot should move along first.
+
+        Input Arguments:
+        ---
+        * `currentX`: [float] - The current X coordinate of the robot.
+        * `currentY`: [float] - The current Y coordinate of the robot.
+
+        Returns:
+        ---
+        * `axis`: [int] - The axis with the greater difference ("0" or "1").
+
+        Example call:
+        ---
+        axis = self.getWhichIsGreater(1.0, 3.0)
+        print(axis)  # Output: "1"
+        '''
         goalX = self.targetX
         goalY = self.targetY
         AbsdifferenceX = abs(abs(currentX) - abs(goalX))
@@ -251,16 +394,85 @@ class MyRobotDockingController(Node):
         
         
     def distanceSingle(self,x1, x2):
+        '''
+        Purpose:
+        ---
+        Calculates the absolute difference between two values. This is a simpler version of `calculate_distance` that only works for one-dimensional data.
+
+        Input Arguments:
+        ---
+        * `x1`: [float] - The first value.
+        * `x2`: [float] - The second value.
+
+        Returns:
+        ---
+        * `difference`: [float] - The absolute difference between the two values.
+
+        Example call:
+        ---
+        difference = self.distanceSingle(5.0, 2.0)
+        print(difference)  # Output: 3.0
+        '''
         return math.sqrt((x1 - x2) ** 2)*1.0
     def Whichaxistomove(self):
+        '''
+        Purpose:
+        ---
+        Determines which axis (X or Y) the robot needs to move along first based on the absolute yaw angle. This is useful for determining the initial movement direction during docking.
+
+        Input Arguments:
+        ---
+        None
+
+        Returns:
+        ---
+        * `axis`: [int] - The axis to move along first ("1" or "0").
+
+        Example call:
+        ---
+        axis = self.Whichaxistomove()
+        print(axis)
+        '''
         absolute_yaw = abs(self.targetYaw)
         return 1 if absolute_yaw > 200.0 else 0 if absolute_yaw > 150.0 else 1 if absolute_yaw > 80.0 else 0
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
+        '''
+        Purpose:
+        ---
+        Calculates a linear speed command using a PID controller based on the input distance. This is used for controlling the robot's movement during docking using odometry data.
+
+        Input Arguments:
+        ---
+        * `InputDistance`: [float] - The desired distance to move.
+        * `Setpoint`: [float, optional] - The target value for the PID controller. Defaults to 0.1.
+
+        Returns:
+        ---
+        * `MotorSpeed`: [float] - The calculated linear speed command for the motor.
+
+        '''
         odomlinearPid = pid()
         if InputDistance <0.4:   
             return 0.0
         return odomlinearPid.odomComputeLinear(InputDistance,Setpoint)
     def odomLinearDocking(self):
+        '''
+        Purpose:
+        ---
+        Performs linear docking using the odometry data and the `odomLinearDockingprocess` function. This function likely controls the robot's movement along a specific axis until it reaches the desired position based on odometry readings.
+
+        Input Arguments:
+        ---
+        None
+
+        Returns:
+        ---
+        None
+
+        Example call:
+        ---
+        self.odomLinearDocking()
+        '''
         global robot_pose
         reachedExtra = False    
         X1 = self.Whichaxistomove()
@@ -279,6 +491,23 @@ class MyRobotDockingController(Node):
             self.moveBot(speed,0.0)
             self.GlobalStopTime(0.1)
     def UltraOrientation(self):
+        '''
+        Purpose:
+        ---
+        Performs ultrasonic sensor-based orientation adjustment using a PID controller. This function likely uses ultrasonic sensor readings to adjust the robot's orientation during docking.
+
+        Input Arguments:
+        ---
+        None
+
+        Returns:
+        ---
+        None
+
+        Example call:
+        ---
+        self.UltraOrientation()
+        '''
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
@@ -289,6 +518,23 @@ class MyRobotDockingController(Node):
             self.moveBot(0.0,angularValue)
             self.GlobalStopTime(0.1)
     def UltraOrientationLinear(self,Setpoint):
+        '''
+        Purpose:
+        ---
+        Performs linear movement based on ultrasonic sensor readings until a specified distance is reached. This function likely uses ultrasonic sensor readings to control the robot's linear movement until it reaches a certain distance.
+
+        Input Arguments:
+        ---
+        * `Setpoint`: [float] - The target value for the PID controller, likely related to the desired distance.
+
+        Returns:
+        ---
+        None
+
+        Example call:
+        ---
+        self.UltraOrientationLinear(0.2)  # Move until 0.2 meters away based on ultrasonic sensor readings
+        '''
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
@@ -302,6 +548,23 @@ class MyRobotDockingController(Node):
                 reached = True
             self.GlobalStopTime(0.1)    
     def AngularDocking(self):   
+        '''
+        Purpose:
+        ---
+        Performs angular docking using the IMU data and a PID controller. This function likely uses the IMU (Inertial Measurement Unit) data to adjust the robot's orientation until it reaches the desired angle during docking.
+
+        Input Arguments:
+        ---
+        None
+
+        Returns:
+        ---
+        None
+
+        Example call:
+        ---
+        self.AngularDocking()
+        '''
         yaw = False
         botPid = pid()
         while (yaw == False):
@@ -313,11 +576,48 @@ class MyRobotDockingController(Node):
         self.moveBot(0.0,0.0)
     
     def find_string_in_list(self,string, list):
+        '''
+        Purpose:
+        ---
+        Searches for a string in a list and returns its index if found, or -1 otherwise. This function is likely used for searching through lists of strings, possibly for configuration or data manipulation.
+
+        Input Arguments:
+        ---
+        * `string`: [str] - The string to search for.
+        * `list`: [list] - The list to search in.
+
+        Returns:
+        ---
+        * `index`: [int] - The index of the string in the list if found, or -1 if not found.
+
+        Example call:
+        ---
+        index = self.find_string_in_list("key", ["value1", "key", "value3"])
+        print(index)  # Output: 1
+        '''
         for index, item in enumerate(list):
             if item == string:
                 return index
         return -1
     def cameraYawConversion(self,yaw):
+        '''
+        Purpose:
+        ---
+        Converts the camera yaw angle to a format suitable for the robot. This function likely adjusts the camera yaw reading to match the robot's internal coordinate system or control requirements.
+
+        Input Arguments:
+        ---
+        * `yaw`: [float] - The camera yaw angle.
+
+        Returns:
+        ---
+        * `converted_yaw`: [float] - The converted yaw angle suitable for the robot.
+
+        Example call:
+        ---
+        converted_yaw = self.cameraYawConversion(45.0)
+        print(converted_yaw)
+        '''
         if self.targetYaw >= 178.0 and self.targetYaw <= 182.0:
             return 180 - yaw
 
@@ -325,6 +625,23 @@ class MyRobotDockingController(Node):
             yaw =  360 - yaw
         return int(yaw)
     def manualMoveBot(self):
+        '''
+        Purpose:
+        ---
+        Allows manual control of the robot through user input. This function likely provides a way to manually control the robot's movement during testing or development.
+
+        Input Arguments:
+        ---
+        None
+
+        Returns:
+        ---
+        None
+
+        Example call:
+        ---
+        self.manualMoveBot()
+        '''
         global robot_pose,aruco_name_list,aruco_angle_list,aruco_ap_list
         # value = input("Move Bot")
         target_rack = "obj_"+self.BoxId#"rack3"
@@ -357,12 +674,49 @@ class MyRobotDockingController(Node):
         return None
     
     def is_yaw_within_tolerance(self,current_yaw, target_yaw, tolerance=5):
+        '''
+        Purpose:
+        ---
+        Checks if the current yaw angle is within a specified tolerance level of the target yaw angle. This function is likely used for determining when the robot's orientation is close enough to the desired angle during docking.
+
+        Input Arguments:
+        ---
+        * `current_yaw`: [float] - The current yaw angle of the robot.
+        * `target_yaw`: [float] - The target yaw angle.
+        * `tolerance`: [float, optional] - The tolerance level for the yaw angle, in degrees. Defaults to 5.
+
+        Returns:
+        ---
+        * `is_within_tolerance`: [bool] - True if the current yaw is within the specified tolerance, False otherwise.
+
+        Example call:
+        ---
+        is_within_tolerance = self.is_yaw_within_tolerance(30.0, 45.0)
+        print(is_within_tolerance)  # Output: True (depending on the tolerance value)
+        '''
         # Calculate the difference between the yaw angles
         yaw_diff = abs(current_yaw - target_yaw)
 
         # Check if the difference is within the tolerance
         return yaw_diff <= tolerance
     def cameraOrientation(self):
+        '''
+        Purpose:
+        ---
+        Performs docking using the camera data to adjust the robot's orientation. This function likely uses the camera to detect specific features or landmarks to adjust the robot's orientation during docking.
+
+        Input Arguments:
+        ---
+        None
+
+        Returns:
+        ---
+        None
+
+        Example call:
+        ---
+        self.cameraOrientation()
+        '''
         global aruco_name_list,aruco_angle_list,aruco_ap_list
         self.manualMoveBot()
         botPid = pid()
@@ -401,7 +755,23 @@ class MyRobotDockingController(Node):
 
         # The controller loop manages the robot's linear and angular motion 
         # control to achieve docking alignment and execution
-        
+        '''
+        Purpose:
+        ---
+        The main control loop that manages the robot's overall docking behavior. This function likely coordinates and calls other functions responsible for various docking tasks like movement, sensor readings, and orientation adjustments.
+
+        Input Arguments:
+        ---
+        None
+
+        Returns:
+        ---
+        None
+
+        Example call:
+        ---
+        self.controller_loop()  # This function is likely called continuously within the program.
+        '''
         # print("controller loop")
         def odometry_callback(msg):
         # Extract and update robot pose information from odometry message
@@ -547,6 +917,24 @@ class MyRobotDockingController(Node):
         # Extract desired docking parameters from the service request
         #
         #
+        '''
+        Purpose:
+        ---
+        A callback function that handles requests from the `DockControl` service and starts the docking process. This function is likely triggered by an external system or user interaction to initiate the robot's docking behavior.
+
+        Input Arguments:
+        ---
+        * `request`: [object] - The request object containing information from the `DockControl` service.
+        * `response`: [object] - The response object used to send information back to the `DockControl` service.
+
+        Returns:
+        ---
+        None
+
+        Example call:
+        ---
+        # This function is likely called automatically within the program when a request is received from the `DockControl` service.
+        '''
         self.targetX = request.goal_x
         self.targetY = request.goal_y
         self.targetYaw = request.orientation
@@ -583,7 +971,24 @@ class MyRobotDockingController(Node):
 
 # Main function to initialize the ROS2 node and spin the executor
 def main(args=None):
-    
+    '''
+    Purpose:
+    ---
+    The main entry point of the program. This function is typically where the program execution begins and coordinates the overall docking process.
+
+    Input Arguments:
+    ---
+    * `args`: [list, optional] - A list of arguments passed to the program from the command line. Defaults to None.
+
+    Returns:
+    ---
+    None
+
+    Example call:
+    ---
+    if __name__ == "__main__":
+        main()
+    '''
     my_robot_docking_controller = MyRobotDockingController()
     executor = MultiThreadedExecutor(2)
     executor.add_node(my_robot_docking_controller)

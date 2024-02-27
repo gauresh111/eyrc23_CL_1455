@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
-## Overview
+'''
+# Team ID:          < 1455 >
+# Theme:            < Cosmo Logistic >
+# Author List:      < Joel Devasia , Gauresh Wadekar >
+# Filename:         < docking_reset.py >
+# Functions:        < main ,imu_callback ,odometry_callback,ultrasonic_callback>
+# Global variables: < robot_pose , ultrasonic_value  >
+'''
 
-# ###
-# This ROS2 script is designed to control a robot's docking behavior with a rack. 
-# It utilizes odometry data, ultrasonic sensor readings, and provides docking control through a custom service. 
-# The script handles both linear and angular motion to achieve docking alignment and execution.
-# ###
 
 # Import necessary ROS2 packages and message types
 import os
@@ -42,6 +44,13 @@ def main():
     executor_thread = Thread(target=executor.spin, daemon=True, args=())
     executor_thread.start()
     def imu_callback(msg):
+        '''
+        Purpose:read the IMU data and update the robot pose
+        args: msg
+        return: None
+        
+        
+        '''
         global robot_pose
         quaternion_array = msg.orientation
         orientation_list = [quaternion_array.x, quaternion_array.y, quaternion_array.z, quaternion_array.w]
@@ -51,14 +60,26 @@ def main():
         robot_pose[2] = round(yaw,2)  
     def odometry_callback(msg):
         # Extract and update robot pose information from odometry message
+        '''
+        Purpose:read the Odometry data and update the robot pose
+        args: msg
+        return: None
+        
+        
+        '''
         global robot_pose
         robot_pose[0] = round(msg.pose.pose.position.x,2)
         robot_pose[1] = round(msg.pose.pose.position.y,2)
         
     def ultrasonic_callback(msg):
-            global ultrasonic_value
-            ultrasonic_value[0] = round(msg.data[4],4)
-            ultrasonic_value[1] = round(msg.data[5],4)  
+        '''
+        Purpose:read the ultraSonic Value data and update the ultrasonic_value
+        args: msg
+        return: None
+        '''
+        global ultrasonic_value
+        ultrasonic_value[0] = round(msg.data[4],4)
+        ultrasonic_value[1] = round(msg.data[5],4)  
     MonitorNode.odom = MonitorNode.create_subscription(Odometry, '/odom', odometry_callback, 10,callback_group=callback_group)
     MonitorNode.ultra_sub = MonitorNode.create_subscription(Float32MultiArray, '/ultrasonic_filter', ultrasonic_callback, 10,callback_group=callback_group)
     MonitorNode.imu_sub = MonitorNode.create_subscription(Imu, 'sensors/imu1', imu_callback, 10,callback_group=callback_group)

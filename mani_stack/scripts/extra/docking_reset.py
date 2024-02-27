@@ -1,4 +1,15 @@
 #!/usr/bin/env python3
+
+'''
+# Team ID:          < 1455 >
+# Theme:            < Cosmo Logistic >
+# Author List:      < Joel Devasia , Gauresh Wadekar >
+# Filename:         < docking_reset.py >
+# Functions:        < "main" >
+# Global variables: < none >
+'''
+
+
 import rclpy
 from rclpy.node import Node
 from rclpy.executors import MultiThreadedExecutor
