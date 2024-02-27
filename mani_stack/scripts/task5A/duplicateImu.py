@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
 
 '''
-*****************************************************************************************
-*  Filename:			duplicate_imu.py
-*  Created:				19/10/2023 (For eYRC Cosmo Logistic)
-*  Last Modified:	    19/10/2023
-*  Modified by:         Archit
-*  Author:				Archit e-Yantra Team
-*****************************************************************************************
+# Team ID:          < 1455 >
+# Theme:            < Cosmo Logistic >
+# Author List:      < Joel Devasia , Gauresh Wadekar >
+# Filename:         < duplicateImu.py >
+# Functions:        < orient_cb >
+# Global variables: < aruco_ap_list, aruco_angle_list , aruco_name_list , dockingPosition >
 '''
 
 import rclpy
@@ -33,6 +32,11 @@ class CopyImu(Node):
     #     # self.get_logger().info(f'Sucessfully copied imu!')
 
     def orient_cb(self, msg):
+        '''
+        purpose: to copy the orientation from the orientation topic and publish it to the imu1 topic
+        args: msg
+        return: None
+        '''
         yaw = msg.data
         if yaw > 3.14:
             yaw_new = (6.28 - yaw) * 1

@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 
-## Overview
-
-# ###
-# This ROS2 script is designed to control a robot's docking behavior with a rack. 
-# It utilizes odometry data, ultrasonic sensor readings, and provides docking control through a custom service. 
-# The script handles both linear and angular motion to achieve docking alignment and execution.
-# ###
-
-# Import necessary ROS2 packages and message types
-
+'''
+# Team ID:          < 1455 >
+# Theme:            < Cosmo Logistic >
+# Author List:      < Joel Devasia , Gauresh Wadekar >
+# Filename:         < ultraFilter.py >
+# Functions:        < ultrasonic_callback  , movingAverage , ultrasonic_publisher>
+# Global variables: < heading , ultrasonic_value , readings , Leftreadings , Rightreadings , leftTotal , rightTotal , readIndex >
+'''
 import rclpy
 from rclpy.node import Node
 from threading import Thread
@@ -34,13 +32,24 @@ def main():
     executor_thread.start()
     
     def ultrasonic_callback(msg):
-            global ultrasonic_value
-            ultrasonic_value[0] = round(msg.data[4],4)
-            ultrasonic_value[1] = round(msg.data[5],4)  
+        ''' 
+        Purpose: to read the ultrasonic sensor data and update the ultrasonic_value
+        args: msg
+        return: None
+        
+        '''
+        global ultrasonic_value
+        ultrasonic_value[0] = round(msg.data[4],4)
+        ultrasonic_value[1] = round(msg.data[5],4)  
     duplicateNode.ultra_sub = duplicateNode.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)
     duplicateNode.ultrasonic_pub = duplicateNode.create_publisher(Float32MultiArray, '/ultrasonic_filter', 1)
     
     def movingAverage():
+        '''
+        Purpose: to calculate the moving average of the ultrasonic sensor data
+        args: None
+        return: leftaverage, rightaverage
+        '''
         global readings, ultrasonic_value, Leftreadings, Rightreadings, leftTotal, rightTotal ,readIndex
         average =0
         
@@ -62,7 +71,11 @@ def main():
         rightaverage = rightTotal / 20
         return leftaverage, rightaverage
     def ultrasonic_publisher():
-        
+        '''
+        Purpose: to publish the ultrasonic sensor data after calculating the moving average
+        args: None
+        return: None
+        '''
         left,right = movingAverage()
         msg = Float32MultiArray()
         minValue = min(left,right)
