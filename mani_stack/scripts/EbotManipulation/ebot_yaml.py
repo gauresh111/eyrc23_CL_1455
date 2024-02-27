@@ -1,3 +1,12 @@
+'''
+# Team ID:          < 1455 >
+# Theme:            < Cosmo Logistic >
+# Author List:      < Joel Devasia , Gauresh Wadekar >
+# Filename:         < ebot_yaml.py >
+# Functions:        < "load_yaml", "get_package_file", "add_docking_position", "switch_case", "find_string_in_list", "main", "getRackFromCamera", "aruco_data_updater", "distance", "findNearestAp" >
+# Global variables: < aruco_ap_list, aruco_angle_list , aruco_name_list , dockingPosition >
+'''
+
 #!/usr/bin/env python3
 import os
 import rclpy
@@ -38,6 +47,17 @@ def get_package_file(package, file_path):
     return absolute_file_path
 config_file = get_package_file(config_folder_name, 'config.yaml')
 def add_docking_position(name, xyz, quaternions, xy_offsets,yaw):
+    '''
+    Purpose: Adds a new docking position to the dockingPosition dictionary.
+    Arguments:
+        name (str): The name of the docking position.
+        xyz (list): A list of three coordinates (x, y, z) for the position.
+        quaternions (list): A list of four quaternions representing the orientation.
+        xy_offsets (list): A list of two offsets (x, y) for the position.
+        yaw (float): The yaw angle of the position.
+    Returns:
+        None.
+    '''
     global dockingPosition
     dockingPosition[name] = {
         'xyz': xyz,
@@ -46,6 +66,14 @@ def add_docking_position(name, xyz, quaternions, xy_offsets,yaw):
         'Yaw':yaw
     }
 def switch_case(yaw,cordinates):
+    '''
+    Purpose: Adjusts coordinates based on yaw angle.
+    Arguments:
+        yaw (float): The yaw angle.
+        cordinates (list): A list of coordinates (x, y).
+    Returns:
+        tuple: A tuple containing adjusted coordinates (x, y) and offsets (x_offset, y_offset).
+'''
     x, y = cordinates[0],cordinates[1]
     offsetXY=[]
     
@@ -68,6 +96,15 @@ def switch_case(yaw,cordinates):
         offsetXY=[-0.9,0.0]    
     return x,y,offsetXY
 def find_string_in_list(string, list):
+    '''
+    Purpose: Finds the index of a string within a list.
+    Arguments:
+        string (str): The string to search for.
+        list (list): The list to search.
+    Returns:
+        int: The index of the string if found, otherwise -1.
+
+    '''
     for index, item in enumerate(list):
         if item == string:
             return index
@@ -87,10 +124,24 @@ def main():
     global rackPresentSub
     rackPresentSub = []
     def getRackFromCamera(data):
+        '''
+        Purpose: Processes camera data to identify present racks.
+        Arguments:
+            data (str): Camera data as a string.
+        Returns:
+            None.
+        '''
         global rackPresentSub     
         rackPresentSub=data.data.split()
         rackPresentSub=set(rackPresentSub)
     def aruco_data_updater(msg):
+        '''
+        Purpose: Updates Aruco marker data.
+        Arguments:
+            msg (String message): Aruco data message.
+        Returns:
+            None.
+        '''
         global aruco_name_list
         global aruco_angle_list
         global aruco_ap_list
@@ -165,8 +216,25 @@ def main():
             package_id.remove(int(getName[-1]))
             futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
     def distance(p1, p2):
+        '''
+        Purpose: Calculates the Euclidean distance between two points.
+        Arguments:
+            p1 (list): A list of coordinates for the first point.
+            p2 (list): A list of coordinates for the second point.
+        Returns:
+            float: The distance between the points.
+        '''
         return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
     def findNearestAp(X,Y):
+        '''
+        Purpose: Finds the nearest access point (AP) to a given location.
+        Arguments:
+            X (float): The x-coordinate of the location.
+            Y (float): The y-coordinate of the location.
+        Returns:
+            str: The name of the nearest access point.
+                
+        '''
         global dockingPosition
         nearest_ap = None
         min_distance = float('inf')

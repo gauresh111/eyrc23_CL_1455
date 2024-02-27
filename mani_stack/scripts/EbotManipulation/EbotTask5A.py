@@ -1,5 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+'''
+# Team ID:          < 1455 >
+# Theme:            < Cosmo Logistic >
+# Author List:      < Joel Devasia , Gauresh Wadekar >
+# Filename:         < EbotTask5A.py >
+# Functions:        < "load_yaml", "get_package_file", "add_docking_position", "switch_case", "find_string_in_list", "main", "getRackFromCamera", "aruco_data_updater", "distance", "findNearestAp" >
+# Global variables: < aruco_ap_list, aruco_angle_list , aruco_name_list , dockingPosition >
+'''
 import rclpy
 from rclpy.node import Node
 from threading import Thread
@@ -18,6 +26,13 @@ global ultrasonic_value
 
 import time
 def main():
+    '''
+    Purpose: The main entry point of the program.
+    Arguments:
+        None.
+    Returns:
+        None.
+    '''
     rclpy.init()
     navigator = BasicNavigator()
     callback_group = ReentrantCallbackGroup()
@@ -36,6 +51,19 @@ def main():
     withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
     def add_docking_position(name, xyz, quaternions, xy_offsets,yaw,boxid,ap_name):
+        '''
+        Purpose: Adds a new docking position to the positionToGO dictionary.
+        Arguments:
+            name (str): The name of the docking position.
+            xyz (list): A list of three coordinates (x, y, z) for the position.
+            quaternions (list): A list of four quaternions representing the orientation.
+            xy_offsets (list): A list of two offsets (x, y) for the position.
+            yaw (float): The yaw angle of the position.
+            boxid (str): The ID of the box associated with the docking position.
+            ap_name (str): The name of the access point (AP) associated with the docking position.
+        Returns:
+            None.
+        '''
         global positionToGO
         positionToGO[name] = {
             'xyz': xyz,
@@ -47,6 +75,14 @@ def main():
         positionToGO[ap_name]["BoxID"] = boxid
     def change_footprint(new_footprint,msg):
     # Initialize ROS node
+        '''
+        Purpose: Changes the robot's footprint on the costmap.
+        Arguments:
+            new_footprint (list): A list of four points defining the new footprint polygon.
+            msg (str): A message to print during footprint change.
+        Returns:
+            None.
+        '''
         nodeFootprint = rclpy.create_node('change_footprint_node')
         # Create a service client to set parameters
         nodeFootprint.localFootPrintPub=nodeFootprint.create_publisher(Polygon, '/local_costmap/footprint', 10)
@@ -62,6 +98,13 @@ def main():
             time.sleep(0.1)
             print("publishing:" ,msg)
     def getGoalPoseStamped(goal):
+        '''
+        Purpose: Gets a PoseStamped message for a specific goal.
+        Arguments:
+            goal (str): The name of the goal in the positionToGO dictionary.
+        Returns:
+            PoseStamped: A ROS2 message representing the desired goal pose
+        '''
         global positionToGO
         Goal = positionToGO[goal]
         goalPose = PoseStamped()
@@ -77,6 +120,16 @@ def main():
         print(goalPose)
         return goalPose  
     def moveToGoal(goalPose,rack_no,israck,positionName):
+        '''
+        Purpose: Moves the robot to a specific goal and performs docking if needed.
+        Arguments:
+            goalPose (PoseStamped): The desired goal pose.
+            rack_no (int): The rack number (if applicable).
+            israck (bool): Indicates whether the goal is a rack (True) or an access point (False).
+            positionName (str): The name of the goal position.
+        Returns:
+            None.
+        '''
         global positionToGO
         dockingNodecli = rclpy.create_node("NodeDockingClient")
         dockingNodecli.dockingClient = dockingNodecli.create_client(DockSw, '/dock_control')
@@ -101,6 +154,13 @@ def main():
         global ultrasonic_value
         ultrasonic_value = [0.0,0.0]
         def ultrasonic_callback(msg):
+            '''
+            Purpose: Callback function to process ultrasonic sensor data (used within moveToGoal).
+            Arguments:
+                msg (Float32MultiArray): A ROS2 message containing ultrasonic sensor readings.
+            Returns:
+                None. (Updates a global variable ultrasonic_value with sensor data)
+            '''
             global ultrasonic_value
             ultrasonic_value[0] = round(msg.data[4],4)
             ultrasonic_value[1] = round(msg.data[5],4)
@@ -147,6 +207,14 @@ def main():
     navigator.waitUntilNav2Active()
     
     def Rack_control_callback(Request,Response):
+        '''
+        Purpose: Service callback function to handle requests for rack and AP navigation.
+        Arguments:
+            Request (RackSw.Request): A ROS service request containing navigation parameters.
+            Response (RackSw.Response): A ROS service response to be sent back to the client.
+        Returns:
+            RackSw.Response: The filled response message indicating success or failure.
+        '''
         global positionToGO
         node.get_logger().info("Request Arrived")
         RackRequest=Request.rack_name
@@ -175,6 +243,13 @@ def main():
         node.get_logger().info("Request done with Succes")
         return Response
     def ExitCallBack(msg):
+        '''
+        Purpose: Callback function to handle exit signal (/ExitNav).
+        Arguments:
+            msg (Bool): A ROS message containing the exit signal (True for exit).
+        Returns:
+            None. (Raises SystemExit to terminate the program)
+        '''
         if msg.data:
             raise SystemExit
     dock_control_srv = node.create_service(RackSw, '/RackNav2Sw', Rack_control_callback, callback_group=callback_group)
