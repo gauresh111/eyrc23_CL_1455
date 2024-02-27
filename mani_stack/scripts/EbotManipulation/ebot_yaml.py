@@ -241,8 +241,8 @@ def main():
         for ap in dockingPosition.keys():
             #get distance
             
-            search_rack = ap.find("r",)
-            if search_rack == -1:
+            search_rack = ap.find("ap",)
+            if search_rack != -1:
                 x1=dockingPosition[ap]["xyz"][0]
                 y1=dockingPosition[ap]["xyz"][1]
                 latestDistance = distance([x, y], [x1, y1])
