@@ -249,7 +249,7 @@ def detect_aruco(image):
             center_aruco_list,
             distance_from_rgb_list,
             angle_aruco_list,
-            width_aruco_list,
+            
             ids,
             verify_angle_list,
         )
@@ -282,7 +282,7 @@ def detect_aruco(image):
             center_aruco_list,
             distance_from_rgb_list,
             angle_aruco_list,
-            width_aruco_list,
+            
             ids,
             verify_angle_list,
         )

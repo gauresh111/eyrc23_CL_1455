@@ -654,7 +654,7 @@ class MyRobotDockingController(Node):
             counter = 1
             while rackIndex == -1:
                 counter = counter + 1
-                if counter > 100:
+                if counter > 20:
                     self.moveBot(0.0,0.0)
                     self.moveBot(0.0,0.0)
                     return None

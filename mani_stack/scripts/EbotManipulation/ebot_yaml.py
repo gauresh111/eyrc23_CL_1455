@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 '''
 # Team ID:          < 1455 >
 # Theme:            < Cosmo Logistic >
@@ -7,7 +8,7 @@
 # Global variables: < aruco_ap_list, aruco_angle_list , aruco_name_list , dockingPosition >
 '''
 
-#!/usr/bin/env python3
+
 import os
 import rclpy
 from threading import Thread
