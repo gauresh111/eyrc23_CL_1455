@@ -1,0 +1,1 @@
+controller_joint_names: ['RIGHT_EEJ', 'BJ1', 'SHJ1', 'SHJ2', 'SHJ3', 'gripper', 'rightr', 'leftlink', ]

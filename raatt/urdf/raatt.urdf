@@ -1,0 +1,454 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="raatt">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-0.000302669236743502 -0.000454528374252028 0.0302331732142673"
+        rpy="0 0 0" />
+      <mass
+        value="0.555206588896969" />
+      <inertia
+        ixx="0.000998098210823024"
+        ixy="1.36920441221066E-05"
+        ixz="2.7862324634259E-07"
+        iyy="0.00100566469500133"
+        iyz="6.05386059861254E-07"
+        izz="0.00194501574962432" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  
+  <link
+    name="BL1">
+    <inertial>
+      <origin
+        xyz="-0.000931439723598049 0.0288301747857007 0.000625090792673172"
+        rpy="0 0 0" />
+      <mass
+        value="0.368463521363485" />
+      <inertia
+        ixx="0.000580652751011535"
+        ixy="9.15043727846987E-08"
+        ixz="-1.60101727427303E-05"
+        iyy="0.00101850958801346"
+        iyz="1.68708383603245E-07"
+        izz="0.000559818113733064" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/BL1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/BL1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="BJ1"
+    type="revolute">
+    <origin
+      xyz="0 0 0.06525"
+      rpy="1.5708 0 -2.0678" />
+    <parent
+      link="base_link" />
+    <child
+      link="BL1" />
+    <axis
+      xyz="0 -1 0" />
+    <limit
+      lower="0"
+      upper="3.14"
+      effort="300"
+      velocity="3" />
+  </joint>
+  <link
+    name="SHL1">
+    <inertial>
+      <origin
+        xyz="-0.0194204541356304 -2.06501482580279E-14 -0.0932485206316829"
+        rpy="0 0 0" />
+      <mass
+        value="0.454225477654302" />
+      <inertia
+        ixx="0.00184578782522655"
+        ixy="-7.66248022133971E-13"
+        ixz="-1.59354016508403E-06"
+        iyy="0.00170961107291307"
+        iyz="-1.26491075006673E-13"
+        izz="0.000165227109359451" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/SHL1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/SHL1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="SHJ1"
+    type="revolute">
+    <origin
+      xyz="-0.020569 0.07 0.011156"
+      rpy="0.0014255 -0.49698 3.1416" />
+    <parent
+      link="BL1" />
+    <child
+      link="SHL1" />
+    <axis
+      xyz="-1 0 0" />
+    <limit
+      lower="0"
+      upper="3.14"
+      effort="300"
+      velocity="3" />
+  </joint>
+  <link
+    name="SHL2">
+    <inertial>
+      <origin
+        xyz="0.000113073323768587 -0.000707151250188692 -0.0578023076202163"
+        rpy="0 0 0" />
+      <mass
+        value="0.233433056175268" />
+      <inertia
+        ixx="0.000571109636740069"
+        ixy="-1.86652936949485E-08"
+        ixz="2.50143892080072E-08"
+        iyy="0.000533764178562199"
+        iyz="-4.65917846589028E-06"
+        izz="7.15009693491391E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/SHL2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/SHL2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="SHJ2"
+    type="revolute">
+    <origin
+      xyz="-0.0184 0 -0.185"
+      rpy="-1.566 0 0" />
+    <parent
+      link="SHL1" />
+    <child
+      link="SHL2" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="0"
+      upper="3.14"
+      effort="300"
+      velocity="3" />
+  </joint>
+  <link
+    name="SHL3">
+    <inertial>
+      <origin
+        xyz="-0.0203233028780176 0.00214733921697735 -0.0395286263542516"
+        rpy="0 0 0" />
+      <mass
+        value="0.237132435221668" />
+      <inertia
+        ixx="0.0002320004492489"
+        ixy="1.03520826480399E-19"
+        ixz="2.51724359465634E-07"
+        iyy="0.000175352374553038"
+        iyz="6.09805618220377E-08"
+        izz="7.77538891579695E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/SHL3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/SHL3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="SHJ3"
+    type="revolute">
+    <origin
+      xyz="0.0184 0 -0.1175"
+      rpy="-1.552 0 0" />
+    <parent
+      link="SHL2" />
+    <child
+      link="SHL3" />
+    <axis
+      xyz="1 0 0" />
+    <limit
+      lower="0"
+      upper="3.14"
+      effort="300"
+      velocity="3" />
+  </joint>
+  <link
+    name="gripper">
+    <inertial>
+      <origin
+        xyz="-0.000280170481696207 0.000930650564398117 -0.0435510954011995"
+        rpy="0 0 0" />
+      <mass
+        value="0.0766357312487326" />
+      <inertia
+        ixx="6.72458140510462E-05"
+        ixy="-1.37997286500542E-07"
+        ixz="-8.64833345042674E-09"
+        iyy="7.02788089949088E-05"
+        iyz="1.90460755775839E-07"
+        izz="1.15560232966194E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/gripper.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/gripper.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="gripper"
+    type="revolute">
+    <origin
+      xyz="-0.0181500000000007 0.0200940202178477 -0.0847372982592163"
+      rpy="0 0 -0.0197437393831376" />
+    <parent
+      link="SHL3" />
+    <child
+      link="gripper" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="300"
+      velocity="3" />
+  </joint>
+  <link
+    name="rightl">
+    <inertial>
+      <origin
+        xyz="0.0247118483536764 -0.00823308523112631 -0.0391333649027678"
+        rpy="0 0 0" />
+      <mass
+        value="0.0235859031619817" />
+      <inertia
+        ixx="8.54203976994772E-06"
+        ixy="1.41598387894309E-06"
+        ixz="7.43420490781539E-06"
+        iyy="2.05791952108961E-05"
+        iyz="-1.00747556799268E-06"
+        izz="1.32376269568841E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/rightl.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/rightl.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="rightr"
+    type="revolute">
+    <origin
+      xyz="0 0 -0.041231"
+      rpy="0 -0.067624 -3.0962" />
+    <parent
+      link="gripper" />
+    <child
+      link="rightl" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="-6.28"
+      upper="6.28"
+      effort="300"
+      velocity="30" />
+  </joint>
+  <link
+    name="rightlink">
+    <inertial>
+      <origin
+        xyz="-0.026327915987134 0.00622149064542687 -0.00625801368338987"
+        rpy="0 0 0" />
+      <mass
+        value="0.0235861330582674" />
+      <inertia
+        ixx="1.13237303851065E-05"
+        ixy="1.21176085746744E-06"
+        ixz="-7.78414977756974E-06"
+        iyy="2.0579098235667E-05"
+        iyz="1.24569818531456E-06"
+        izz="1.04558506739014E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/rightlink.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.501960784313725 0.501960784313725 0.501960784313725 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://raatt/meshes/rightlink.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="leftlink"
+    type="revolute">
+    <origin
+      xyz="-0.00078619 0.011988 -0.079013"
+      rpy="0 -0.067624 -3.0962" />
+    <parent
+      link="gripper" />
+    <child
+      link="rightlink" />
+    <axis
+      xyz="0 1 0" />
+    <limit
+      lower="6.28"
+      upper="-6.28"
+      effort="300"
+      velocity="30" />
+  </joint>
+</robot>

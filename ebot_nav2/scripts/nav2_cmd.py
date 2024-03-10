@@ -140,6 +140,7 @@ def main():
         dockingNodecli.dockingRequest.rack_attach=israck
         dockingNodecli.dockingRequest.is_rack_detached = False
         dockingNodecli.dockingRequest.box_id = positionToGO[positionName]['BoxID']
+        
         future = dockingNodecli.dockingClient.call_async(dockingNodecli.dockingRequest)
         rclpy.spin_until_future_complete(dockingNodecli, future)
         dockingNodecli.destroy_node()
