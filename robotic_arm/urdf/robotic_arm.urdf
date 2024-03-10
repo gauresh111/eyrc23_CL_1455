@@ -533,9 +533,11 @@ Stephen Brawner (brawner@gmail.com)
     </actuator>
   </transmission>
 
-  <ros2_control name="robotic_arm_controller" type="system">
-    
-  </ros2_control>  
+  <ros2_control name="example" type="system">
+    <hardware>
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+    </hardware>
+</ros2_control>
 
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
