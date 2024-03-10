@@ -110,7 +110,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="0"
       upper="6.283"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="link_2">
@@ -169,7 +169,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-1.57"
       upper="1.57"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="link_3">
@@ -228,7 +228,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-1.0"
       upper="4.14"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="link_4">
@@ -287,7 +287,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-2.14"
       upper="2.14"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="link_5">
@@ -346,7 +346,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-6.283"
       upper="6.283"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="eef_link_r">
@@ -405,7 +405,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-0.3"
       upper="0.3"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="eef_link_l">
@@ -464,7 +464,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-0.3"
       upper="0.3"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
 
   <transmission name="link_1_trans">
@@ -533,11 +533,101 @@ Stephen Brawner (brawner@gmail.com)
     </actuator>
   </transmission>
 
-  <ros2_control name="example" type="system">
+  <ros2_control name="ros2_control" type="system">
     <hardware>
-        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
     </hardware>
-</ros2_control>
+
+    <joint name="joint_1">
+      <command_interface name="position">
+        <param name="min">0</param>
+        <param name="max">6.283</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="joint_2">
+      <command_interface name="position">
+        <param name="min">-1.57</param>
+        <param name="max">1.57</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="joint_3">
+      <command_interface name="position">
+        <param name="min">-1.0</param>
+        <param name="max">4.14</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="joint_4">
+      <command_interface name="position">
+        <param name="min">-2.14</param>
+        <param name="max">2.14</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="eef_joint_r">
+      <command_interface name="position">
+        <param name="min">-0.3</param>
+        <param name="max">0.3</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="eef_joint_l">
+      <command_interface name="position">
+        <param name="min">-0.3</param>
+        <param name="max">0.3</param>
+      </command_interface>
+      <command_interface name="velocity">
+        <param name="min">-3.15</param>
+        <param name="max">3.15</param>
+      </command_interface>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+  </ros2_control>
 
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
