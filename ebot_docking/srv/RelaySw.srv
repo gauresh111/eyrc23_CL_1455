@@ -1,6 +1,0 @@
-bool relaychannel # e.g. for selecting the relay channel
-bool relaystate # e.g. for relay enabling / disabling
-string rackname
----
-bool success   # indicate successful run of triggered service
-string message # informational, e.g. for error messages
