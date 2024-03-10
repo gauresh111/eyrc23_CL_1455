@@ -319,7 +319,7 @@
   <joint
     name="joint_5"
     type="fixed">
-    <origin
+    <origin 
       xyz="-0.01865 0.0073984 -0.12777"
       rpy="0 0 -3.1416" />
     <parent
