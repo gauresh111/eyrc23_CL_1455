@@ -3,7 +3,7 @@
 Stephen Brawner (brawner@gmail.com) 
      Commit Version: 1.5.1-0-g916b5db  Build Version: 1.5.7152.31018
      For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
-<robot
+<robot xmlns:xacro="https://wiki.ros.org/xacro.org" 
   name="robotic_arm">
   <link name="world" />
   <joint name="base_joint" type="fixed">
@@ -35,7 +35,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/base_link.STL" />
+          filename="file://$(find robotic_arm)/meshes/base_link.STL" />
       </geometry>
       <material
         name="">
@@ -49,7 +49,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/base_link.STL" />
+          filename="file://$(find robotic_arm)/meshes/base_link.STL" />
       </geometry>
     </collision>
   </link>
@@ -76,7 +76,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/link_1.STL" />
+          filename="file://$(find robotic_arm)/meshes/link_1.STL" />
       </geometry>
       <material
         name="">
@@ -90,7 +90,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/link_1.STL" />
+          filename="file://$(find robotic_arm)/meshes/link_1.STL" />
       </geometry>
     </collision>
   </link>
@@ -110,7 +110,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="0"
       upper="6.283"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="link_2">
@@ -135,7 +135,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/link_2.STL" />
+          filename="file://$(find robotic_arm)/meshes/link_2.STL" />
       </geometry>
       <material
         name="">
@@ -149,7 +149,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/link_2.STL" />
+          filename="file://$(find robotic_arm)/meshes/link_2.STL" />
       </geometry>
     </collision>
   </link>
@@ -169,7 +169,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-1.57"
       upper="1.57"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="link_3">
@@ -194,7 +194,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/link_3.STL" />
+          filename="file://$(find robotic_arm)/meshes/link_3.STL" />
       </geometry>
       <material
         name="">
@@ -208,7 +208,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/link_3.STL" />
+          filename="file://$(find robotic_arm)/meshes/link_3.STL" />
       </geometry>
     </collision>
   </link>
@@ -228,7 +228,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-1.0"
       upper="4.14"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="link_4">
@@ -253,7 +253,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/link_4.STL" />
+          filename="file://$(find robotic_arm)/meshes/link_4.STL" />
       </geometry>
       <material
         name="">
@@ -267,7 +267,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/link_4.STL" />
+          filename="file://$(find robotic_arm)/meshes/link_4.STL" />
       </geometry>
     </collision>
   </link>
@@ -287,7 +287,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-2.14"
       upper="2.14"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="link_5">
@@ -312,7 +312,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/link_5.STL" />
+          filename="file://$(find robotic_arm)/meshes/link_5.STL" />
       </geometry>
       <material
         name="">
@@ -326,7 +326,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/link_5.STL" />
+          filename="file://$(find robotic_arm)/meshes/link_5.STL" />
       </geometry>
     </collision>
   </link>
@@ -346,7 +346,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-6.283"
       upper="6.283"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="eef_link_r">
@@ -371,7 +371,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/eef_link_r.STL" />
+          filename="file://$(find robotic_arm)/meshes/eef_link_r.STL" />
       </geometry>
       <material
         name="">
@@ -385,7 +385,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/eef_link_r.STL" />
+          filename="file://$(find robotic_arm)/meshes/eef_link_r.STL" />
       </geometry>
     </collision>
   </link>
@@ -405,7 +405,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-0.3"
       upper="0.3"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
   <link
     name="eef_link_l">
@@ -430,7 +430,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/eef_link_l.STL" />
+          filename="file://$(find robotic_arm)/meshes/eef_link_l.STL" />
       </geometry>
       <material
         name="">
@@ -444,7 +444,7 @@ Stephen Brawner (brawner@gmail.com)
         rpy="0 0 0" />
       <geometry>
         <mesh
-          filename="package://robotic_arm/meshes/eef_link_l.STL" />
+          filename="file://$(find robotic_arm)/meshes/eef_link_l.STL" />
       </geometry>
     </collision>
   </link>
@@ -464,7 +464,7 @@ Stephen Brawner (brawner@gmail.com)
       lower="-0.3"
       upper="0.3"
       effort="300"
-      velocity="3" />
+      velocity="3.14" />
   </joint>
 
   <transmission name="link_1_trans">
@@ -533,18 +533,75 @@ Stephen Brawner (brawner@gmail.com)
     </actuator>
   </transmission>
 
-  <ros2_control name="robotic_arm_controller" type="system">
-    
-  </ros2_control>  
+  <ros2_control name="GazeboSimSystem" type="system">
+    <hardware>
+      <plugin>mock_components/GenericSystem</plugin>
+    </hardware>
+
+    <joint name="joint_1">
+      <command_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="joint_2">
+      <command_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="joint_3">
+      <command_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="joint_4">
+      <command_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="eef_joint_r">
+      <command_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="eef_joint_l">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint>
+
+    <!-- <joint name="eef_joint_l">
+      <param name="mimic">eef_joint_r</param>
+      <param name="multiplier">-1</param>
+      <command_interface name="position" />
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint> -->
+
+  </ros2_control>
 
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-      <robot_param>robot_description</robot_param>
-      <robot_param_node>robot_state_publisher</robot_param_node>
-      <parameters>/home/joel/moveit2_ws/src/robotic_arm/config/ros_controllers.yaml</parameters>
-      <!-- <controller_manager_name>simulation_controller_manager</controller_manager_name> -->
+      <parameters>$(find robotic_arm)/config/ros_controllers.yaml</parameters>
     </plugin>
   </gazebo>
-
 
 </robot>
