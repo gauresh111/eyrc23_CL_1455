@@ -19,7 +19,7 @@ def generate_launch_description():
     
     package_path = os.path.join(get_package_share_directory('robotic_arm'))
 
-    xacro_file = os.path.join(package_path, 'urdf', 'robotic_arm.urdf')
+    xacro_file = os.path.join(package_path, 'urdf', 'robotic_arm_2.urdf.xacro')
 
     doc = xacro.parse(open(xacro_file))
     xacro.process_doc(doc)
@@ -33,6 +33,27 @@ def generate_launch_description():
         parameters=[params]
     )
 
+    joint_state_broadcaster = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
+        output="screen"
+    )
+
+    arm_controller = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["arm_group_controller", "-c", "/controller_manager"],
+        output="screen"
+    )
+
+    gripper_controller = Node(
+        package="controller_manager",
+        executable="spawner",
+        arguments=["gripper_group_controller", "-c", "/controller_manager"],
+        output="screen"
+    )
+
     spawn_entity = Node(
         package='gazebo_ros',
         executable='spawn_entity.py',
@@ -41,6 +62,24 @@ def generate_launch_description():
     )
 
     return LaunchDescription([
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=spawn_entity,
+                on_exit=[joint_state_broadcaster]
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=joint_state_broadcaster,
+                on_exit=[arm_controller]
+            )
+        ),
+        RegisterEventHandler(
+            event_handler=OnProcessExit(
+                target_action=joint_state_broadcaster,
+                on_exit=[gripper_controller]
+            )
+        ),
         gazebo_launch,
         node_robot_state_publisher,
         spawn_entity

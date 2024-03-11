@@ -533,20 +533,13 @@ Stephen Brawner (brawner@gmail.com)
     </actuator>
   </transmission>
 
-  <ros2_control name="ros2_control" type="system">
+  <ros2_control name="GazeboSimSystem" type="system">
     <hardware>
       <plugin>gazebo_ros2_control/GazeboSystem</plugin>
     </hardware>
 
     <joint name="joint_1">
-      <command_interface name="position">
-        <param name="min">0</param>
-        <param name="max">6.283</param>
-      </command_interface>
-      <command_interface name="velocity">
-        <param name="min">-3.15</param>
-        <param name="max">3.15</param>
-      </command_interface>
+      <command_interface name="position" />
       <state_interface name="position">
         <param name="initial_value">0.0</param>
       </state_interface>
@@ -554,14 +547,7 @@ Stephen Brawner (brawner@gmail.com)
     </joint>
 
     <joint name="joint_2">
-      <command_interface name="position">
-        <param name="min">-1.57</param>
-        <param name="max">1.57</param>
-      </command_interface>
-      <command_interface name="velocity">
-        <param name="min">-3.15</param>
-        <param name="max">3.15</param>
-      </command_interface>
+      <command_interface name="position" />
       <state_interface name="position">
         <param name="initial_value">0.0</param>
       </state_interface>
@@ -569,14 +555,7 @@ Stephen Brawner (brawner@gmail.com)
     </joint>
 
     <joint name="joint_3">
-      <command_interface name="position">
-        <param name="min">-1.0</param>
-        <param name="max">4.14</param>
-      </command_interface>
-      <command_interface name="velocity">
-        <param name="min">-3.15</param>
-        <param name="max">3.15</param>
-      </command_interface>
+      <command_interface name="position" />
       <state_interface name="position">
         <param name="initial_value">0.0</param>
       </state_interface>
@@ -584,14 +563,7 @@ Stephen Brawner (brawner@gmail.com)
     </joint>
 
     <joint name="joint_4">
-      <command_interface name="position">
-        <param name="min">-2.14</param>
-        <param name="max">2.14</param>
-      </command_interface>
-      <command_interface name="velocity">
-        <param name="min">-3.15</param>
-        <param name="max">3.15</param>
-      </command_interface>
+      <command_interface name="position" />
       <state_interface name="position">
         <param name="initial_value">0.0</param>
       </state_interface>
@@ -599,42 +571,36 @@ Stephen Brawner (brawner@gmail.com)
     </joint>
 
     <joint name="eef_joint_r">
-      <command_interface name="position">
-        <param name="min">-0.3</param>
-        <param name="max">0.3</param>
-      </command_interface>
-      <command_interface name="velocity">
-        <param name="min">-3.15</param>
-        <param name="max">3.15</param>
-      </command_interface>
+      <command_interface name="position" />
       <state_interface name="position">
         <param name="initial_value">0.0</param>
       </state_interface>
       <state_interface name="velocity" />
     </joint>
 
+    <!-- <joint name="eef_joint_l">
+      <command_interface name="position"/>
+      <state_interface name="position">
+        <param name="initial_value">0.0</param>
+      </state_interface>
+      <state_interface name="velocity" />
+    </joint> -->
+
     <joint name="eef_joint_l">
-      <command_interface name="position">
-        <param name="min">-0.3</param>
-        <param name="max">0.3</param>
-      </command_interface>
-      <command_interface name="velocity">
-        <param name="min">-3.15</param>
-        <param name="max">3.15</param>
-      </command_interface>
+      <param name="mimic">eef_joint_r</param>
+      <param name="multiplier">-1</param>
+      <command_interface name="position" />
       <state_interface name="position">
         <param name="initial_value">0.0</param>
       </state_interface>
       <state_interface name="velocity" />
     </joint>
+
   </ros2_control>
 
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-      <robot_param>robot_description</robot_param>
-      <robot_param_node>robot_state_publisher</robot_param_node>
       <parameters>$(find robotic_arm)/config/ros_controllers.yaml</parameters>
-      <!-- <controller_manager_name>simulation_controller_manager</controller_manager_name> -->
     </plugin>
   </gazebo>
 
