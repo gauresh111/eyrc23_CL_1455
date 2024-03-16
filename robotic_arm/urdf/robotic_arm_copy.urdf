@@ -535,7 +535,7 @@ Stephen Brawner (brawner@gmail.com)
 
   <ros2_control name="GazeboSystem" type="system">
     <hardware>
-      <plugin>fake_components/GenericSystem</plugin>
+      <plugin>mock_components/GenericSystem</plugin>
       <!-- <plugin>gazebo_ros2_control/GazeboSystem</plugin> -->
     </hardware>
 
