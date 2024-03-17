@@ -182,9 +182,9 @@ def main():
             except:
                 print("Rack not found")
             package_id.remove(int(str(BoxNumber)))
-            dynamicTopic["rack"+str(BoxNumber)]["status"]=True
             futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
-    
+            time.sleep(1)
+            dynamicTopic["rack"+str(BoxNumber)]["status"]=True
     def distance(p1, p2):
         '''
         Purpose: Calculates the Euclidean distance between two points.
