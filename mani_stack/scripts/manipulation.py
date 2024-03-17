@@ -414,25 +414,25 @@ def main():
 
         '''
         counter = 1
-        while True:
-            print("Moving to ", position_name, "    [Attempt: ", counter, "]")
-            moveit2.move_to_configuration(joint_states, tolerance=0.01)
-            status = moveit2.wait_until_executed()
-            time.sleep(0.1)
-            counter += 1
-            print("Joint State Difference: ", end="")
-            print(
-                round(round(joint_states[0], 1) - round(current_joint_states[0], 1), 1),
-                round(round(joint_states[1], 1) - round(current_joint_states[1], 1), 1),
-                round(round(joint_states[2], 1) - round(current_joint_states[2], 1), 1),
-                round(round(joint_states[3], 1) - round(current_joint_states[3], 1), 1),
-                round(round(joint_states[4], 1) - round(current_joint_states[4], 1), 1),
-                round(round(joint_states[5], 1) - round(current_joint_states[5], 1), 1),
-            )
-            if status == True:
-                break
-            else:
-                continue
+        # while True:
+        #     print("Moving to ", position_name, "    [Attempt: ", counter, "]")
+        #     moveit2.move_to_configuration(joint_states, tolerance=0.01)
+        #     status = moveit2.wait_until_executed()
+        #     time.sleep(0.1)
+        #     counter += 1
+        #     print("Joint State Difference: ", end="")
+        #     print(
+        #         round(round(joint_states[0], 1) - round(current_joint_states[0], 1), 1),
+        #         round(round(joint_states[1], 1) - round(current_joint_states[1], 1), 1),
+        #         round(round(joint_states[2], 1) - round(current_joint_states[2], 1), 1),
+        #         round(round(joint_states[3], 1) - round(current_joint_states[3], 1), 1),
+        #         round(round(joint_states[4], 1) - round(current_joint_states[4], 1), 1),
+        #         round(round(joint_states[5], 1) - round(current_joint_states[5], 1), 1),
+        #     )
+        #     if status == True:
+        #         break
+        #     else:
+        #         continue
     
     # Create a client to control the gripper (Hardware)
     if is_sim == True:
@@ -455,6 +455,8 @@ def main():
     moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
     print("Reached Initial Pose")
     
+    print(ApQueue, BoxId, totalRacks)
+
     while rackCounter < totalRacks:
         rackCounter += 1
         print("Rack Counter: ", rackCounter)
@@ -477,13 +479,15 @@ def main():
             )
         ApQueue.pop(0)
         print("###### Waiting for StartBox")
-        status=False
+        status:Bool = False
         def BoxStatus(msg):
             global status
             status = msg.data
+            
         node.create_subscription(Bool, "/rack"+str(BoxId), BoxStatus, 10)
         while status == False:
-            time.sleep(0.1)
+            time.sleep(0.5)
+            print("###### Waiting for StartBox")
         time.sleep(5)
         while len(arucoData) < len(aruco_name_list):
             flag = True
@@ -833,131 +837,132 @@ def main():
             `moveToPoseWithServo([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], False, False, 0, 0)`
 
             '''
-            if is_sim == False:
-                switch_controller(useMoveit=False)
-            global servo_status
-            mission_status = True
-            moveit2Servo.enable()
-            sphericalToleranceAchieved = False
-            currentPose, currentQuats = getCurrentPose()
-            _, magnitude = checkSphericalTolerance(currentPose, TargetPose, tolerance)
-            magnitude *= 3
-            vx, vy, vz = (
-                (TargetPose[0] - currentPose[0]) / magnitude,
-                (TargetPose[1] - currentPose[1]) / magnitude,
-                (TargetPose[2] - currentPose[2]) / magnitude,
-            )
-            vx *= 5
-            vy *= 5
-            vz *= 5
-            distance = magnitude
-            totalTime = (
-                distance
-                / checkSphericalTolerance([0.0, 0.0, 0.0], [vx, vy, vz], tolerance)[1]
-            )
-            totalTime /=5
-            print("TargetQuats:", TargetQuats, "CurrentQuats:", currentQuats)
-            TargetEuler = euler_from_quaternion(
-                [TargetQuats[3], TargetQuats[0], TargetQuats[1], TargetQuats[2]]
-            )
-            currentEuler = euler_from_quaternion(
-                [currentQuats[3], currentQuats[0], currentQuats[1], currentQuats[2]]
-            )
-            ax, ay, az = (
-                (TargetEuler[0] - currentEuler[0]) / magnitude,
-                (TargetEuler[2] - currentEuler[2]) / magnitude,
-                (TargetEuler[1] - currentEuler[1]) / magnitude,
-            )
-            print("yawError_d: ", YawError, "yawError_r: ", math.radians(YawError))
-            az = (math.radians(YawError) / totalTime) * 3
-            print("TargetPose:", TargetPose, "CurrentPose:", currentPose)
-            print("TargetEuler:", TargetEuler, "CurrentEuler:", currentEuler)
+            # if is_sim == False:
+            #     switch_controller(useMoveit=False)
+            # global servo_status
+            # mission_status = True
+            # moveit2Servo.enable()
+            # sphericalToleranceAchieved = False
+            # currentPose, currentQuats = getCurrentPose()
+            # _, magnitude = checkSphericalTolerance(currentPose, TargetPose, tolerance)
+            # magnitude *= 3
+            # vx, vy, vz = (
+            #     (TargetPose[0] - currentPose[0]) / magnitude,
+            #     (TargetPose[1] - currentPose[1]) / magnitude,
+            #     (TargetPose[2] - currentPose[2]) / magnitude,
+            # )
+            # vx *= 5
+            # vy *= 5
+            # vz *= 5
+            # distance = magnitude
+            # totalTime = (
+            #     distance
+            #     / checkSphericalTolerance([0.0, 0.0, 0.0], [vx, vy, vz], tolerance)[1]
+            # )
+            # totalTime /=5
+            # print("TargetQuats:", TargetQuats, "CurrentQuats:", currentQuats)
+            # TargetEuler = euler_from_quaternion(
+            #     [TargetQuats[3], TargetQuats[0], TargetQuats[1], TargetQuats[2]]
+            # )
+            # currentEuler = euler_from_quaternion(
+            #     [currentQuats[3], currentQuats[0], currentQuats[1], currentQuats[2]]
+            # )
+            # ax, ay, az = (
+            #     (TargetEuler[0] - currentEuler[0]) / magnitude,
+            #     (TargetEuler[2] - currentEuler[2]) / magnitude,
+            #     (TargetEuler[1] - currentEuler[1]) / magnitude,
+            # )
+            # print("yawError_d: ", YawError, "yawError_r: ", math.radians(YawError))
+            # az = (math.radians(YawError) / totalTime) * 3
+            # print("TargetPose:", TargetPose, "CurrentPose:", currentPose)
+            # print("TargetEuler:", TargetEuler, "CurrentEuler:", currentEuler)
 
-            print("Vx:", vx, "Vy:", vy, "Vz:", vz)
-            print("Ax:", ax, "Ay:", ay, "Az:", az)
+            # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
+            # print("Ax:", ax, "Ay:", ay, "Az:", az)
 
-            if QuatsOnly == True:
-                print("Servoing Quats Only")
-                yawError = math.radians(YawError)
-                az = -1.0 if yawError > 0.0 else 1.0
+            # if QuatsOnly == True:
+            #     print("Servoing Quats Only")
+            #     yawError = math.radians(YawError)
+            #     az = -1.0 if yawError > 0.0 else 1.0
 
-                print("Yaw Error: ", yawError)
-                while abs(yawError) > 0.02:
-                    moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
-                    # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
-                    currentEuler = getCurrentPose(useEuler=True)[1]
-                    if TargetYaw == 0:
-                        yawError = -(currentEuler[2] - math.pi / 2)
-                    elif TargetYaw == 90:
-                        yawError = currentEuler[2] - math.pi
-                    else:
-                        yawError = currentEuler[
-                            2
-                        ]  # math.radians(TargetYaw) - (currentEuler[2])
-                    print(
-                        "Yaw Error: ",
-                        yawError,
-                        "current: ",
-                        currentEuler[2],
-                        "Target: ",
-                        math.radians(TargetYaw),
-                    )
-                    time.sleep(0.01)
-                    if servo_status > 0:
-                        mission_status = False
-                        print("Exited While Loop due to Servo Error", servo_status)
-                        break
-                if is_sim == False:
-                    switch_controller(useMoveit=True)
-                return mission_status
+            #     print("Yaw Error: ", yawError)
+            #     while abs(yawError) > 0.02:
+            #         moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
+            #         # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
+            #         currentEuler = getCurrentPose(useEuler=True)[1]
+            #         if TargetYaw == 0:
+            #             yawError = -(currentEuler[2] - math.pi / 2)
+            #         elif TargetYaw == 90:
+            #             yawError = currentEuler[2] - math.pi
+            #         else:
+            #             yawError = currentEuler[
+            #                 2
+            #             ]  # math.radians(TargetYaw) - (currentEuler[2])
+            #         print(
+            #             "Yaw Error: ",
+            #             yawError,
+            #             "current: ",
+            #             currentEuler[2],
+            #             "Target: ",
+            #             math.radians(TargetYaw),
+            #         )
+            #         time.sleep(0.01)
+            #         if servo_status > 0:
+            #             mission_status = False
+            #             print("Exited While Loop due to Servo Error", servo_status)
+            #             break
+            #     if is_sim == False:
+            #         switch_controller(useMoveit=True)
+            #     return mission_status
 
-            elif PoseOnly == True:
-                print("Servoing Pose Only")
-                while sphericalToleranceAchieved == False:
-                    moveWithServo([vx, vy, vz], [0.0, 0.0, 0.0])
-                    # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
-                    currentPose = getCurrentPose()[0]
-                    sphericalToleranceAchieved, _ = checkSphericalTolerance(
-                        currentPose, TargetPose, tolerance
-                    )
-                    time.sleep(0.01)
-                    if servo_status > 0:
-                        mission_status = False
-                        print("Exited While Loop due to Servo Error", servo_status)
-                        break
-                if is_sim == False:
-                    switch_controller(useMoveit=True)
-                return mission_status
+            # elif PoseOnly == True:
+            #     print("Servoing Pose Only")
+            #     while sphericalToleranceAchieved == False:
+            #         moveWithServo([vx, vy, vz], [0.0, 0.0, 0.0])
+            #         # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
+            #         currentPose = getCurrentPose()[0]
+            #         sphericalToleranceAchieved, _ = checkSphericalTolerance(
+            #             currentPose, TargetPose, tolerance
+            #         )
+            #         time.sleep(0.01)
+            #         if servo_status > 0:
+            #             mission_status = False
+            #             print("Exited While Loop due to Servo Error", servo_status)
+            #             break
+            #     if is_sim == False:
+            #         switch_controller(useMoveit=True)
+            #     return mission_status
 
-            else:
-                print("Servoing Pose and Quats")
-                print("Estimated Time: ", totalTime, " seconds")
-                currentTime = node.get_clock().now().nanoseconds * 1e-9
-                while sphericalToleranceAchieved == False:
-                    moveWithServo([vx, vy, vz], [0.0, 0.0, az])
-                    # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
-                    currentPose, currentQuats = getCurrentPose()
-                    sphericalToleranceAchieved, _ = checkSphericalTolerance(
-                        currentPose, TargetPose, tolerance
-                    )
-                    # if (
-                    #     checkSphericalTolerance(currentQuats, TargetQuats, tolerance)
-                    #     == True
-                    # ):
-                    #     ax, ay, az = 0.0, 0.0, 0.0
-                    time.sleep(0.01)
-                    if servo_status > 0:
-                        mission_status = False
-                        print("Exited While Loop due to Servo Error", servo_status)
-                        break
-                print(
-                    "Time taken: ",
-                    node.get_clock().now().nanoseconds * 1e-9 - currentTime,
-                    " seconds",
-                )
-                if is_sim == False:
-                    switch_controller(useMoveit=True)
-                return mission_status
+            # else:
+            #     print("Servoing Pose and Quats")
+            #     print("Estimated Time: ", totalTime, " seconds")
+            #     currentTime = node.get_clock().now().nanoseconds * 1e-9
+            #     while sphericalToleranceAchieved == False:
+            #         moveWithServo([vx, vy, vz], [0.0, 0.0, az])
+            #         # print("Vx:", vx, "Vy:", vy, "Vz:", vz)
+            #         currentPose, currentQuats = getCurrentPose()
+            #         sphericalToleranceAchieved, _ = checkSphericalTolerance(
+            #             currentPose, TargetPose, tolerance
+            #         )
+            #         # if (
+            #         #     checkSphericalTolerance(currentQuats, TargetQuats, tolerance)
+            #         #     == True
+            #         # ):
+            #         #     ax, ay, az = 0.0, 0.0, 0.0
+            #         time.sleep(0.01)
+            #         if servo_status > 0:
+            #             mission_status = False
+            #             print("Exited While Loop due to Servo Error", servo_status)
+            #             break
+            #     print(
+            #         "Time taken: ",
+            #         node.get_clock().now().nanoseconds * 1e-9 - currentTime,
+            #         " seconds",
+            #     )
+            #     if is_sim == False:
+            #         switch_controller(useMoveit=True)
+                # return mission_status
+            return True
 
         def moveToPose(aruco_data, drop_angles):
             '''
