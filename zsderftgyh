@@ -1,1 +1,2 @@
 package://robotic_arm
+file://$(find robotic_arm) moveit setupassistant error
