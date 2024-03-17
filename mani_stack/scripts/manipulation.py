@@ -28,7 +28,7 @@
 # Services:		    Add your service servers here
 #                   Service   - [ /ArmManipulationSw, /GripperMagnetON, /GripperMagnetOFF, /controller_manager/switch_controller, /io_and_status_controller/set_io ]
 
-is_sim = False # Change this to True if you are using simulation
+is_sim = True # Change this to True if you are using simulation
 
 from os import path
 from threading import Thread
