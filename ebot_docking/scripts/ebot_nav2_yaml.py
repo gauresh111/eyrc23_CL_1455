@@ -119,11 +119,11 @@ def main():
     rackPresent = 0
     racknameData = []
     package_id=[]
-    totalRacks = len(package_id)
     dynamicTopic = {}
     for data in config_yaml["position"]:
         racknameData.append(list(data.keys())[0])
     package_id = config_yaml["package_id"]
+    totalRacks = len(package_id)
     for i in package_id:
         print("Creating publisher for rack"+str(i))
         dynamicTopic["rack"+str(i)] = {"publisher":node.create_publisher(Bool, '/rack'+str(i), 10),"status":False}
