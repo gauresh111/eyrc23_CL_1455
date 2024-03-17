@@ -38,18 +38,18 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from std_msgs.msg import String
 from geometry_msgs.msg import TwistStamped
-from pymoveit2 import MoveIt2, MoveIt2Servo
-from pymoveit2.robots import ur5
+from pymoveit2 import MoveIt2, MoveIt2Servo # type: ignore
+from pymoveit2.robots import ur5 # type: ignore
 import tf2_ros
 import math
 import re
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Int8
-import transforms3d as tf3d
+import transforms3d as tf3d # type: ignore
 import numpy as np
 from std_msgs.msg import Bool
 if is_sim == True:
-    from ebot_docking.srv import ManipulationSw
+    from ebot_docking.srv import ManipulationSw # type: ignore
 else:
     from mani_stack.srv import ManipulationSw
 import yaml
@@ -57,7 +57,7 @@ import yaml
 from tf_transformations import euler_from_quaternion
 
 if is_sim == True:
-    from linkattacher_msgs.srv import AttachLink, DetachLink
+    from linkattacher_msgs.srv import AttachLink, DetachLink # type: ignore
 else:
     from ur_msgs.srv import SetIO  # type: ignore
     from controller_manager_msgs.srv import SwitchController
@@ -71,7 +71,7 @@ current_joint_states = [0, 0, 0, 0, 0, 0]
 StartBox = False
 ApQueue = []
 BoxId = []
-isStarting = []
+
 totalRacks = 0
 
 class ArucoData:
@@ -184,11 +184,10 @@ def Arm_manipulation_callback(request, response):
         Response message from the service
 
     '''
-    global ApQueue, BoxId, totalRacks, isStarting
+    global ApQueue, BoxId, totalRacks
     BoxId.append(request.box_id)
     ApQueue.append(request.ap_name)
     totalRacks = request.total_racks
-    isStarting.append(request.starting)
     response.success = True
     response.message = "Success"
     return response
@@ -444,7 +443,7 @@ def main():
 
     
     rackCounter = 0
-    global ApQueue, BoxId, totalRacks, isStarting
+    global ApQueue, BoxId, totalRacks
 
     #Wait untill Navigation sends the Ap Queue
     while len(ApQueue) == 0:
@@ -465,8 +464,6 @@ def main():
         while len(ApQueue) == 0:
             time.sleep(0.5)
         print("ApQueue: ", ApQueue)
-        print("isStarting: ", isStarting)
-
         if ApQueue[0] == "ap1":
             moveToJointStates(
                 Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name
@@ -480,14 +477,14 @@ def main():
             )
         ApQueue.pop(0)
         print("###### Waiting for StartBox")
-        while StartBox == False and isStarting[0] == False:
+        status=False
+        def BoxStatus(msg):
+            global status
+            status = msg.data
+        node.create_subscription(Bool, "/rack"+str(BoxId), BoxStatus, 10)
+        while status == False:
             time.sleep(0.1)
-
-        print("StartBox: ", StartBox, "isStarting: ", isStarting[0])
-        StartBox = False
         time.sleep(5)
-        isStarting.pop(0)
-
         while len(arucoData) < len(aruco_name_list):
             flag = True
             for aruco in aruco_name_list:
