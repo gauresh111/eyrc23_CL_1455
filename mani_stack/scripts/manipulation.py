@@ -1,6 +1,34 @@
 #!/usr/bin/env python3
 
-is_sim = True
+"""
+*****************************************************************************************
+*
+*        		===============================================
+*           		    Cosmo Logistic (CL) Theme (eYRC 2023-24)
+*        		===============================================
+*
+*  This script should be used to implement Task 1A of Cosmo Logistic (CL) Theme (eYRC 2023-24).
+*
+*  This software is made available on an "AS IS WHERE IS BASIS".
+*  Licensee/end user indemnifies and will keep e-Yantra indemnified from
+*  any and all claim(s) that emanate from the use of the Software or
+*  breach of the terms of this agreement.
+*
+*****************************************************************************************
+"""
+
+# Team ID:          [ CL#1455 ]
+# Author List:		[ Joel Devasia, Gauresh Wadekar ]
+# Filename:		    manipulation.py
+# Functions:
+# 			        [ main, ArucoData, PredefinedJointStates, getBox_id, Arm_manipulation_callback, aruco_data_updater, moveToJointStates, moveWithServo, addCollisionObject, getCurrentPose, controlGripper, checkSphericalTolerance, moveToPoseWithServo, moveToPose, main ]
+# Nodes:		    Add your publishing and subscribing node
+# 			        Publishing Topics  - [ /servo_node/delta_twist_cmds]
+#                   Subscribing Topics - [ /aruco_data, /StartArnManipulation, /joint_states, /servo_node/status ]
+# Services:		    Add your service servers here
+#                   Service   - [ /ArmManipulationSw, /GripperMagnetON, /GripperMagnetOFF, /controller_manager/switch_controller, /io_and_status_controller/set_io ]
+
+is_sim = False # Change this to True if you are using simulation
 
 from os import path
 from threading import Thread
@@ -10,18 +38,18 @@ from rclpy.callback_groups import ReentrantCallbackGroup
 from rclpy.node import Node
 from std_msgs.msg import String
 from geometry_msgs.msg import TwistStamped
-from pymoveit2 import MoveIt2, MoveIt2Servo
-from pymoveit2.robots import ur5
+from pymoveit2 import MoveIt2, MoveIt2Servo # type: ignore
+from pymoveit2.robots import ur5 # type: ignore
 import tf2_ros
 import math
 import re
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Int8
-import transforms3d as tf3d
+import transforms3d as tf3d # type: ignore
 import numpy as np
 from std_msgs.msg import Bool
 if is_sim == True:
-    from ebot_docking.srv import ManipulationSw
+    from ebot_docking.srv import ManipulationSw # type: ignore
 else:
     from mani_stack.srv import ManipulationSw
 import yaml
@@ -29,10 +57,11 @@ import yaml
 from tf_transformations import euler_from_quaternion
 
 if is_sim == True:
-    from linkattacher_msgs.srv import AttachLink, DetachLink
+    from linkattacher_msgs.srv import AttachLink, DetachLink # type: ignore
 else:
     from ur_msgs.srv import SetIO  # type: ignore
     from controller_manager_msgs.srv import SwitchController
+
 
 aruco_name_list = []
 aruco_angle_list = []
@@ -42,10 +71,45 @@ current_joint_states = [0, 0, 0, 0, 0, 0]
 StartBox = False
 ApQueue = []
 BoxId = []
-isStarting = []
+
 totalRacks = 0
 
 class ArucoData:
+    '''
+    Purpose:
+    ---
+    Class to store the data of the Aruco Marker
+
+    Members:
+    ---
+    `name` :  [ string ]
+        Name of the Aruco Marker
+    
+    `id` :  [ int ]
+        Id of the Aruco Marker
+
+    `position` :  [ list ]
+        Position of the Aruco Marker
+    
+    `quaternions` :  [ list ]
+        Quaternions of the Aruco Marker
+
+    `yaw` :  [ float ]
+        Yaw of the Aruco Marker
+
+    `yaw_error` :  [ float ]
+        Yaw Error of the Aruco Marker
+
+    `ap` :  [ string ]
+        Arm Position Name for Aruco Marker
+
+    `rotation_name` :  [ string ]
+        Rotation Name of the Aruco Marker
+
+    Example Creation of Object:
+    --- 
+    `arucoData = ArucoData()`
+    '''
     def __init__(self):
         self.name = None
         self.id = None
@@ -56,41 +120,94 @@ class ArucoData:
         self.ap = None
         self.rotation_name = None
 
-
-class ArucoBoxPose:
-    def __init__(self):
-        self.position = None
-        self.quaternions = None
-
-
 class PredefinedJointStates:
+    '''
+    Purpose:
+    ---
+
+    Class to store the Predefined Joint States
+
+    Members:
+    ---
+
+    `joint_states` :  [ list ]
+        List of Joint States
+
+    `name` :  [ string ]
+        Name of the Joint States
+
+    Example Creation of Object:
+    ---
+    `Initial_Joints = PredefinedJointStates()`
+    '''
     def __init__(self):
         self.joint_states = None
         self.name = None
 
-
-def aruco_name_list_updater(msg):
-    global aruco_name_list
-    aruco_name_list = msg.data.split()
-
-
 def getBox_id(msg):
+    '''
+    Purpose:
+    ---
+    Callback function to get the start box signal
+
+    Input Arguments:
+    ---
+    `msg` :  [ Bool ]
+        Start Box Signal
+
+    Returns:
+    ---
+    None
+
+    '''
     global StartBox
     StartBox = msg.data
 
 
 def Arm_manipulation_callback(request, response):
-    global ApQueue, BoxId, totalRacks, isStarting
+    '''
+    Purpose:
+    ---
+    Callback function to get the info of the box to be picked
+
+    Input Arguments:
+    ---
+    `request` :  [ ManipulationSw ]
+        Request message from the service
+    
+    `response` :  [ ManipulationSw ]
+        Response message from the service
+
+    Returns:
+    ---
+    `response` :  [ ManipulationSw ]
+        Response message from the service
+
+    '''
+    global ApQueue, BoxId, totalRacks
     BoxId.append(request.box_id)
     ApQueue.append(request.ap_name)
     totalRacks = request.total_racks
-    isStarting.append(request.starting)
     response.success = True
     response.message = "Success"
     return response
 
 
 def aruco_data_updater(msg):
+    '''
+    Purpose:
+    ---
+    Callback function to get the aruco data
+
+    Input Arguments:
+    ---
+    `msg` :  [ String ]
+        Aruco Data
+
+    Returns:
+    ---
+    None
+    '''
     global aruco_name_list
     global aruco_angle_list
     global aruco_ap_list
@@ -101,15 +218,25 @@ def aruco_data_updater(msg):
 
 
 def main():
+    '''
+    Purpose:
+    ---
+    Main Function to control the arm manipulation
+
+    Input Arguments:
+    ---
+    None
+
+    Returns:
+    ---
+    None
+
+    '''
     rclpy.init()
     if is_sim == True:
         print("Starting Simulation Manipulation Script")
     else:
         print("Starting Real Robot Manipulation Script")
-
-    Initial_Pose = ArucoBoxPose()
-    Initial_Pose.position = [0.18, 0.10, 0.46]
-    Initial_Pose.quaternions = [0.50479, 0.495985, 0.499407, 0.499795]
 
     Initial_Joints = PredefinedJointStates()
     Initial_Joints.joint_states = [0.0, -2.39, 2.4, -3.15, -1.58, 3.15]
@@ -147,7 +274,7 @@ def main():
     Pickup_Joints_Right.joint_states = [-1.57, -2.43, 2.10, -2.81, -1.56, 3.15]
     Pickup_Joints_Right.name = "Pickup_Joints_Right"
 
-    Drop_Joints_List = [Drop_Joints_Left, Drop_Joints_Right, Drop_Joints_Back]
+    Drop_Joints_List = [Drop_Joints_Back, Drop_Joints_Back, Drop_Joints_Back]
 
     box_file_path = path.join(
         path.dirname(path.realpath(__file__)), "..", "assets", "box.stl"
@@ -166,8 +293,8 @@ def main():
     global aruco_ap_list
     global StartBox
 
-    # Create node for this example
-    node = Node("pick_aruco")
+    # Create a node
+    node = Node("arm_manipulation_node")
 
     # Create callback group that allows execution of callbacks in parallel without restrictions
     callback_group = ReentrantCallbackGroup()
@@ -181,6 +308,7 @@ def main():
         group_name=ur5.MOVE_GROUP_ARM,
         callback_group=callback_group,
     )
+    # Create MoveIt 2 Servo interface
     moveit2Servo = MoveIt2Servo(
         node=node, frame_id=ur5.base_link_name(), callback_group=callback_group
     )
@@ -192,6 +320,8 @@ def main():
     executor_thread.start()
     tf_buffer = tf2_ros.buffer.Buffer()
     tf_listener = tf2_ros.TransformListener(tf_buffer, node)
+
+    # Create a subscriber to get the aruco data
     aruco_name_subscriber = node.create_subscription(
         String,
         "/aruco_data",
@@ -199,6 +329,8 @@ def main():
         10,
         callback_group=callback_group,
     )
+
+    # Create a service to get the info of the box to be picked
     arm_manipulation_srv = node.create_service(
         ManipulationSw,
         "/ArmManipulationSw",
@@ -206,8 +338,10 @@ def main():
         callback_group=callback_group,
     )
 
+    # Create a publisher to publish the twist commands for Servo
     twist_pub = node.create_publisher(TwistStamped, "/servo_node/delta_twist_cmds", 10)
 
+    
     if is_sim == False:
         contolMSwitch = node.create_client(
             SwitchController, "/controller_manager/switch_controller"
@@ -217,6 +351,7 @@ def main():
             node.get_logger().warn(f"Service control Manager is not yet available...")
 
         def switch_controller(useMoveit: bool):
+            # Create a client to switch the controller
             contolMSwitch = node.create_client(
                 SwitchController, "/controller_manager/switch_controller"
             )
@@ -242,20 +377,42 @@ def main():
                 node.get_logger().warn(
                     f"Service control Manager is not yet available..."
                 )
+            # calling the service
             contolMSwitch.call_async(switchParam)
             time.sleep(1.0)
             print(
                 "[CM]: Switching to", "Moveit" if useMoveit else "Servo", "Complete"
             )
 
-        switch_controller(useMoveit=True)
-
+    # Create a subscriber to get the start box signal
     ManipulationStart = node.create_subscription(
         Bool, "/StartArnManipulation", getBox_id, 10
     )
     time.sleep(5)
 
     def moveToJointStates(joint_states, position_name):
+        '''
+        Purpose:
+        ---
+        Function to move the arm to the predefined joint states
+
+        Input Arguments:
+        ---
+        `joint_states` :  [ list ]
+            List of Joint States
+
+        `position_name` :  [ string ]
+            Name of the Joint States
+
+        Returns:
+        ---
+        None
+
+        Example call:
+        ---
+        `moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)`
+
+        '''
         counter = 1
         while True:
             print("Moving to ", position_name, "    [Attempt: ", counter, "]")
@@ -276,24 +433,28 @@ def main():
                 break
             else:
                 continue
-
+    
+    # Create a client to control the gripper (Hardware)
     if is_sim == True:
         while not node.create_client(AttachLink, "/GripperMagnetON").wait_for_service(
             timeout_sec=1.0
         ):
             node.get_logger().info("EEF service not available, waiting again...")
 
+    
     rackCounter = 0
-    global ApQueue, BoxId, totalRacks, isStarting
+    global ApQueue, BoxId, totalRacks
 
+    #Wait untill Navigation sends the Ap Queue
     while len(ApQueue) == 0:
         time.sleep(0.1)
 
     dropAngleIterator = 0
 
+    #Move to Initial Pose
     moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
     print("Reached Initial Pose")
-
+    
     while rackCounter < totalRacks:
         rackCounter += 1
         print("Rack Counter: ", rackCounter)
@@ -303,8 +464,6 @@ def main():
         while len(ApQueue) == 0:
             time.sleep(0.5)
         print("ApQueue: ", ApQueue)
-        print("isStarting: ", isStarting)
-
         if ApQueue[0] == "ap1":
             moveToJointStates(
                 Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name
@@ -318,14 +477,14 @@ def main():
             )
         ApQueue.pop(0)
         print("###### Waiting for StartBox")
-        while StartBox == False and isStarting[0] == False:
+        status=False
+        def BoxStatus(msg):
+            global status
+            status = msg.data
+        node.create_subscription(Bool, "/rack"+str(BoxId), BoxStatus, 10)
+        while status == False:
             time.sleep(0.1)
-
-        print("StartBox: ", StartBox, "isStarting: ", isStarting[0])
-        StartBox = False
         time.sleep(5)
-        isStarting.pop(0)
-
         while len(arucoData) < len(aruco_name_list):
             flag = True
             for aruco in aruco_name_list:
@@ -392,6 +551,27 @@ def main():
             )
 
         def moveWithServo(linear_speed, angular_speed):
+            '''
+            Purpose:
+            ---
+            Function to move the arm with servo
+
+            Input Arguments:
+            ---
+            `linear_speed` :  [ list ]
+                List of Linear Speeds
+
+            `angular_speed` :  [ list ]
+                List of Angular Speeds
+
+            Returns:
+            ---
+            None
+
+            Example call:
+            ---
+            `moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, 0.0])`
+            '''
             twist_msg = TwistStamped()
             twist_msg.header.frame_id = ur5.base_link_name()
             twist_msg.header.stamp = node.get_clock().now().to_msg()
@@ -404,6 +584,36 @@ def main():
             twist_pub.publish(twist_msg)
 
         def addCollisionObject(objectType, id, position, orientation, frame_id):
+            '''
+            Purpose
+            ---
+            Function to add the collision object to planning scene
+
+            Input Arguments:
+            ---
+            `objectType` :  [ string ]
+                Type of the Object
+
+            `id` :  [ string ]
+                Id of the Object
+
+            `position` :  [ list ]
+                Position of the Object
+
+            `orientation` :  [ list ]
+                Orientation of the Object
+
+            `frame_id` :  [ string ]
+                Frame Id of the Object
+
+            Returns:
+            ---
+            None
+
+            Example call:
+            ---
+            `addCollisionObject("box", "box1", [0.5, 0.5, 0.5], "Front", "base_link")`
+            '''
             if objectType == "box":
                 path = box_file_path
             else:
@@ -428,6 +638,28 @@ def main():
                 )
 
         def getCurrentPose(useEuler=False):
+            '''
+            Purpose:
+            ---
+            Function to get the current pose of the arm
+
+            Input Arguments:
+            ---
+            `useEuler` :  [ Bool ] (Optional, Default=False)
+                Flag to use Euler Angles
+
+            Returns:
+            ---
+            `tempPose` :  [ list ]
+                List of Current Positions in x, y, z axes
+
+            `tempQuats` :  [ list ]
+                List of Current orientation in x, y, z axes
+
+            Example call:
+            ---
+            `getCurrentPose()`
+            '''
             tempPose = [0, 0, 0]
             tempQuats = [0, 0, 0, 0]
             transform = tf_buffer.lookup_transform(
@@ -449,6 +681,27 @@ def main():
             return tempPose, tempQuats
 
         def controlGripper(status, box_name):
+            '''
+            Purpose:
+            ---
+            Function to control the gripper
+
+            Input Arguments:
+            ---
+            `status` :  [ string ] ("ON" or "OFF")
+                Status of the Gripper
+
+            `box_name` :  [ string ]
+                Name of the Box
+
+            Returns:
+            ---
+            None
+
+            Example call:
+            ---
+            `controlGripper("ON", "box1")`
+            '''
             if is_sim == True:
                 if status == "ON":
                     gripper_control = node.create_client(AttachLink, "/GripperMagnetON")
@@ -500,12 +753,42 @@ def main():
                 return state
 
         def checkSphericalTolerance(currentPose, targetPose, tolerance):
+            '''
+            Purpose:
+            ---
+            Function to check the spherical tolerance of EEF towards the target pose
+
+            Input Arguments:
+            ---
+            `currentPose` :  [ list ]
+                List of Current Positions in x, y, z axes
+
+            `targetPose` :  [ list ]
+                List of Target Positions in x, y, z axes
+
+            `tolerance` :  [ float ]
+                Tolerance Value
+
+            Returns:
+            ---
+            `hasToleranceAchieved` :  [ Bool ]
+                Flag to check if the tolerance is achieved
+
+            `currentTolerance` :  [ float ]
+                Current Tolerance Value
+
+            Example call:
+            ---
+            `checkSphericalTolerance([0.0, 0.0, 0.0], [0.0, 0.0, 0.0], 0.02)`
+
+            '''
             currentTolerance = math.sqrt(
                 (currentPose[0] - targetPose[0]) ** 2
                 + (currentPose[1] - targetPose[1]) ** 2
                 + (currentPose[2] - targetPose[2]) ** 2
             )
-            return True if currentTolerance <= tolerance else False, currentTolerance
+            hasToleranceAchieved = True if currentTolerance <= tolerance else False
+            return hasToleranceAchieved, currentTolerance
 
         def moveToPoseWithServo(
             TargetPose,
@@ -515,6 +798,41 @@ def main():
             TargetYaw=0,
             YawError=0,
         ):
+            '''
+            Purpose:
+            ---
+            Function to move the arm to the target pose with servo  
+
+            Input Arguments:
+            ---
+            `TargetPose` :  [ list ]
+                List of Target Positions in x, y, z axes
+
+            `TargetQuats` :  [ list ]
+                List of Target Quaternions
+
+            `QuatsOnly` :  [ Bool ] (Optional, Default=False)
+                Flag to Servo Orientation Only
+
+            `PoseOnly` :  [ Bool ] (Optional, Default=False)
+                Flag to Servo Position Only
+
+            `TargetYaw` :  [ int ] (Optional, Default=0)
+                Target Yaw
+
+            `YawError` :  [ int ] (Optional, Default=0)
+                Yaw Error
+
+            Returns:
+            ---
+            `mission_status` :  [ Bool ]
+                Flag to check if the mission is successful
+
+            Example call:
+            ---
+            `moveToPoseWithServo([0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0], False, False, 0, 0)`
+
+            '''
             if is_sim == False:
                 switch_controller(useMoveit=False)
             global servo_status
@@ -561,7 +879,8 @@ def main():
             if QuatsOnly == True:
                 print("Servoing Quats Only")
                 yawError = math.radians(YawError)
-                az = -0.5 if yawError > 0.0 else 0.5
+                az = -1.0 if yawError > 0.0 else 1.0
+
                 print("Yaw Error: ", yawError)
                 while abs(yawError) > 0.02:
                     moveWithServo([0.0, 0.0, 0.0], [0.0, 0.0, az])
@@ -641,6 +960,27 @@ def main():
                 return mission_status
 
         def moveToPose(aruco_data, drop_angles):
+            '''
+            Purpose:
+            ---
+            Function to move the arm to the target pose
+
+            Input Arguments:
+            ---
+            `aruco_data` :  [ ArucoData ]
+                Aruco Data
+
+            `drop_angles` :  [ list ]
+                List of Drop Angles
+
+            Returns:
+            ---
+            None
+
+            Example call:
+            ---
+            `moveToPose(aruco_data, drop_angles)`
+            '''
             aruco_name = aruco_data.name
             aruco_id = aruco_data.id
             aruco_position = aruco_data.position
@@ -721,19 +1061,6 @@ def main():
                 round(aruco_quaternions[2], 4),
                 round(aruco_quaternions[3], 4),
             ]
-
-            # if rotation_name == "Left":
-            #     moveToJointStates(
-            #         Pickup_Joints_Left.joint_states, Pickup_Joints_Left.name
-            #     )
-            # elif rotation_name == "Right":
-            #     moveToJointStates(
-            #         Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name
-            #     )
-            # else:
-            #     moveToJointStates(
-            #         Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name
-            #     )
 
             if is_sim == False:
                 time.sleep(0.1)
@@ -979,4 +1306,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try: 
+        main()
+    except:
+        rclpy.shutdown()

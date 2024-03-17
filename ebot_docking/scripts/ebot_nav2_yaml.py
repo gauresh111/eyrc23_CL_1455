@@ -119,10 +119,22 @@ def main():
     rackPresent = 0
     racknameData = []
     package_id=[]
-    for data in config_yaml["position"]:
-        racknameData.append(list(data.keys())[0])
-    package_id = config_yaml["package_id"]
     totalRacks = len(package_id)
+    dynamicTopic = {}
+    
+    for i in package_id:
+        print("Creating publisher for rack"+str(i))
+        dynamicTopic["rack"+str(i)] = {"publisher":node.create_publisher(Bool, '/rack'+str(i), 10),"status":False}
+    print("dynamicTopic",dynamicTopic)
+    #########################################
+    def publishBoxStatus():
+        for keys in dynamicTopic.keys():
+            msg = Bool()
+            msg.data = dynamicTopic[keys]["status"]
+            dynamicTopic[keys]["publisher"].publish(msg)
+            # print("publishing",keys,"status",dynamicTopic[keys]["status"])
+    node.timer = node.create_timer(
+            0.2,publishBoxStatus)
     for data in range(len(package_id)):
         rackIndex = find_string_in_list("rack" + str(package_id[data]),racknameData)
         rackName = racknameData[rackIndex]
@@ -136,8 +148,11 @@ def main():
         xyz=[x,y,0.0]
         add_docking_position(rackName,xyz,quaternions,offsetXY,yaw)
     print(dockingPosition)
-    print("package_id",package_id)
     rackPresentSub=[-1]
+    # time.sleep(15)
+    # print("seting rack3 status to true")
+   
+    # print(dynamicTopic['rack3'])
     while(-1 in rackPresentSub):
             time.sleep(0.1)
             print("waiting for ap list Node")
@@ -154,24 +169,40 @@ def main():
             node.ArmManipulationRequest.ap_name = boxPresent
             node.ArmManipulationRequest.box_id = int(BoxNumber)
             node.ArmManipulationRequest.total_racks = totalRacks
-            node.ArmManipulationRequest.starting = True
+            
             print("going to racks",node.ArmManipulationRequest)
             try: 
                 del dockingPosition[boxPresent] 
             except:
-                print("Rack not found")
-                            
+                print("Rack not found")       
             try:
-                del dockingPosition["rack"+str(int(getName[-1]))]
+                del dockingPosition["rack"+str(BoxNumber)]
             except:
                 print("Rack not found")
-            package_id.remove(int(getName[-1]))
+            package_id.remove(int(str(BoxNumber)))
+            dynamicTopic["rack"+str(BoxNumber)]["status"]=True
             futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
-    print(dockingPosition)
-    print("package_id",package_id)
+    
     def distance(p1, p2):
+        '''
+        Purpose: Calculates the Euclidean distance between two points.
+        Arguments:
+            p1 (list): A list of coordinates for the first point.
+            p2 (list): A list of coordinates for the second point.
+        Returns:
+            float: The distance between the points.
+        '''
         return ((p1[0] - p2[0])**2 + (p1[1] - p2[1])**2)**0.5
     def findNearestAp(X,Y):
+        '''
+        Purpose: Finds the nearest access point (AP) to a given location.
+        Arguments:
+            X (float): The x-coordinate of the location.
+            Y (float): The y-coordinate of the location.
+        Returns:
+            str: The name of the nearest access point.
+                
+        '''
         global dockingPosition
         nearest_ap = None
         min_distance = float('inf')
@@ -209,15 +240,9 @@ def main():
         node.ArmManipulationRequest.ap_name = ap
         node.ArmManipulationRequest.box_id = package_id[data]
         node.ArmManipulationRequest.total_racks = totalRacks
-        node.ArmManipulationRequest.starting = False
         print("going to racks",node.nav2RackRequest)
         futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
         counter=0
-        for i in range(2):
-            msg = Bool()
-            msg.data = False
-            node.racksApsPub.publish(msg)
-            time.sleep(0.1)
         while(futureArm.result() is  None and counter<10):
             try:
                 # node.aruco_name_publisher.publish(box_string)
@@ -238,13 +263,9 @@ def main():
                 rclpy.spin(node)
                 rclpy.shutdown()
                 exit(0)
-        print("Start Arn Manipulation")
+        # print("Start Arn Manipulation")
         print("Rack Client Response: ",futureNav2.result())
-        for i in range(2):
-            msg = Bool()
-            msg.data = True
-            node.racksApsPub.publish(msg)
-            time.sleep(0.1)
+        dynamicTopic[rackName]["status"]=True
     print("done")
     for i in range(20):
         msg = Bool()
