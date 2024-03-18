@@ -71,7 +71,7 @@ current_joint_states = [0, 0, 0, 0, 0, 0]
 StartBox = False
 ApQueue = []
 BoxId = []
-
+status = False
 totalRacks = 0
 
 class ArucoData:
@@ -292,6 +292,7 @@ def main():
     global aruco_angle_list
     global aruco_ap_list
     global StartBox
+    global status
 
     # Create a node
     node = Node("arm_manipulation_node")
@@ -455,6 +456,8 @@ def main():
     moveToJointStates(Initial_Joints.joint_states, Initial_Joints.name)
     print("Reached Initial Pose")
     
+    print(ApQueue, BoxId, totalRacks)
+
     while rackCounter < totalRacks:
         rackCounter += 1
         print("Rack Counter: ", rackCounter)
@@ -477,13 +480,15 @@ def main():
             )
         ApQueue.pop(0)
         print("###### Waiting for StartBox")
-        status=False
+        
         def BoxStatus(msg):
             global status
             status = msg.data
-        node.create_subscription(Bool, "/rack"+str(BoxId), BoxStatus, 10)
+            
+        node.create_subscription(Bool, "/rack"+str(BoxId[0]), BoxStatus, 10)
         while status == False:
-            time.sleep(0.1)
+            time.sleep(0.5)
+            print("###### Waiting for StartBox id {}".format(BoxId[0]))
         time.sleep(5)
         while len(arucoData) < len(aruco_name_list):
             flag = True
@@ -1159,7 +1164,6 @@ def main():
                     frame_id="tool0",
                 )
                 time.sleep(0.2)
-
             current_position, current_quaternions = getCurrentPose()
             if rotation_name == "Left":
                 midPosition = [
