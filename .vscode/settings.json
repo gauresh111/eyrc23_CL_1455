@@ -1,6 +1,11 @@
 {
     "python.analysis.extraPaths": [
         "./pymoveit2"
+    ],
+    "python.autoComplete.extraPaths": [
+        "/home/gauresh/ros2_ws/install/mani_stack/local/lib/python3.10/dist-packages",
+        "/opt/ros/humble/lib/python3.10/site-packages",
+        "/opt/ros/humble/local/lib/python3.10/dist-packages"
     ]
     
 }

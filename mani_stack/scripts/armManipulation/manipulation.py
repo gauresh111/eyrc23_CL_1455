@@ -1126,16 +1126,16 @@ def main():
 
             print("Tolerance Achieved: Reached Box")
 
-            # print("## Pushing Box by 5cm")
+            print("## Pushing Box by 5cm")
 
-            # if rotation_name == "Left":
-            #     aruco_position[1] += 0.10
-            # elif rotation_name == "Right":
-            #     aruco_position[1] -= 0.10
-            # else:
-            #     aruco_position[0] += 0.10
+            if rotation_name == "Left":
+                aruco_position[1] += 0.10
+            elif rotation_name == "Right":
+                aruco_position[1] -= 0.10
+            else:
+                aruco_position[0] += 0.10
 
-            # temp_result = moveToPoseWithServo(TargetPose=aruco_position, TargetQuats=aruco_quaternions)
+            temp_result = moveToPoseWithServo(TargetPose=aruco_position, TargetQuats=aruco_quaternions)
             if is_sim == True:
                 time.sleep(0.1)
                 controlGripper("ON", box_name)
@@ -1168,18 +1168,18 @@ def main():
             if rotation_name == "Left":
                 midPosition = [
                     current_position[0],
-                    current_position[1] - 0.23,
+                    current_position[1] - 0.33,
                     current_position[2],
                 ]
             elif rotation_name == "Right":
                 midPosition = [
                     current_position[0],
-                    current_position[1] + 0.23,
+                    current_position[1] + 0.33,
                     current_position[2],
                 ]
             else:
                 midPosition = [
-                    current_position[0] - 0.23,
+                    current_position[0] - 0.33,
                     current_position[1],
                     current_position[2],
                 ]
