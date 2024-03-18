@@ -162,10 +162,10 @@ def main():
      
     node.getpresentRacksSub = node.create_subscription(String, '/ap_list',getRackFromCamera, 10)
     node.getpresentRacksSub
-    # while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
-    #     print(' Nav2 Client service not available, waiting again...')
-    # while not node.ArmManipulationClient.wait_for_service(timeout_sec=1.0):
-    #     print(' ArmManipulation Client service not available, waiting again...')
+    while not node.nav2RackClient.wait_for_service(timeout_sec=1.0):
+        print(' Nav2 Client service not available, waiting again...')
+    while not node.ArmManipulationClient.wait_for_service(timeout_sec=1.0):
+        print(' ArmManipulation Client service not available, waiting again...')
     node.nav2RackRequest = RackSw.Request()
     node.ArmManipulationRequest = ManipulationSw.Request()
     global dockingPosition
