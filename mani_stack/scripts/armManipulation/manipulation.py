@@ -1129,11 +1129,11 @@ def main():
             print("## Pushing Box by 5cm")
 
             if rotation_name == "Left":
-                aruco_position[1] += 0.10
+                aruco_position[1] += 0.05
             elif rotation_name == "Right":
-                aruco_position[1] -= 0.10
+                aruco_position[1] -= 0.05
             else:
-                aruco_position[0] += 0.10
+                aruco_position[0] += 0.05
 
             temp_result = moveToPoseWithServo(TargetPose=aruco_position, TargetQuats=aruco_quaternions)
             if is_sim == True:
@@ -1168,18 +1168,18 @@ def main():
             if rotation_name == "Left":
                 midPosition = [
                     current_position[0],
-                    current_position[1] - 0.33,
+                    current_position[1] - 0.28,
                     current_position[2],
                 ]
             elif rotation_name == "Right":
                 midPosition = [
                     current_position[0],
-                    current_position[1] + 0.33,
+                    current_position[1] + 0.28,
                     current_position[2],
                 ]
             else:
                 midPosition = [
-                    current_position[0] - 0.33,
+                    current_position[0] - 0.28,
                     current_position[1],
                     current_position[2],
                 ]
