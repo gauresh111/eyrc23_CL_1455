@@ -859,13 +859,13 @@ class MyRobotDockingController(Node):
                 switch_eletromagent(True)
                 stopBot(0.1)
                 # self.UltraOrientation()
-                stopBot(3.0)
+                stopBot(0.5)
                 
-                self.UltraOrientationLinear(Setpoint=16.0)
+                self.UltraOrientationLinear(Setpoint=17.0)
                 # self.UltraOrientationLinear(Setpoint=16.0)
                 stopBot(1.0)
-                stopBot(0.5,-0.05,0.0)
-                stopBot(2.0)
+                stopBot(0.8,-0.04,0.0)
+                stopBot(1.0)
                 
                 
                 # self.AngularDocking()
