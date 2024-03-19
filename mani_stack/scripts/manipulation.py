@@ -73,7 +73,7 @@ ApQueue = []
 BoxId = []
 status = False
 totalRacks = 0
-
+boxStatusDict = {}
 class ArucoData:
     '''
     Purpose:
@@ -293,6 +293,7 @@ def main():
     global aruco_ap_list
     global StartBox
     global status
+    global boxStatusDict
 
     # Create a node
     node = Node("arm_manipulation_node")
@@ -457,7 +458,7 @@ def main():
     print("Reached Initial Pose")
     
     print(ApQueue, BoxId, totalRacks)
-
+    
     while rackCounter < totalRacks:
         rackCounter += 1
         print("Rack Counter: ", rackCounter)
@@ -466,30 +467,50 @@ def main():
 
         while len(ApQueue) == 0:
             time.sleep(0.5)
+            print("APQueue len  = 0, ",ApQueue)
         print("ApQueue: ", ApQueue)
         if ApQueue[0] == "ap1":
             moveToJointStates(
                 Pickup_Joints_Front.joint_states, Pickup_Joints_Front.name
             )
-            print("Reached Initial Pose")
         elif ApQueue[0] == "ap2":
             moveToJointStates(Pickup_Joints_Left.joint_states, Pickup_Joints_Left.name)
         else:
             moveToJointStates(
                 Pickup_Joints_Right.joint_states, Pickup_Joints_Right.name
             )
+        print("Reached Initial Pose")
         ApQueue.pop(0)
         print("###### Waiting for StartBox")
-        
+        boxStatusNode = Node("boxStatusNode")
+        executor.add_node(boxStatusNode)
+        print("BoxStatusDict:")
+        print(boxStatusDict)
+        status = False
         def BoxStatus(msg):
-            global status
-            status = msg.data
-            
-        node.create_subscription(Bool, "/rack"+str(BoxId[0]), BoxStatus, 10)
-        while status == False:
+            global status,boxStatusDict
+            boxStatusDict[str(BoxId[0])] = msg.data
+            # print("Box Status: ", msg.data)
+            # status = msg.data
+        
+        boxStatusNode.create_subscription(Bool, "/rack"+str(BoxId[0]), BoxStatus, 10)
+        print("Subscribed to /rack"+str(BoxId[0]))
+        while len(boxStatusDict.keys()) <rackCounter:
             time.sleep(0.5)
-            print("###### Waiting for StartBox id {}".format(BoxId[0]))
+            print("###### Waiting for Box id {} key to exist".format(BoxId[0]))
+            print("boxStatusDict len = ", len(boxStatusDict.keys()), "rackCounter = ", rackCounter)
+            print("BoxStatusDict:")
+            print(boxStatusDict)
+        print("Box id {} key to exist in boxStatusDict {}".format(BoxId[0], str(BoxId[0]) in boxStatusDict.keys()))
+        print(boxStatusDict)
+        while boxStatusDict[str(BoxId[0])] == False:
+            time.sleep(0.5)
+            print("###### Waiting for Box id {} key to be TRUE".format(BoxId[0]))
+
+        print("Box id {} key is {}".format(BoxId[0], boxStatusDict[str(BoxId[0])]))
+        
         time.sleep(5)
+        boxStatusNode.destroy_node()
         while len(arucoData) < len(aruco_name_list):
             flag = True
             for aruco in aruco_name_list:
@@ -1119,6 +1140,7 @@ def main():
                             servo_status,
                             "     Continuing next iteration",
                         )
+                        global_counter += 1
                         continue
                 else:
                     break
@@ -1126,16 +1148,16 @@ def main():
 
             print("Tolerance Achieved: Reached Box")
 
-            # print("## Pushing Box by 5cm")
+            print("## Pushing Box by 5cm")
 
-            # if rotation_name == "Left":
-            #     aruco_position[1] += 0.10
-            # elif rotation_name == "Right":
-            #     aruco_position[1] -= 0.10
-            # else:
-            #     aruco_position[0] += 0.10
+            if rotation_name == "Left":
+                aruco_position[1] += 0.05
+            elif rotation_name == "Right":
+                aruco_position[1] -= 0.05
+            else:
+                aruco_position[0] += 0.05
 
-            # temp_result = moveToPoseWithServo(TargetPose=aruco_position, TargetQuats=aruco_quaternions)
+            temp_result = moveToPoseWithServo(TargetPose=aruco_position, TargetQuats=aruco_quaternions)
             if is_sim == True:
                 time.sleep(0.1)
                 controlGripper("ON", box_name)
@@ -1168,18 +1190,18 @@ def main():
             if rotation_name == "Left":
                 midPosition = [
                     current_position[0],
-                    current_position[1] - 0.23,
+                    current_position[1] - 0.28,
                     current_position[2],
                 ]
             elif rotation_name == "Right":
                 midPosition = [
                     current_position[0],
-                    current_position[1] + 0.23,
+                    current_position[1] + 0.28,
                     current_position[2],
                 ]
             else:
                 midPosition = [
-                    current_position[0] - 0.23,
+                    current_position[0] - 0.28,
                     current_position[1],
                     current_position[2],
                 ]
