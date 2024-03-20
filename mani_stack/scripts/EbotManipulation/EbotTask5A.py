@@ -44,11 +44,11 @@ def main():
     
     global positionToGO
     positionToGO = {
-      'ap1':{'xyz': [4.73, -0.25,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [0.6,0.0], 'Yaw': 0.0},
-      'ap2':{'xyz': [6.33, -1.75,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,1.4] , 'Yaw': 90}
+      'ap1':{'xyz': [4.73, -0.35,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [0.6,0.0], 'Yaw': 0.0},
+      'ap2':{'xyz': [5.75, -1.60,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,0.9] , 'Yaw': 90}
     }
     
-    withRackFootprint = [ [0.31, 0.40],[0.31, -0.40],[-0.31, -0.40],[-0.31, 0.40] ]
+    withRackFootprint = [ [0.31, 0.45],[0.31, -0.45],[-0.31, -0.45],[-0.31, 0.45] ]
     withoutRackFootprint = [ [0.21, 0.195],[0.21, -0.195],[-0.21, -0.195],[-0.21, 0.195] ]
     def add_docking_position(name, xyz, quaternions, xy_offsets,yaw,boxid,ap_name):
         '''
