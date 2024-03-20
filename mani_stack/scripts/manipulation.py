@@ -29,6 +29,7 @@
 #                   Service   - [ /ArmManipulationSw, /GripperMagnetON, /GripperMagnetOFF, /controller_manager/switch_controller, /io_and_status_controller/set_io ]
 
 is_sim = True # Change this to True if you are using simulation
+fix_aruco_orientation = False # Change this to True if you want to fix the orientation of the aruco marker
 
 from os import path
 from threading import Thread
@@ -861,6 +862,8 @@ def main():
             '''
             if is_sim == False:
                 switch_controller(useMoveit=False)
+            if fix_aruco_orientation == False:
+                YawError = 0
             global servo_status
             mission_status = True
             moveit2Servo.enable()
