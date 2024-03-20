@@ -44,7 +44,7 @@ def main():
     
     global positionToGO
     positionToGO = {
-      'ap1':{'xyz': [4.73, -0.33,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [0.6,0.0], 'Yaw': 0.0},
+      'ap1':{'xyz': [4.70, -0.33,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [0.6,0.0], 'Yaw': 0.0},
       'ap2':{'xyz': [5.75, -1.63,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,0.9] , 'Yaw': 90}
     }
     

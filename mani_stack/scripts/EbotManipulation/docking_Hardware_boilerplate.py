@@ -861,7 +861,7 @@ class MyRobotDockingController(Node):
                 # self.UltraOrientation()
                 stopBot(0.5)
                 
-                self.UltraOrientationLinear(Setpoint=17.0)
+                self.UltraOrientationLinear(Setpoint=17.5)
                 # self.UltraOrientationLinear(Setpoint=16.0)
                 stopBot(1.0)
                 stopBot(0.8,-0.04,0.0)
@@ -892,7 +892,7 @@ class MyRobotDockingController(Node):
             # #orientation done
             if self.isAttach:
                 rackAttach()
-                stopBot(1.2,0.05,0.0)
+                stopBot(1.6,0.05,0.0)
                 stopBot(0.1)
             else:
                 
