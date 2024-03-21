@@ -29,7 +29,7 @@
 #                   Service   - [ /ArmManipulationSw, /GripperMagnetON, /GripperMagnetOFF, /controller_manager/switch_controller, /io_and_status_controller/set_io ]
 
 is_sim = True # Change this to True if you are using simulation
-fix_aruco_orientation = False # Change this to True if you want to fix the orientation of the aruco marker
+fix_aruco_orientation = True # Change this to True if you want to fix the orientation of the aruco marker
 
 from os import path
 from threading import Thread
@@ -864,6 +864,7 @@ def main():
                 switch_controller(useMoveit=False)
             if fix_aruco_orientation == False:
                 YawError = 0
+            
             global servo_status
             mission_status = True
             moveit2Servo.enable()
@@ -898,7 +899,7 @@ def main():
                 (TargetEuler[1] - currentEuler[1]) / magnitude,
             )
             print("yawError_d: ", YawError, "yawError_r: ", math.radians(YawError))
-            az = (math.radians(YawError) / totalTime) * 3
+            az = (math.radians(YawError) / totalTime) * 1.5
             print("TargetPose:", TargetPose, "CurrentPose:", currentPose)
             print("TargetEuler:", TargetEuler, "CurrentEuler:", currentEuler)
 
@@ -908,7 +909,7 @@ def main():
             if QuatsOnly == True:
                 print("Servoing Quats Only")
                 yawError = math.radians(YawError)
-                az = -1.0 if yawError > 0.0 else 1.0
+                az = -1.5 if yawError > 0.0 else 1.5
 
                 print("Yaw Error: ", yawError)
                 while abs(yawError) > 0.02:
