@@ -44,8 +44,8 @@ def main():
     
     global positionToGO
     positionToGO = {
-      'ap1':{'xyz': [4.70, -0.33,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [0.6,0.0], 'Yaw': 0.0},
-      'ap2':{'xyz': [5.75, -1.63,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,0.9] , 'Yaw': 90}
+      'ap1':{'xyz': [4.73, -0.30,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [0.6,0.0], 'Yaw': 0.0},
+      'ap2':{'xyz': [5.75, -1.60,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,0.9] , 'Yaw': 90}
     }
     
     withRackFootprint = [ [0.31, 0.45],[0.31, -0.45],[-0.31, -0.45],[-0.31, 0.45] ]
@@ -167,6 +167,7 @@ def main():
         UltraSoniceForNAv2.ultra_sub = UltraSoniceForNAv2.create_subscription(Float32MultiArray, 'ultrasonic_sensor_std_float', ultrasonic_callback, 10)  
     
         while not navigator.isTaskComplete():
+            
             if not israck:
                 print("moving to ",positionName," ",ultrasonic_value)
                 # if (ultrasonic_value[0]+ultrasonic_value[1])/2 >=18.0:

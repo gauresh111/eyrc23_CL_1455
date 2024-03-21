@@ -517,7 +517,7 @@ class MyRobotDockingController(Node):
             print("m:",m)
             self.moveBot(0.0,angularValue)
             self.GlobalStopTime(0.1)
-    def UltraOrientationLinear(self,Setpoint):
+    def UltraOrientationLinear(self,Setpoint,linearValue=-0.05):
         '''
         Purpose:
         ---
@@ -538,7 +538,7 @@ class MyRobotDockingController(Node):
         global ultrasonic_value
         reached = False
         ultrasonicPid = pid()
-        linearValue = -0.05
+        
         while (reached == False):
             m = (ultrasonic_value[1] - ultrasonic_value[0])
             angularValue ,check = ultrasonicPid.UltraOrientation(m,True)
@@ -718,7 +718,7 @@ class MyRobotDockingController(Node):
         self.cameraOrientation()
         '''
         global aruco_name_list,aruco_angle_list,aruco_ap_list
-        self.manualMoveBot()
+        # self.manualMoveBot()
         botPid = pid()
         target_rack = "obj_"+self.BoxId        
         rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
@@ -859,13 +859,14 @@ class MyRobotDockingController(Node):
                 switch_eletromagent(True)
                 stopBot(0.1)
                 # self.UltraOrientation()
-                stopBot(0.5)
                 
-                self.UltraOrientationLinear(Setpoint=17.5)
+                self.UltraOrientationLinear(Setpoint=22.0,linearValue=-0.1)
+                self.UltraOrientationLinear(Setpoint=17.5,linearValue=-0.05)
+                
                 # self.UltraOrientationLinear(Setpoint=16.0)
-                stopBot(1.0)
+                stopBot(0.2)
                 stopBot(0.8,-0.04,0.0)
-                stopBot(1.0)
+                stopBot(0.5)
                 
                 
                 # self.AngularDocking()
@@ -892,7 +893,7 @@ class MyRobotDockingController(Node):
             # #orientation done
             if self.isAttach:
                 rackAttach()
-                stopBot(1.6,0.05,0.0)
+                stopBot(1.2,0.05,0.0)
                 stopBot(0.1)
             else:
                 
@@ -900,7 +901,7 @@ class MyRobotDockingController(Node):
                 stopBot(0.1) 
                 
                 self.cameraOrientation() 
-                stopBot(0.3)
+                stopBot(0.1)
                 switch_eletromagent(False)
                 #moving ebot back from rack
                 stopBot(0.4,0.8,0.0)

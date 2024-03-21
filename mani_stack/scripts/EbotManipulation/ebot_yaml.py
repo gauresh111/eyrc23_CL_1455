@@ -241,10 +241,7 @@ def main():
             package_id.remove(int(str(BoxNumber)))
             dynamicTopic["rack"+str(BoxNumber)]["status"]=True
             futureArm = node.ArmManipulationClient.call_async(node.ArmManipulationRequest)
-    # print("before",dockingPosition['rack2']['xyz'],dockingPosition['rack3']['xyz'])
-    dockingPosition['rack2']['xyz'] = [2.0, -2.25, 0.0]
-    dockingPosition['rack3']['xyz'] = [1.1, 1.75, 0.0]
-    # print("after",dockingPosition['rack2']['xyz'],dockingPosition['rack3']['xyz'])
+    
     def distance(p1, p2):
         '''
         Purpose: Calculates the Euclidean distance between two points.
