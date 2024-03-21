@@ -417,7 +417,8 @@ class aruco_tf(Node):
 
         try:
             image = self.bridge.imgmsg_to_cv2(data, "passthrough")
-            self.depth_image = image.copy()
+            if image is not None:
+                self.depth_image = image.copy()
         except:
             pass
 
@@ -438,7 +439,8 @@ class aruco_tf(Node):
 
         try:
             image = self.bridge.imgmsg_to_cv2(data, "bgr8")
-            self.cv_image = image.copy()
+            if image is not None:
+                self.cv_image = image.copy()
         except:
             pass
 
