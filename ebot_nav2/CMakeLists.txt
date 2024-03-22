@@ -50,6 +50,7 @@ install(
 install(
   PROGRAMS
   scripts/nav2_cmd.py
+  scripts/EbotTask5A.py
   DESTINATION lib/${PROJECT_NAME}
 )
 

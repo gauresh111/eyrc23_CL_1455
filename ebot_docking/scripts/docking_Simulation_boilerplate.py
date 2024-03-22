@@ -341,7 +341,7 @@ class MyRobotDockingController(Node):
         return -1
     def cameraOrientation(self):
         global aruco_name_list,aruco_angle_list,aruco_ap_list
-        self.manualMoveBot()
+        # self.manualMoveBot()
         botPid = pid()
         target_rack = "obj_"+self.BoxId   
         rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
