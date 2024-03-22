@@ -6,4 +6,11 @@ position:
 
 package_id: [3, 2, 1]
 
+#RV
+# position:
+#     - rack1: [5.75, 0.6, 1.57]
+#     - rack2: [1.1, -2.3, 0.0]
+#     - rack3: [0.2, 1.8, 0.0]
+#     - arm: [6.3, -0.05, 3.14]
 
+# package_id: [3, 2, 1]
