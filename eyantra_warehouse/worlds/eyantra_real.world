@@ -113,12 +113,12 @@
       <name>rack1</name>
       <!-- <pose>1.6373 -1.2511 6.1 0 -0 1.57</pose> -->
       <!-- <pose>1.600 -1.248 0.07 0 -0 1.57</pose> -->
-      <pose> 6.5  0.75 0.0750  0.0 0.0 1.57</pose>
+      <pose> 5.75  0.6 0.0750  0.0 0.0 1.57</pose>
 	</include>
   <include>
       <uri>model://boxes/box_1</uri>
       <name>box1</name>
-      <pose>6.5  0.75 1.35 0 -0 -1.57</pose>
+      <pose>5.75  0.6 1.35 0 -0 -1.57</pose>
 	</include>
   <!-- RACK 1 -->
 
@@ -128,17 +128,17 @@
       <name>rack2</name>
       <!-- <pose>1.6373 -1.2511 6.1 0 -0 1.57</pose> -->
       <!-- <pose>1.600 -1.248 0.07 0 -0 1.57</pose> -->
-      <pose>1.15 -2.2 0.075 0.0 0.0 0.0</pose>
+      <pose>1.1 -2.3 0.075 0.0 0.0 0.0</pose>
 	</include>
   <include>
       <uri>model://boxes/box_2</uri>
       <name>box2</name>
-      <pose>1.15 -2.2 1.35 0 -0 3.14</pose>
+      <pose>1.1 -2.3 1.35 0 -0 3.14</pose>
 	</include>
   <include>
       <uri>model://single_rack_base</uri>
       <name>rack2Base</name>
-      <pose>1.0 -2.2 0.041430 0.0 0.0 1.57</pose>
+      <pose>0.95 -2.3 0.041430 0.0 0.0 1.57</pose>
 	</include>
   <!-- RACK 2 -->
   
@@ -148,17 +148,17 @@
       <name>rack3</name>
       <!-- <pose>1.6373 -1.2511 6.1 0 -0 1.57</pose> -->
       <!-- <pose>1.600 -1.248 0.07 0 -0 1.57</pose> -->
-      <pose>0.5 2.05 0.075 0.0 0.0 0.0</pose>
+      <pose>0.2 1.8 0.075 0.0 0.0 0.0</pose>
 	</include>
   <include>
       <uri>model://boxes/box_3</uri>
       <name>box3</name>
-      <pose>0.5 2.05 1.35 0 -0 3.14</pose>
+      <pose>0.2 1.8 1.35 0 -0 3.14</pose>
 	</include>
   <include>
       <uri>model://single_rack_base</uri>
       <name>rack3Base</name>
-      <pose>0.35 2.05 0.041430 0.0 0.0 1.57</pose>
+      <pose>0.2, 1.8 0.041430 0.0 0.0 1.57</pose>
 	</include>
   <!-- RACK 3 -->
 
@@ -169,11 +169,11 @@
       <name>boxes</name>
       <pose>2.75 -0.250 0.0 0.0 0.0 0.0</pose>
 	</include> -->
-  <include>
-      <uri>model://isro_arm</uri>
+  <!-- <include> -->
+      <!-- <uri>model://isro_arm</uri>
       <name>boxes</name>
       <pose>2.75 0.250 0.0 0.0 0.0 0.0</pose>
-  </include>  
+  </include>   -->
   
 
   <plugin name="gazebo_link_attacher" filename="libgazebo_link_attacher.so"/>
