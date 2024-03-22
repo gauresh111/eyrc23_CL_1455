@@ -29,7 +29,7 @@
 #                   Service   - [ /ArmManipulationSw, /GripperMagnetON, /GripperMagnetOFF, /controller_manager/switch_controller, /io_and_status_controller/set_io ]
 
 is_sim = False # Change this to True if you are using simulation
-fix_aruco_orientation = True # Change this to True if you want to fix the orientation of the aruco marker
+fix_aruco_orientation = False # Change this to True if you want to fix the orientation of the aruco marker
 
 from os import path
 from threading import Thread
@@ -264,15 +264,15 @@ def main():
     Drop_Joints_Back.name = "Drop_Joints_Back"
 
     Pickup_Joints_Front = PredefinedJointStates()
-    Pickup_Joints_Front.joint_states = [-0.00, -2.59, 2.28, -2.82, -1.54, 3.15]
+    Pickup_Joints_Front.joint_states = [-0.00, -2.43, 2.10, -2.81, -1.56, 3.15]
     Pickup_Joints_Front.name = "Pickup_Joints_Front"
 
     Pickup_Joints_Left = PredefinedJointStates()
-    Pickup_Joints_Left.joint_states = [1.57, -2.59, 2.28, -2.82, -1.54, 3.15]
+    Pickup_Joints_Left.joint_states = [1.57, -2.43, 2.10, -2.81, -1.56, 3.15]
     Pickup_Joints_Left.name = "Pickup_Joints_Left"
 
     Pickup_Joints_Right = PredefinedJointStates()
-    Pickup_Joints_Right.joint_states = [-1.57, -2.59, 2.28, -2.82, -1.54, 3.15]
+    Pickup_Joints_Right.joint_states = [-1.57, -2.43, 2.10, -2.81, -1.56, 3.15]
     Pickup_Joints_Right.name = "Pickup_Joints_Right"
 
     Drop_Joints_List = [Drop_Joints_Back, Drop_Joints_Back, Drop_Joints_Back]
