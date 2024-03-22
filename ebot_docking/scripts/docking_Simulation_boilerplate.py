@@ -496,6 +496,7 @@ class MyRobotDockingController(Node):
             if self.isAttach:
                 print(self.rackName,"rackName")
                 rackAttach()
+                stopBot(1.0,0.2,0.0) 
             else:
                 self.odomLinearDocking()
                 # stopBot(0.8,-0.2,0.0) 
