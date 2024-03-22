@@ -23,13 +23,8 @@ aruco_ap_list = []
 
 global dockingPosition
 dockingPosition = {
-    # 'ap1':{'xyz': [4.73, -0.23,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [0.65,0.0], 'Yaw': 0.0},
-    "ap2": {
-        "xyz": [5.75, -1.60, 0.0],
-        "quaternions": [0.0, 0.0, -0.706825181105366, 0.7073882691671998],
-        "XYoffsets": [0.0, 0.969],
-        "Yaw": 90,
-    }
+    'ap1':{'xyz': [4.63, -0.21,0.0], 'quaternions': [0.0, 0.0, 0.1, 0.0000], 'XYoffsets': [0.6,0.0], 'Yaw': 0.0},
+      'ap2':{'xyz': [6.25, -1.8,0.0], 'quaternions': [0.0, 0.0, -0.706825181105366, 0.7073882691671998], 'XYoffsets': [0.0,1.0] , 'Yaw': 90}
 }
 
 
@@ -227,6 +222,9 @@ def main():
             )
             time.sleep(1)
             dynamicTopic["rack" + str(BoxNumber)]["status"] = True
+
+    dockingPosition['rack2']['xyz'] = [2.0, -2.22, 0.0]
+    dockingPosition['rack3']['xyz'] = [1.1, 1.75, 0.0]
 
     def distance(p1, p2):
         """

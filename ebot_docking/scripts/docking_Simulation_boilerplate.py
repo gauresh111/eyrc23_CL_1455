@@ -226,7 +226,7 @@ class MyRobotDockingController(Node):
     
     def odomLinearDockingprocess(self,InputDistance,Setpoint=0.1):
         odomlinearPid = pid()
-        if InputDistance <0.12:   
+        if InputDistance <0.4:   
             return 0.0
         return odomlinearPid.odomComputeLinear(InputDistance,Setpoint)
     def Whichaxistomove(self):
@@ -261,12 +261,12 @@ class MyRobotDockingController(Node):
         while (reachedExtra == False):
             if X1 == 0:
                 distance=self.distanceSingle(self.targetX,robot_pose[0])
-                if distance < 0.15:
+                if distance < 0.4:
                     reachedExtra = True
                 print("X: target",self.targetX,"current",robot_pose[0],"distance",distance)
             else:
                 distance=self.distanceSingle(self.targetY,robot_pose[1])
-                if distance < 0.15:
+                if distance < 0.4:
                     reachedExtra = True
                 print("Y: target",self.targetY,"current",robot_pose[1],"distance",distance)
             speed=self.odomLinearDockingprocess(distance)
