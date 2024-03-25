@@ -1,0 +1,395 @@
+<?xml version='1.0'?>
+<sdf version='1.7'>
+  <model name="joel_gauresh_urdf">
+  <robot name="joel_gauresh_urdf">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-0.00030267 -0.00045453 0.030233"
+        rpy="0 0 0" />
+      <mass
+        value="0.55521" />
+      <inertia
+        ixx="0.0009981"
+        ixy="1.3692E-05"
+        ixz="2.7862E-07"
+        iyy="0.0010057"
+        iyz="6.0539E-07"
+        izz="0.001945" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.50196 0.50196 0.50196 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="shoulder_link1">
+    <inertial>
+      <origin
+        xyz="-0.00093144 0.02883 0.00062509"
+        rpy="0 0 0" />
+      <mass
+        value="0.36846" />
+      <inertia
+        ixx="0.00058065"
+        ixy="9.1504E-08"
+        ixz="-1.601E-05"
+        iyy="0.0010185"
+        iyz="1.6871E-07"
+        izz="0.00055982" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/shoulder_link1.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.50196 0.50196 0.50196 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/shoulder_link1.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="shoulder_joint1"
+    type="revolute">
+    <origin
+      xyz="0 0 0.06525"
+      rpy="1.5708 0 1.5708" />
+    <parent
+      link="base_link" />
+    <child
+      link="shoulder_link1" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="6.28"
+      effort="0"
+      velocity="0" />
+  </joint>
+  <link
+    name="shoulder_link2">
+    <inertial>
+      <origin
+        xyz="-0.01738 2.3564E-14 0.093249"
+        rpy="0 0 0" />
+      <mass
+        value="0.45423" />
+      <inertia
+        ixx="0.0018458"
+        ixy="7.6625E-13"
+        ixz="-1.5935E-06"
+        iyy="0.0017096"
+        iyz="1.2654E-13"
+        izz="0.00016523" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/shoulder_link2.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.50196 0.50196 0.50196 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/shoulder_link2.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="shoulder_joint2"
+    type="revolute">
+    <origin
+      xyz="0.011779 0.07 -0.0063887"
+      rpy="3.1402 0 0" />
+    <parent
+      link="shoulder_link1" />
+    <child
+      link="shoulder_link2" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="3.14"
+      effort="300"
+      velocity="3" />
+  </joint>
+  <link
+    name="shoulder_link3">
+    <inertial>
+      <origin
+        xyz="0.00011307 -0.00070715 -0.057802"
+        rpy="0 0 0" />
+      <mass
+        value="0.23343" />
+      <inertia
+        ixx="0.00057111"
+        ixy="-1.8665E-08"
+        ixz="2.5014E-08"
+        iyy="0.00053376"
+        iyz="-4.6592E-06"
+        izz="7.1501E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/shoulder_link3.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.50196 0.50196 0.50196 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/shoulder_link3.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="shoulder_joint3"
+    type="revolute">
+    <origin
+      xyz="-0.0184 0 0.185"
+      rpy="1.5708 0 3.1402" />
+    <parent
+      link="shoulder_link2" />
+    <child
+      link="shoulder_link3" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="-1.396"
+      upper="3.84"
+      effort="300"
+      velocity="3" />
+  </joint>
+  <link
+    name="shoulder_link4">
+    <inertial>
+      <origin
+        xyz="-0.016476 0.0041063 0.039356"
+        rpy="0 0 0" />
+      <mass
+        value="0.23704" />
+      <inertia
+        ixx="0.000232"
+        ixy="1.2542E-08"
+        ixz="2.5141E-07"
+        iyy="0.0001751"
+        iyz="-4.9175E-06"
+        izz="7.8002E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/shoulder_link4.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.50196 0.50196 0.50196 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/shoulder_link4.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="shoulder_joint4"
+    type="revolute">
+    <origin
+      xyz="-0.0184 0 -0.1175"
+      rpy="-1.5708 0 3.1402" />
+    <parent
+      link="shoulder_link3" />
+    <child
+      link="shoulder_link4" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="-0.785"
+      upper="3.229"
+      effort="300"
+      velocity="3" />
+  </joint>
+  <link
+    name="wrist_link">
+    <inertial>
+      <origin
+        xyz="4.4966E-11 -0.01662 -0.0094006"
+        rpy="0 0 0" />
+      <mass
+        value="0.044881" />
+      <inertia
+        ixx="3.5363E-05"
+        ixy="-6.2306E-15"
+        ixz="-6.2979E-13"
+        iyy="3.8917E-05"
+        iyz="1.9805E-06"
+        izz="6.835E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/wrist_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.50196 0.50196 0.50196 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/wrist_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="wrist_joint"
+    type="revolute">
+    <origin
+      xyz="-0.017896 0.013363 0.10997"
+      rpy="3.1402 0 0" />
+    <parent
+      link="shoulder_link4" />
+    <child
+      link="wrist_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="-3.1402"
+      upper="3.1402"
+      effort="300"
+      velocity="3" />
+  </joint>
+  <link
+    name="EndEffector_link">
+    <inertial>
+      <origin
+        xyz="-0.0065515 0.008032 0.0073471"
+        rpy="0 0 0" />
+      <mass
+        value="0.062706" />
+      <inertia
+        ixx="4.2342E-05"
+        ixy="2.0214E-06"
+        ixz="-7.4487E-06"
+        iyy="6.6651E-05"
+        iyz="3.1444E-06"
+        izz="2.7585E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/EndEffector_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.50196 0.50196 0.50196 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="model://isro_arm/meshes/EndEffector_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="EndEffector_joint"
+    type="revolute">
+    <origin
+      xyz="0 -0.021 -0.04725"
+      rpy="0 0.79382 0" />
+    <parent
+      link="wrist_link" />
+    <child
+      link="EndEffector_link" />
+    <axis
+      xyz="0 0 0" />
+    <limit
+      lower="0"
+      upper="0.785"
+      effort="300"
+      velocity="3" />
+  </joint>
+  </robot>
+</model>
+</sdf>

@@ -35,14 +35,14 @@ def load_yaml(file_path):
 def run_xacro(xacro_file):
     """Run xacro and output a file in the same directory with the same name, w/o a .xacro suffix"""
     urdf_file, ext = os.path.splitext(xacro_file)
-    if ext != '.xacro':
-        raise RuntimeError(f'Input file to xacro must have a .xacro extension, got {xacro_file}')
+    # if ext != '.xacro':
+        # raise RuntimeError(f'Input file to xacro must have a .xacro extension, got {xacro_file}')
     os.system(f'xacro {xacro_file} -o {urdf_file}')
     return urdf_file
 
 
 def generate_launch_description():
-    xacro_file = get_package_file('ur_description', 'urdf/ur5_robot.urdf.xacro')
+    xacro_file = get_package_file('joel_gauresh_urdf', 'urdf/joel_gauresh_urdf.urdf')
     urdf_file = run_xacro(xacro_file)
     robot_description_arm = load_file(urdf_file)
 
