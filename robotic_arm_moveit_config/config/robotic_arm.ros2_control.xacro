@@ -7,7 +7,7 @@
             <hardware>
                 <!-- By default, set up controllers for simulation. This won't work on real hardware -->
                 <!-- <plugin>gazebo_ros2_control/GazeboSystem</plugin> -->
-                <plugin>mock_components/GenericSystem</plugin>
+                <plugin>gazebo_ros2_control/GazeboSystem</plugin>
             </hardware>
             <joint name="joint_1">
                 <command_interface name="position"/>

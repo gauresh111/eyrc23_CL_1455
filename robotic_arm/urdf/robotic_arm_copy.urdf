@@ -535,7 +535,7 @@ Stephen Brawner (brawner@gmail.com)
 
   <ros2_control name="GazeboSystem" type="system">
     <hardware>
-      <plugin>mock_components/GenericSystem</plugin>
+      <plugin>gazebo_ros2_control/GazeboSystem</plugin>
       <!-- <plugin>gazebo_ros2_control/GazeboSystem</plugin> -->
     </hardware>
 
@@ -591,8 +591,6 @@ Stephen Brawner (brawner@gmail.com)
 
   <gazebo>
     <plugin filename="libgazebo_ros2_control.so" name="gazebo_ros2_control">
-      <robot_param>robot_description</robot_param>
-      <robot_param_node>robot_state_publisher</robot_param_node>
       <parameters>$(find robotic_arm_moveit_config)/config/ros2_controllers.yaml</parameters>
     </plugin>
   </gazebo>
