@@ -27,6 +27,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.actions import ExecuteProcess
+from launch.actions import DeclareLaunchArgument
 
 def get_package_file(package, file_path):
     """Get the location of a file installed in an ament package"""
@@ -44,9 +45,18 @@ def generate_launch_description():
         arguments=['-entity', 'robotic_arm', '-topic', '/robot_description', '-x', '0.0', '-y', '0.0', '-z', '0.0', '-Y', '0.0'],
         output='screen')
 
+    gazebo = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(get_package_share_directory('gazebo_ros'), 'launch', 'gazebo.launch.py'),
+        )
+    )
                                                  
     return launch.LaunchDescription([
-        ExecuteProcess(cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'], output='screen'),
+        DeclareLaunchArgument(
+          'world',
+          default_value=[os.path.join(get_package_share_directory("robotic_arm"), 'worlds', 'arm_world.world'), ''], # Change name of world file if required.
+          description='SDF world file'),gazebo
+        # ExecuteProcess(cmd=['gazebo', '--verbose','-s', 'libgazebo_ros_init.so', '-s', 'libgazebo_ros_factory.so'], output='screen'),
         
-        spawn_arm
+        # spawn_arm
     ])
