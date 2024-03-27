@@ -39,9 +39,14 @@
 
     <include>
       <uri>model://ground_plane</uri>
+      <material>
+        <script>
+          <uri>Gazebo/Black</uri>
+        </script>
+      </material>
     </include>
 
-    <!-- <light name="light3" type="directional">
+    <light name="light3" type="directional">
       <pose frame="">3.9239 1.64974 4 0 1.2 0</pose>
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
@@ -53,9 +58,9 @@
         <quadratic>0.001</quadratic>
       </attenuation>
       <cast_shadows>0</cast_shadows>
-    </light> -->
+    </light>
 
-    <!-- <light name="light5" type="directional">
+    <light name="light5" type="directional">
       <pose frame="">0.454419 12.4783 5 -0.8 0 0</pose>
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
@@ -67,9 +72,9 @@
         <quadratic>0.001</quadratic>
       </attenuation>
       <cast_shadows>0</cast_shadows>
-    </light> -->
+    </light>
 
-    <!-- <scene>
+    <scene>
       <shadows>false</shadows>
       <ambient>0.5 0.5 0.5 1.0</ambient>
       <grid>false</grid>
@@ -81,23 +86,11 @@
           <humidity>0</humidity>
         </clouds>
       </sky>
-    </scene> -->
-
-    <!-- <include>
-      <uri>model://cylinderrr</uri>
-      <name>cylinderrr</name>
-      <pose>0.0 0.0 1.0 0.0 0.0 0.0</pose>
-    </include> -->
-
-    <!-- <include>
-      <uri>model://TestTube</uri>
-      <name>Testtube</name>
-      <pose>2.75 0.0 1.0 0.0 0.0 0.0</pose>
-    </include> -->
+    </scene>
 
     <model name="cylinder">
       <static>false</static>
-      <pose>0.0 0.35 0.0625 0 -0 0</pose>
+      <pose>0.0 0.5 0.0625 0 -0 0</pose>
       <link name="link">
         <gravity>1</gravity>
         <inertial>
@@ -115,16 +108,36 @@
         <collision name='collision'>
           <geometry>
             <cylinder>
-              <radius>0.04</radius>
+              <!-- <radius>0.04</radius> -->
+              <radius>0.03</radius>
               <length>0.125</length>
             </cylinder>
           </geometry>
+          <surface>
+            <friction>
+              <mu1>1000</mu1>
+              <mu2>1000</mu2>
+              <kp>1000000.0</kp>
+              <kd>100000.0</kd>
+              <slip1>0</slip1>
+              <slip2>0</slip2>
+              <minDepth>0.001</minDepth>
+              <maxVel>0</maxVel>
+              <torsional>
+                <ode>
+                  <coefficient>1000</coefficient>
+                  <slip>0</slip>
+                </ode>
+              </torsional>
+            </friction>
+          </surface>
         </collision>
 
         <visual name='visual'>
           <geometry>
             <cylinder>
-              <radius>0.04</radius>
+              <!-- <radius>0.04</radius> -->
+              <radius>0.03</radius>
               <length>0.125</length>
             </cylinder>
           </geometry>

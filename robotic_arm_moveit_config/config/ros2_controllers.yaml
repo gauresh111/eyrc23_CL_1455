@@ -26,6 +26,7 @@ arm_controller:
     state_interfaces:
       - position
       - velocity
+
 gripper_controller:
   ros__parameters:
     joints:
@@ -36,3 +37,9 @@ gripper_controller:
     state_interfaces:
       - position
       - velocity
+    action_monitor_rate: 20.0
+    allow_stalling: true
+    goal_tolerance: 0.01
+    max_effort: 0.0
+    stall_timeout: 0.0001
+    stall_velocity_threshold: 0.001

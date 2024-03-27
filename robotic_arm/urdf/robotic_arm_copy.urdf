@@ -404,7 +404,7 @@ Stephen Brawner (brawner@gmail.com)
     <limit
       lower="-0.5"
       upper="0.3"
-      effort="300"
+      effort="0.0"
       velocity="3.14" />
   </joint>
   <link
@@ -463,17 +463,17 @@ Stephen Brawner (brawner@gmail.com)
     <limit
       lower="-0.5"
       upper="0.3"
-      effort="300"
+      effort="0.0"
       velocity="3.14" />
   </joint>
 
   <transmission name="link_1_trans">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="joint_1">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
     </joint>
     <actuator name="link_1_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
@@ -481,10 +481,10 @@ Stephen Brawner (brawner@gmail.com)
   <transmission name="link_2_trans">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="joint_2">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
     </joint>
     <actuator name="link_2_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
@@ -492,10 +492,10 @@ Stephen Brawner (brawner@gmail.com)
   <transmission name="link_3_trans">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="joint_3">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
     </joint>
     <actuator name="link_3_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
@@ -503,10 +503,10 @@ Stephen Brawner (brawner@gmail.com)
   <transmission name="link_4_trans">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="joint_4">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
     </joint>
     <actuator name="link_4_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
@@ -514,10 +514,10 @@ Stephen Brawner (brawner@gmail.com)
   <transmission name="eef_link_r_trans">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="eef_joint_r">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
     </joint>
     <actuator name="eef_link_r_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
@@ -525,10 +525,10 @@ Stephen Brawner (brawner@gmail.com)
   <transmission name="eef_link_l_trans">
     <type>transmission_interface/SimpleTransmission</type>
     <joint name="eef_joint_l">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
     </joint>
     <actuator name="eef_link_l_motor">
-      <hardwareInterface>hardware_interface/PositionJointInterface</hardwareInterface>
+      <hardwareInterface>hardware_interface/EffortHardwareInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>
   </transmission>
