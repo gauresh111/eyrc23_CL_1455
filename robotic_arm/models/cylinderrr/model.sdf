@@ -1,0 +1,41 @@
+<?xml version="1.0" ?>
+<sdf version="1.5">
+  <model name="cylinderrr">
+    <link name="link">
+      <inertial>
+        <pose>0 0 0 0 -0 0</pose>
+        <inertia>
+          <ixx>0.00220983</ixx>
+          <ixy>0</ixy>
+          <ixz>0</ixz>
+          <iyy>0.00128087</iyy>
+          <iyz>0</iyz>
+          <izz>0.00244903</izz>
+        </inertia>
+        <mass>0.01</mass>
+      </inertial>
+      <pose>0 0 0 0 -0 0</pose>
+      <gravity>0</gravity>
+
+      <visual name="visual">
+        <pose>0 0 0 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.04</radius>
+            <length>0.125</length>
+          </cylinder>
+        </geometry>
+      </visual>
+      
+      <collision name='collision'>
+        <pose>0 0 0 0 -0 0</pose>
+        <geometry>
+          <cylinder>
+            <radius>0.04</radius>
+            <length>0.125</length>
+          </cylinder>
+        </geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

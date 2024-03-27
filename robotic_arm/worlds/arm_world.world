@@ -19,7 +19,7 @@
   <world name="default">
     <gui>
       <camera name="user_default">
-        <pose>-24.307 -9.572 4.851 0 0.071 0.316</pose>
+        <pose>2.6 1.25 1.22 0 0.4 -2.93</pose>
       </camera>
     </gui>
 
@@ -37,7 +37,11 @@
       <cast_shadows>0</cast_shadows>
     </light>
 
-    <light name="light3" type="directional">
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- <light name="light3" type="directional">
       <pose frame="">3.9239 1.64974 4 0 1.2 0</pose>
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
@@ -49,10 +53,9 @@
         <quadratic>0.001</quadratic>
       </attenuation>
       <cast_shadows>0</cast_shadows>
-    </light>
+    </light> -->
 
-
-    <light name="light5" type="directional">
+    <!-- <light name="light5" type="directional">
       <pose frame="">0.454419 12.4783 5 -0.8 0 0</pose>
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
@@ -64,32 +67,75 @@
         <quadratic>0.001</quadratic>
       </attenuation>
       <cast_shadows>0</cast_shadows>
-    </light>
+    </light> -->
 
-    <scene>
-		<shadows>false</shadows>
-		<ambient>0.5 0.5 0.5 1.0</ambient>
-    <grid>false</grid>    
-      <sky>        
+    <!-- <scene>
+      <shadows>false</shadows>
+      <ambient>0.5 0.5 0.5 1.0</ambient>
+      <grid>false</grid>
+      <sky>
         <time>22</time>
         <sunrise>20</sunrise>
         <sunset>21</sunset>
         <clouds>
           <humidity>0</humidity>
-          <!-- <cloud_ambient>1.0 1.0 1.0 1.0</cloud_ambient> Not working -->
-        </clouds>        
+        </clouds>
       </sky>
-    </scene>
+    </scene> -->
 
-    <include>
-      <uri>model://ground_plane</uri>
-    </include>
+    <!-- <include>
+      <uri>model://cylinderrr</uri>
+      <name>cylinderrr</name>
+      <pose>0.0 0.0 1.0 0.0 0.0 0.0</pose>
+    </include> -->
 
-  <include>
+    <!-- <include>
       <uri>model://TestTube</uri>
       <name>Testtube</name>
       <pose>2.75 0.0 1.0 0.0 0.0 0.0</pose>
-  </include>  
-  
+    </include> -->
+
+    <model name="cylinder">
+      <static>false</static>
+      <pose>0.0 0.35 0.0625 0 -0 0</pose>
+      <link name="link">
+        <gravity>1</gravity>
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.0833333</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.0833333</iyy>
+            <iyz>0</iyz>
+            <izz>0.0833333</izz>
+          </inertia>
+        </inertial>
+
+        <collision name='collision'>
+          <geometry>
+            <cylinder>
+              <radius>0.04</radius>
+              <length>0.125</length>
+            </cylinder>
+          </geometry>
+        </collision>
+
+        <visual name='visual'>
+          <geometry>
+            <cylinder>
+              <radius>0.04</radius>
+              <length>0.125</length>
+            </cylinder>
+          </geometry>
+          <material>
+            <script>
+              <uri>Gazebo/White</uri>
+            </script>
+          </material>
+        </visual>
+      </link>
+    </model>
+
   </world>
 </sdf>
