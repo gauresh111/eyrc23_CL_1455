@@ -39,11 +39,6 @@
 
     <include>
       <uri>model://ground_plane</uri>
-      <material>
-        <script>
-          <uri>Gazebo/Black</uri>
-        </script>
-      </material>
     </include>
 
     <light name="light3" type="directional">
@@ -75,7 +70,7 @@
     </light>
 
     <scene>
-      <shadows>false</shadows>
+      <shadows>true</shadows>
       <ambient>0.5 0.5 0.5 1.0</ambient>
       <grid>false</grid>
       <sky>
@@ -90,7 +85,7 @@
 
     <model name="cylinder">
       <static>false</static>
-      <pose>0.0 0.5 0.0625 0 -0 0</pose>
+      <pose>0.0 0.4 0.0625 0 -0 0</pose>
       <link name="link">
         <gravity>1</gravity>
         <inertial>
@@ -108,8 +103,8 @@
         <collision name='collision'>
           <geometry>
             <cylinder>
-              <!-- <radius>0.04</radius> -->
-              <radius>0.03</radius>
+              <radius>0.04</radius>
+              <!-- <radius>0.03</radius> -->
               <length>0.125</length>
             </cylinder>
           </geometry>
@@ -136,8 +131,8 @@
         <visual name='visual'>
           <geometry>
             <cylinder>
-              <!-- <radius>0.04</radius> -->
-              <radius>0.03</radius>
+              <radius>0.04</radius>
+              <!-- <radius>0.03</radius> -->
               <length>0.125</length>
             </cylinder>
           </geometry>
