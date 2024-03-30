@@ -11,13 +11,13 @@ from rclpy.node import Node
 from std_msgs.msg import String
 from geometry_msgs.msg import TwistStamped
 from pymoveit2 import MoveIt2, MoveIt2Servo
-from pymoveit2.robots import robotic_arm
+from pymoveit2.robots import robotic_arm # type: ignore
 import tf2_ros
 import math
 import re
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Int8
-import transforms3d as tf3d
+import transforms3d as tf3d # type: ignore
 import numpy as np
 from std_msgs.msg import Bool
 import yaml
