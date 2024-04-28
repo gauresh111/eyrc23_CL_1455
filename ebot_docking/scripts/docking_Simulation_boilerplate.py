@@ -129,6 +129,7 @@ class MyRobotDockingController(Node):
         self.isAttach = False
         self.globalnodeClock = self.get_clock()
         self.isRackDetach = False
+        self.BoxId = None    
         #         
         # 
         # 
@@ -309,7 +310,7 @@ class MyRobotDockingController(Node):
     def manualMoveBot(self):
         global robot_pose,aruco_name_list,aruco_angle_list,aruco_ap_list
         # value = input("Move Bot")
-        target_rack = "obj_"+self.rackName[-1]
+        target_rack = "obj_"+self.BoxId
         self.GlobalStopTime(1.0)
         rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
         counter = 1
@@ -342,7 +343,7 @@ class MyRobotDockingController(Node):
         global aruco_name_list,aruco_angle_list,aruco_ap_list
         self.manualMoveBot()
         botPid = pid()
-        target_rack = "obj_"+self.rackName[-1]
+        target_rack = "obj_"+self.BoxId   
         rackIndex = self.find_string_in_list(target_rack,aruco_name_list)
         targetYAw = int(self.normalize_angle(self.targetYaw))
         counter = 1
@@ -530,6 +531,7 @@ class MyRobotDockingController(Node):
         self.rackName = request.rack_no
         self.isAttach = request.rack_attach
         self.isRackDetach = request.is_rack_detached
+        self.BoxId = str(request.box_id)
         # Reset flags and start the docking process
         #
         #

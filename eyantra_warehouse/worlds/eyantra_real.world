@@ -164,11 +164,16 @@
 
 
 
-  <include>
+  <!-- <include>
       <uri>model://Cube</uri>
       <name>boxes</name>
       <pose>2.75 -0.250 0.0 0.0 0.0 0.0</pose>
-	</include>
+	</include> -->
+  <include>
+      <uri>model://isro_arm</uri>
+      <name>boxes</name>
+      <pose>2.75 0.250 0.0 0.0 0.0 0.0</pose>
+  </include>  
   
 
   <plugin name="gazebo_link_attacher" filename="libgazebo_link_attacher.so"/>

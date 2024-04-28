@@ -423,7 +423,8 @@ class aruco_tf(Node):
         aruco_name_list = []
         aruco_angle_list = []
         ap_list = []
-        aruco_data_yaml = {"id":[], "angle":[], "ap":[]}
+        distances_list = []
+        aruco_data_yaml = {"id":[], "angle":[], "ap":[],"distance":[]}
         ############ ADD YOUR CODE HERE ############
 
         # INSTRUCTIONS & HELP :
@@ -559,6 +560,7 @@ class aruco_tf(Node):
                 transformStamped.transform.rotation.w = tranform.transform.rotation.w
                 self.br.sendTransform(transformStamped)
                 aruco_name_list.append("obj_" + str(id))
+                distances_list.append(str(depth_distance))
                 arucoAngle=round(arucoAngle)
                 aruco_angle_list.append(arucoAngle)
                 ap_list.append(self.get_rack_name(self.nearest_angle(arucoAngle)))
@@ -592,6 +594,7 @@ class aruco_tf(Node):
             aruco_data_yaml["id"] = aruco_name_list
             aruco_data_yaml["angle"] = aruco_angle_list
             aruco_data_yaml["ap"] = ap_list
+            aruco_data_yaml["distance"]=distances_list
             aruco_data_string.data = yaml.dump(aruco_data_yaml)
             self.aruco_data_publisher.publish(aruco_data_string)
             
